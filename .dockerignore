@@ -1,0 +1,11 @@
+.dockerignore
+docker-compose.yml
+Dockerfile
+.gitignore
+
+.env
+/testing/
+Makefile
+dist/
+README.md
+

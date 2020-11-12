@@ -1,0 +1,46 @@
+version: '3.7'
+
+services:
+  redis:
+    image: redis:6.0-alpine
+    ports:
+      - 6379:6379
+    networks:
+      - datastore
+    volumes:
+      - redis_data:/data
+
+  vault:
+    image: vault:1.4.1
+    ports:
+      - 8200:8200
+    networks:
+      - datastore
+    environment:
+      VAULT_ADDR: http://127.0.0.1:8200
+      VAULT_DEV_ROOT_TOKEN_ID: vault-admin
+      VAULT_DEV_LISTEN_ADDRESS: 0.0.0.0:8200
+
+  api:
+    build: .
+    image: registry.gitlab.com/auroq/cellar/cellar-api:latest
+    ports:
+      - 8081:8080
+    networks:
+      - datastore
+    environment:
+      APP_CLIENT_ADDRESS: 127.0.0.1:8081
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      DISABLE_SWAGGER:
+      LOGGING_LEVEL: "DEBUG"
+    env_file:
+      - .env
+
+
+volumes:
+  redis_data:
+
+
+networks:
+  datastore:
