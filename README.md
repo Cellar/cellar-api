@@ -21,6 +21,6 @@ If you would like to contribute, get started by reading the [contributing.md][co
 [contributing]: CONTRIBUTING.md
 [gin]: https://github.com/gin-gonic/gin
 [redis]: https://redis.io/
-[ui]: https://gitlab.com/auroq/cellar/cellar-ui
+[ui]: https://gitlab.com/cellar-app/cellar-ui
 [vault]: https://www.vaultproject.io/
 
