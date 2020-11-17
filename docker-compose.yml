@@ -23,7 +23,7 @@ services:
 
   api:
     build: .
-    image: registry.gitlab.com/auroq/cellar/cellar-api:latest
+    image: registry.gitlab.com/cellar-app/cellar-api:latest
     ports:
       - 8081:8080
     networks:
