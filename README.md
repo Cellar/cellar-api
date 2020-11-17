@@ -16,10 +16,11 @@ It uses the [Gin Web Framework][gin].
 If you would like to contribute, get started by reading the [contributing.md][contributing]
 
 
-[gin]: https://github.com/gin-gonic/gin
 
+[cellar-docs]: https://cellar-app.gitlab.io
 [contributing]: CONTRIBUTING.md
-[ui]: https://gitlab.com/auroq/cellar/cellar-ui
+[gin]: https://github.com/gin-gonic/gin
 [redis]: https://redis.io/
+[ui]: https://gitlab.com/auroq/cellar/cellar-ui
 [vault]: https://www.vaultproject.io/
 
