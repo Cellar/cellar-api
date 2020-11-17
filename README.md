@@ -13,14 +13,12 @@ The Cellar API is a RESTful API written in Go.
 
 It uses the [Gin Web Framework][gin].
 
-If you would like to contribute, get started by reading the [contributing.md][contributing]
+If you would like to contribute, get started by reading the [ontributing document][contributing].
 
 
 
 [cellar-docs]: https://cellar-app.gitlab.io
 [contributing]: CONTRIBUTING.md
 [gin]: https://github.com/gin-gonic/gin
-[redis]: https://redis.io/
 [ui]: https://gitlab.com/cellar-app/cellar-ui
-[vault]: https://www.vaultproject.io/
 
