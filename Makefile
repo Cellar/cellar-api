@@ -31,22 +31,15 @@ LOG := @sh -c '\
 	   echo -e "\n> $$1\n"; \
 	   printf ${NC}' VALUE
 
-REDOC-CLI := @docker run \
-				-u 1000:1000 \
-				-v $${PWD}:/data \
-				-w /data \
-				node:alpine \
-				npx redoc-cli
-
 .PHONY: run build publish
 
 swag-init:
 	$(LOG) "Generating Swagger documentation"
 	@cd cmd/cellar && swag init --parseDependency
 
-swag-publish:
+redoc:
 	$(LOG) "Generating redoc site"
-	$(REDOC-CLI) bundle \
+	@npx redoc-cli bundle \
 		-o ${REDOC_FILE} \
 		--title "Cellar API ${APP_VERSION}" \
 		cmd/cellar/docs/swagger.yaml
