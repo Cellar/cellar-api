@@ -8,6 +8,7 @@ import (
 
 func NewHealthResponseTest(t *testing.T, dataStoreStatus, encryptionStatus, expectedStatus models.HealthStatus) {
 	host := "host"
+	appVersion := "1.0.0"
 	dataStoreHealth := *models.NewHealth(
 		"dataStore",
 		dataStoreStatus,
@@ -20,12 +21,14 @@ func NewHealthResponseTest(t *testing.T, dataStoreStatus, encryptionStatus, expe
 	)
 	expected := models.HealthResponse{
 		Host:       host,
+		Version:    appVersion,
 		Status:     expectedStatus.String(),
 		Datastore:  dataStoreHealth,
 		Encryption: encryptionHealth,
 	}
 	actual := *models.NewHealthResponse(
-		"host",
+		host,
+		appVersion,
 		dataStoreHealth,
 		encryptionHealth,
 	)

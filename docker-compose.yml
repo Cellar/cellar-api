@@ -11,7 +11,7 @@ services:
       - redis_data:/data
 
   vault:
-    image: vault:1.4.1
+    image: vault:1.5.5
     ports:
       - 8200:8200
     networks:
@@ -34,6 +34,8 @@ services:
       REDIS_PORT: 6379
       DISABLE_SWAGGER:
       LOGGING_LEVEL: "DEBUG"
+      VAULT_ADDRESS: http://vault:8200
+      VAULT_TOKEN_NAME: cellar-key
     env_file:
       - .env
 

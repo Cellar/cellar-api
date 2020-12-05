@@ -12,7 +12,7 @@ type IAppConfiguration interface {
 
 const (
 	appKey              = "app."
-	appVersionKey       = appKey + "client_address"
+	appVersionKey       = appKey + "version"
 	appClientAddressKey = appKey + "client_address"
 	appBindAddressKey   = appKey + "bind_address"
 )

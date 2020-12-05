@@ -4,6 +4,7 @@ import (
 	"cellar/pkg/commands"
 	"cellar/pkg/mocks"
 	"cellar/pkg/models"
+	"cellar/pkg/settings"
 	"cellar/testing/testhelpers"
 	"github.com/golang/mock/gomock"
 	"strings"
@@ -12,6 +13,7 @@ import (
 
 func TestGetHealth(t *testing.T) {
 	ctrl := gomock.NewController(t)
+	cfg := settings.NewConfiguration()
 
 	encryption := mocks.NewMockEncryption(ctrl)
 	encryptionHealth := *models.NewHealth(
@@ -33,11 +35,11 @@ func TestGetHealth(t *testing.T) {
 		Health().
 		Return(dataStoreHealth)
 
-	health := commands.GetHealth(dataStore, encryption)
+	health := commands.GetHealth(cfg.App(), dataStore, encryption)
 
 	t.Run("status should be Healthy", testhelpers.EqualsF("healthy", strings.ToLower(health.Status)))
 	t.Run("should return host", testhelpers.NotEqualsF("", health.Host))
-	t.Run("should return version", testhelpers.NotEqualsF("", health.Version))
+	t.Run("should return version", testhelpers.EqualsF(cfg.App().Version(), health.Version))
 	t.Run("should return datastore health", testhelpers.EqualsF(dataStoreHealth, health.Datastore))
 	t.Run("should return encryption health", testhelpers.EqualsF(encryptionHealth, health.Encryption))
 }
