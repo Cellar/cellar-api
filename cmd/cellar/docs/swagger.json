@@ -1,11 +1,16 @@
 {
     "swagger": "2.0",
     "info": {
+        "description": "Simple secret sharing with the infrastructure you already trust",
+        "title": "Cellar",
         "contact": {
             "name": "Parker Johansen",
             "email": "johansen.parker@gmail.com"
         },
-        "license": {}
+        "license": {
+            "name": "MIT",
+            "url": "https://gitlab.com/cellar-app/cellar-api/-/blob/148abea87dfbba32ab1aefc1ab36b2de1f652c9e/LICENSE.txt"
+        }
     },
     "paths": {
         "/health-check": {
