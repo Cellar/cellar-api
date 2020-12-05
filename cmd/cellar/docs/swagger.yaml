@@ -36,15 +36,16 @@ definitions:
     properties:
       datastore:
         $ref: '#/definitions/models.Health'
-        type: object
       encryption:
         $ref: '#/definitions/models.Health'
-        type: object
       host:
         example: localhost
         type: string
       status:
         example: healthy
+        type: string
+      version:
+        example: 1.0.0
         type: string
     type: object
   models.SecretContentResponse:
@@ -131,7 +132,8 @@ paths:
       produces:
       - application/json
       responses:
-        "204": {}
+        "204":
+          description: ""
         "404":
           description: Not Found
           schema:

@@ -1,0 +1,11 @@
+# This file instructs Redocly's linter to ignore the rules contained for specific parts of your API.
+# See https://redoc.ly/docs/cli/ for more information.
+./cmd/cellar/docs/swagger.yaml:
+  spec:
+    - '#/info'
+  operation-operationId:
+    - '#/paths/~1health-check/get'
+    - '#/paths/~1v1~1secrets/post'
+    - '#/paths/~1v1~1secrets~1{id}/get'
+    - '#/paths/~1v1~1secrets~1{id}/delete'
+    - '#/paths/~1v1~1secrets~1{id}~1access/post'

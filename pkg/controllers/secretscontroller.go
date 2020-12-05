@@ -102,7 +102,7 @@ func GetSecretMetadata(c *gin.Context) {
 // @Produce json
 // @Accept json
 // @Param id path string true "Secret ID"
-// @Success 204
+// @Success 204 ""
 // @Failure 404 {object} httputil.HTTPError
 // @Failure 500 {object} httputil.HTTPError
 // @Router /v1/secrets/{id} [delete]
