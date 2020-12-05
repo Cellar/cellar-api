@@ -11,7 +11,7 @@ variables:
   PACKAGE_REGISTRY_URL: ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic
 
 .api:
-  image: golang:1.15-buster
+  image: gitlab.com/cellar-app/dependency_proxy/containers/golang:1.15-buster
   cache:
     key:
       files:
@@ -24,9 +24,9 @@ variables:
     - gitlab-org-docker
 
 .docker:
-  image: docker:stable
+  image: gitlab.com/cellar-app/dependency_proxy/containers/docker:stable
   services:
-    - docker:dind
+    - gitlab.com/cellar-app/dependency_proxy/containers/docker:dind
   before_script:
     - apk add --no-cache make
     - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
@@ -60,7 +60,7 @@ test-integration:
     REDIS_HOST: "redis"
     REDIS_PORT: 6379
   services:
-    - redis:6.0-alpine
+    - gitlab.com/cellar-app/dependency_proxy/containers/redis:6.0-alpine
   script:
     - make test-integration
 
