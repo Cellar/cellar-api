@@ -1,8 +1,0 @@
-apiDefinitions:
-  cellar: ./cmd/cellar/docs/swagger.yaml
-
-lint:
-  extends: recommend
-  rules:
-    boolean-parameter-prefixes: warn
-
