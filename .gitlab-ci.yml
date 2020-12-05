@@ -1,5 +1,4 @@
 stages:
-  - pre
   - build
   - test
   - publish
@@ -94,7 +93,7 @@ test-acceptance:
     - make stop-daemon
 
 pages:
-  stage: pre
+  stage: publish
   image: gitlab.com/cellar-app/dependency_proxy/containers/node:alpine
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
