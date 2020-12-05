@@ -56,11 +56,11 @@ test-unit:
 
 test-integration:
 	$(LOG) "Running integration tests"
-	@go test -tags=integration testing/...
+	@go test -tags=integration -race ./testing/integration/...
 
 test-acceptance:
 	$(LOG) "Running acceptance tests"
-	@go test -tags=acceptance testing/...
+	@go test -tags=acceptance -race ./testing/acceptance/...
 
 run:
 	$(LOG) "Running Cellar"
