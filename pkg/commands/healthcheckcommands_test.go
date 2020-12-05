@@ -37,6 +37,7 @@ func TestGetHealth(t *testing.T) {
 
 	t.Run("status should be Healthy", testhelpers.EqualsF("healthy", strings.ToLower(health.Status)))
 	t.Run("should return host", testhelpers.NotEqualsF("", health.Host))
+	t.Run("should return version", testhelpers.NotEqualsF("", health.Version))
 	t.Run("should return datastore health", testhelpers.EqualsF(dataStoreHealth, health.Datastore))
 	t.Run("should return encryption health", testhelpers.EqualsF(encryptionHealth, health.Encryption))
 }

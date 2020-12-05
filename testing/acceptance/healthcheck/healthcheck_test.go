@@ -31,6 +31,7 @@ func TestHealthCheck(t *testing.T) {
 
 	t.Run("status should be Healthy", testhelpers.EqualsF("healthy", strings.ToLower(health.Status)))
 	t.Run("should return host", testhelpers.NotEqualsF("", health.Host))
+	t.Run("should return non empty version", testhelpers.NotEqualsF("", health.Version))
 
 	t.Run("should return datastore name", testhelpers.EqualsF("redis", strings.ToLower(health.Datastore.Name)))
 	t.Run("should return datastore healthy status", testhelpers.EqualsF("healthy", strings.ToLower(health.Datastore.Status)))

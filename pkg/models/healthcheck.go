@@ -65,6 +65,7 @@ func assessHealth(statuses []HealthStatus) HealthStatus {
 type HealthResponse struct {
 	Host       string `json:"host" example:"localhost"`
 	Status     string `json:"status" example:"healthy"`
+	Version    string `json:"version" example:"1.0.0"`
 	Datastore  Health `json:"datastore"`
 	Encryption Health `json:"encryption"`
 }
@@ -85,11 +86,12 @@ func NewHealth(name string, status HealthStatus, version string) *Health {
 	}
 }
 
-func NewHealthResponse(host string, dataStoreHealth, encryptionHealth Health) *HealthResponse {
+func NewHealthResponse(host string, version string, dataStoreHealth, encryptionHealth Health) *HealthResponse {
 	status := assessHealth([]HealthStatus{dataStoreHealth.statusEnum, encryptionHealth.statusEnum})
 
 	return &HealthResponse{
 		Host:       host,
+		Version:    version,
 		Status:     status.String(),
 		Datastore:  dataStoreHealth,
 		Encryption: encryptionHealth,
