@@ -6,6 +6,8 @@ IMAGE_TAG ?= local
 
 APP_VERSION ?= 0.0.0
 
+PID_FILE := /var/run/cellar-api.pid
+
 PACKAGE_TOKEN ?= ""
 PACKAGE_ARCH ?= unknown
 PACKAGE_REGISTRY_URL ?= localhost/projects/project-id/packages/generic/
@@ -63,6 +65,19 @@ test-acceptance:
 run:
 	$(LOG) "Running Cellar"
 	@go run cellar/cmd/cellar
+
+run-daemon:
+	$(LOG) "Starting Cellar"
+	@go build -o cellar-bin cellar/cmd/cellar && chmod +x cellar-bin
+	@./cellar-bin & _pid=$$!; \
+		echo $$_pid > ${PID_FILE} \
+		|| { kill -s TERM $$_pid; echo "Failed to write pid file '${PID_FILE}'"; exit 1; }
+	@sleep 5
+	@rm cellar-bin
+
+stop-daemon:
+	$(LOG) "Stopping Cellar"
+	@kill -s TERM $$(cat ${PID_FILE})
 
 build:
 	$(LOG) "Building all source files"

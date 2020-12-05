@@ -26,7 +26,9 @@ variables:
 .docker:
   image: gitlab.com/cellar-app/dependency_proxy/containers/docker:stable
   services:
-    - gitlab.com/cellar-app/dependency_proxy/containers/docker:dind
+    - name: gitlab.com/cellar-app/dependency_proxy/containers/docker:dind
+      alias: docker
+
   before_script:
     - apk add --no-cache make
     - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
@@ -53,16 +55,41 @@ test-unit:
   script:
     - make test-unit
 
-test-integration:
+.api-test-depends:
   extends: .api
-  stage: test
   variables:
     REDIS_HOST: "redis"
     REDIS_PORT: 6379
+    VAULT_DEV_ROOT_TOKEN_ID: vault-admin
+    VAULT_DEV_LISTEN_ADDRESS: 0.0.0.0:8200
+    VAULT_ADDR: http://vault:8200
+    VAULT_LOCAL_ADDR: http://vault:8200
+    VAULT_ROOT_TOKEN: vault-admin
+    VAULT_TOKEN_NAME: cellar-testing
   services:
-    - gitlab.com/cellar-app/dependency_proxy/containers/redis:6.0-alpine
+    - name: gitlab.com/cellar-app/dependency_proxy/containers/redis:6.0-alpine
+      alias: redis
+    - name: gitlab.com/cellar-app/dependency_proxy/containers/vault:1.5.5
+      alias: vault
+  before_script:
+    - make vault-configure
+    - export VAULT_ROLE_ID=$(make vault-role-id)
+    - export VAULT_SECRET_ID=$(make vault-secret-id)
+
+test-integration:
+  extends: .api-test-depends
+  stage: test
   script:
     - make test-integration
+
+test-acceptance:
+  extends: .api-test-depends
+  stage: test
+  script:
+    - make run-daemon
+    - make test-acceptance
+  after_script:
+    - make stop-daemon
 
 publish-reference:
   stage: publish
