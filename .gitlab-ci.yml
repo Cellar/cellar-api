@@ -1,4 +1,5 @@
 stages:
+  - pre
   - build
   - test
   - publish
@@ -72,6 +73,7 @@ test-unit:
     - name: gitlab.com/cellar-app/dependency_proxy/containers/vault:1.5.5
       alias: vault
   before_script:
+    - apt-get update && apt-get install -y jq
     - make vault-configure
     - export VAULT_ROLE_ID=$(make vault-role-id)
     - export VAULT_SECRET_ID=$(make vault-secret-id)
@@ -91,8 +93,8 @@ test-acceptance:
   after_script:
     - make stop-daemon
 
-publish-reference:
-  stage: publish
+pages:
+  stage: pre
   image: gitlab.com/cellar-app/dependency_proxy/containers/node:alpine
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
@@ -142,7 +144,7 @@ release:
   needs:
     - job: publish-binary
       artifacts: true
-    - job: publish-reference
+    - job: pages
       artifacts: true
     - job: publish-docker
   image: registry.gitlab.com/gitlab-org/release-cli:latest
