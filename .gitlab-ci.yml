@@ -65,11 +65,13 @@ test-integration:
     - make test-integration
 
 publish-reference:
-  extends: .api
   stage: publish
+  image: gitlab.com/cellar-app/dependency_proxy/containers/node:alpine
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       when: manual
+  before_script:
+    - apk add --no-cache make
   script:
     - make redoc
       APP_VERSION=${APP_VERSION}
