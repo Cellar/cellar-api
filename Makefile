@@ -33,6 +33,8 @@ LOG := @sh -c '\
 	   echo -e "\n> $$1\n"; \
 	   printf ${NC}' VALUE
 
+include .env
+
 .PHONY: run build publish
 
 swag-init:
@@ -64,7 +66,9 @@ test-acceptance:
 
 run:
 	$(LOG) "Running Cellar"
-	@go run cellar/cmd/cellar
+	@VAULT_ROLE_ID=${VAULT_ROLE_ID} \
+	 VAULT_SECRET_ID=${VAULT_SECRET_ID} \
+	 go run cellar/cmd/cellar
 
 run-daemon:
 	$(LOG) "Starting Cellar"
