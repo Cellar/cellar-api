@@ -11,7 +11,7 @@ variables:
   PACKAGE_REGISTRY_URL: ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic
 
 .api:
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/golang:1.15-buster
+  image: golang:1.15-buster
   cache:
     key:
       files:
@@ -24,20 +24,18 @@ variables:
     - gitlab-org-docker
 
 .docker:
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:stable
+  image: docker:stable
   services:
-    - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:dind
+    - name: docker:dind
       alias: docker
 
   before_script:
     - apk add --no-cache make
-    - docker login -u "$CI_DEPENDENCY_PROXY_USER" -p "$CI_DEPENDENCY_PROXY_PASSWORD" "$CI_DEPENDENCY_PROXY_SERVER"`
     - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
   script:
     - make docker-build IMAGE_NAME=${IMAGE_NAME} IMAGE_TAG=${APP_VERSION}
   after_script:
     - docker logout $CI_REGISTRY
-    - docker logout "$CI_DEPENDENCY_PROXY_SERVER"`
 
 build-binary:
   extends: .api
@@ -96,7 +94,7 @@ test-acceptance:
 
 pages:
   stage: publish
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/node:alpine
+  image: node:alpine
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       when: manual
