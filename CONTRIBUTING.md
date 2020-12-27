@@ -149,9 +149,9 @@ Tagging and release will be handled automatically through the [CI/CD pipelines][
 - Tests are mandatory. Code changes will not be accepted without new or updated tests nor without all tests passing.
 
 
-[go-mod]: ./go.mod
-[gitlab-ci]: ./.gitlab-ci.yml
-[changelog]: ./CHANGELOG.md
+[go-mod]: go.mod
+[gitlab-ci]: .gitlab-ci.yml
+[changelog]: CHANGELOG.md
 [contributing-gitlab]: https://gitlab.com/cellar-app/cellar-api/-/blob/main/CONTRIBUTING.md
 
 [docs-datastore]: https://cellar-app.io/basics/application-structure/#datastore
