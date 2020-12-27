@@ -16,7 +16,7 @@ However, before reporting an issue, please make sure it doesn't already exist in
 If an issue does exist, please refrain from commenting "+1" or similar comments.
 That said, if you have addditional context, such as new ways to reproduce an issue, please to leave a comment.
 
-When reporting an issue, make sure to follow the [bug issue template].
+When reporting an issue, make sure to follow the [bug issue template][issues-bug].
 Make sure not to include any sensitive information.
 You may replace any sensitive information that appears in logs you share with the word "REDACTED".
 
@@ -78,7 +78,7 @@ Finally, working on this project relies heavily on [Docker][docker] and [docker-
 Once you have all the above installed, you are ready to start the dependencies.
 This is done through make by running `make services`.
 This will startup any dependencies required by the API and bootstrap their configuration.
-It will also output any relevant secrets into a file called `.env` from with the Cellar API will read secrets.
+It will also output any relevant secrets into a file called `.env` from which the Cellar API will read secrets.
 
 You are now ready to run the API.
 This can either be done from your IDE or using the command `make run`.
@@ -177,4 +177,4 @@ Tagging and release will be handled automatically through the [CI/CD pipelines][
 [docker]: https://www.docker.com/
 [docker-compose]: https://docs.docker.com/compose/
 [curl]: https://curl.se/
-[sember]: https://semver.org/
+[semver]: https://semver.org/
