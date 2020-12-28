@@ -33,7 +33,7 @@ LOG := @sh -c '\
 	   echo -e "\n> $$1\n"; \
 	   printf ${NC}' VALUE
 
-include .env
+-include .env
 
 .PHONY: run build publish
 
