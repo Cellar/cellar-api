@@ -68,6 +68,7 @@ run:
 	$(LOG) "Running Cellar"
 	@VAULT_ROLE_ID=${VAULT_ROLE_ID} \
 	 VAULT_SECRET_ID=${VAULT_SECRET_ID} \
+	 VAULT_TOKEN_NAME=${VAULT_TOKEN_NAME} \
 	 go run cellar/cmd/cellar
 
 run-daemon:
@@ -158,6 +159,7 @@ services: clean-services
 	@make vault-configure
 	@echo "VAULT_ROLE_ID=$$(make -s vault-role-id)" >> .env
 	@echo "VAULT_SECRET_ID=$$(make -s vault-secret-id)" >> .env
+	@echo "VAULT_TOKEN_NAME=${VAULT_TOKEN_NAME}" >> .env
 
 clean-services:
 	@[ -f ".env" ] || touch .env
