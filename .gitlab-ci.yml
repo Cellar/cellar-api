@@ -67,9 +67,9 @@ test-unit:
     VAULT_ROOT_TOKEN: vault-admin
     VAULT_TOKEN_NAME: cellar-testing
   services:
-    - name: gitlab.com/cellar-app/dependency_proxy/containers/redis:6.0-alpine
+    - name: redis:6.0-alpine
       alias: redis
-    - name: gitlab.com/cellar-app/dependency_proxy/containers/vault:1.5.5
+    - name: vault:1.5.5
       alias: vault
   before_script:
     - apt-get update && apt-get install -y jq
