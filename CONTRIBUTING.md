@@ -77,12 +77,22 @@ Finally, working on this project relies heavily on [Docker][docker] and [docker-
 ### Getting started
 
 Once you have all the above installed, you are ready to start the dependencies.
-This is done through make by running `make services`.
+This is done through make by running the `services` target of the [Makefile][makefile]:
+
+```shell
+make services
+```
+
 This will startup any dependencies required by the API and bootstrap their configuration.
 It will also output any relevant secrets into a file called `.env` from which the Cellar API will read secrets.
 
 You are now ready to run the API.
-This can either be done from your IDE or using the command `make run`.
+This can either be done from your IDE or using the `run` target of the [Makefile][makefile]:
+
+```shell
+make run
+```
+
 > Note: If you choose to run without `make` you will need to load all values from the .env file into your environment
 
 Now in another terminal or in your IDE you can run the tests:
@@ -135,6 +145,29 @@ Within `pkg/datastore` and `pkg/cryptography` there is an interface for datastor
 Adding a new datastore or cryptography engine is as simple as implementing one of those interfaces.
 Then simply expose the new implementations using settings `pkg/settings`.
 
+If you need to re-generate mocks for any reason, you can do so with the `generate-mocks` target:
+
+```shell
+make generate-mocks
+```
+
+Any changes to the mocks should be checked in to source control along with other changes.
+
+
+#### Swagger
+
+This project uses [swagger][swagger] (specifically [gin-swagger][gin-swagger]) for documentation and to make manually testing the API easier.
+
+With the API running, you can load the swagger page at http://127.0.0.1:8080/swagger/index.html.
+
+To regenerate the swagger documentation, use the `swag-init` target:
+
+
+```shell
+make swag init
+```
+
+
 
 ### Versioning
 
@@ -151,6 +184,7 @@ Tagging and release will be handled automatically through the [CI/CD pipelines][
 - Tests are mandatory. Code changes will not be accepted without new or updated tests nor without all tests passing.
 
 
+[makefile]: Makefile
 [go-mod]: go.mod
 [gitlab-ci]: .gitlab-ci.yml
 [changelog]: CHANGELOG.md
@@ -180,3 +214,4 @@ Tagging and release will be handled automatically through the [CI/CD pipelines][
 [docker-compose]: https://docs.docker.com/compose/
 [curl]: https://curl.se/
 [semver]: https://semver.org/
+[swagger]: https://swagger.io/
