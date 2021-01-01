@@ -8,4 +8,3 @@ func HandleError(message string, err error) {
 			Fatal(message)
 	}
 }
-

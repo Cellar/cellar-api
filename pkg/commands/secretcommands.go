@@ -11,10 +11,9 @@ import (
 	"time"
 )
 
-
 func getLogger(secretId string) *log.Entry {
 	return log.WithFields(log.Fields{
-		"context": "secret commands",
+		"context":  "secret commands",
 		"secretId": secretId,
 	})
 }
@@ -57,7 +56,7 @@ func CreateSecret(dataStore datastore.DataStore, encryption cryptography.Encrypt
 
 	logger = logger.WithFields(log.Fields{
 		"secretAccessLimit": secret.AccessLimit,
-		"secretExpiration": secret.Expiration().Format(),
+		"secretExpiration":  secret.Expiration().Format(),
 	})
 	logger.Info("Writing new secret to datastore")
 	err = dataStore.WriteSecret(*secret)
@@ -91,7 +90,7 @@ func AccessSecret(dataStore datastore.DataStore, encryption cryptography.Encrypt
 		WithFields(log.Fields{
 			"secretAccessCount": accessCount,
 			"secretAccessLimit": secret.AccessLimit,
-			"secretExpiration": secret.Expiration().Format(),
+			"secretExpiration":  secret.Expiration().Format(),
 		})
 	logger.Info("Accessed secret")
 

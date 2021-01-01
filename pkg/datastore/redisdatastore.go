@@ -97,7 +97,6 @@ func (redis RedisDataStore) ReadSecret(id string) (secret *models.Secret) {
 	keySet := NewRedisKeySet(id)
 	redis.logger.WithField(redisIdFieldKey, keySet.id).Debug("reading secret from redis")
 
-
 	accessLimit, err := redis.client.Get(keySet.AccessLimit()).Int()
 	if err != nil {
 		return nil

@@ -44,4 +44,3 @@ func (app AppConfiguration) ClientAddress() string {
 func (app AppConfiguration) Version() string {
 	return viper.GetString(appVersionKey)
 }
-

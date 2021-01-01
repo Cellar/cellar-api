@@ -1,13 +1,13 @@
 package settings
 
 import (
-"fmt"
-log "github.com/sirupsen/logrus"
-"github.com/spf13/viper"
-"io"
-"os"
-"path/filepath"
-"time"
+	"fmt"
+	log "github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
+	"io"
+	"os"
+	"path/filepath"
+	"time"
 )
 
 const (
@@ -67,4 +67,3 @@ func (lgc LoggingConfiguration) Level() (level log.Level, err error) {
 
 	return
 }
-

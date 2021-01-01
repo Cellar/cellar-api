@@ -15,7 +15,7 @@ import (
 type VaultEncryption struct {
 	client        *api.Client
 	configuration settings.IConfiguration
-	logger *log.Entry
+	logger        *log.Entry
 }
 
 func NewVaultEncryption(configuration settings.IConfiguration) (*VaultEncryption, error) {

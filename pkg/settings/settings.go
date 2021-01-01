@@ -25,9 +25,9 @@ func NewConfiguration() *Configuration {
 	viper.AutomaticEnv()
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	return &Configuration{
-		app:   NewAppConfiguration(),
-		redis: NewRedisConfiguration(),
-		vault: NewVaultConfiguration(),
+		app:     NewAppConfiguration(),
+		redis:   NewRedisConfiguration(),
+		vault:   NewVaultConfiguration(),
 		logging: NewLoggingConfiguration(),
 	}
 }
