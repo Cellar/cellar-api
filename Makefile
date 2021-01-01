@@ -163,5 +163,6 @@ services: clean-services
 
 clean-services:
 	@[ -f ".env" ] || touch .env
+	@docker-compose down
 	@docker-compose rm -svf
 	@basename ${PWD} | xargs -I % docker volume rm -f %_redis_data

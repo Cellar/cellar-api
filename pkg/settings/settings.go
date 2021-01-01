@@ -21,8 +21,6 @@ type Configuration struct {
 	logging ILoggingConfiguration
 }
 
-var configuration IConfiguration
-
 func NewConfiguration() *Configuration {
 	viper.AutomaticEnv()
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))

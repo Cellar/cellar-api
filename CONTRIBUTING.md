@@ -59,7 +59,8 @@ However, to generate swagger docs, you will need the `swag` command.
 It can be installed using `go get -u github.com/swaggo/swag/cmd/swag`.
 For more information see the [gin-swagger readme][gin-swagger].
 You will also need the `mockgen` command for generating mocks for unit testing.
-It can be installed using `GO111MODULE=on go get github.com/golang/mock/mockgen@v{VERSION}` (replace version with the version of `github.com/golang/mock` found in the [go.mod][go-mod] file.
+It can be installed using `GO111MODULE=on go get github.com/golang/mock/mockgen@v{VERSION}`
+(replacing {VERSION} with the version of `github.com/golang/mock` found in the [go.mod][go-mod] file.)
 For more information see the [go-mock readme][go-mock].
 
 This project also makes extensive use of [**GNU Make**][gnu-make].
@@ -82,6 +83,7 @@ It will also output any relevant secrets into a file called `.env` from which th
 
 You are now ready to run the API.
 This can either be done from your IDE or using the command `make run`.
+> Note: If you choose to run without `make` you will need to load all values from the .env file into your environment
 
 Now in another terminal or in your IDE you can run the tests:
 
