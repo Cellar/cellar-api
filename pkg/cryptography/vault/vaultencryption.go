@@ -18,7 +18,6 @@ type (
 		configuration settings.IConfiguration
 		logger        *log.Entry
 	}
-	AppRoleAuthBackend struct {}
 )
 
 func NewVaultEncryption(configuration settings.IConfiguration) (*VaultEncryption, error) {
