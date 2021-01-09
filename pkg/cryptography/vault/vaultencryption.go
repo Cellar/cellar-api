@@ -1,4 +1,4 @@
-package cryptography
+package vault
 
 import (
 	"cellar/pkg/models"
@@ -12,14 +12,20 @@ import (
 	"time"
 )
 
-type VaultEncryption struct {
-	client        *api.Client
-	configuration settings.IConfiguration
-	logger        *log.Entry
-}
+type (
+	VaultEncryption struct {
+		client        *api.Client
+		configuration settings.IConfiguration
+		logger        *log.Entry
+	}
+	AppRoleAuthBackend struct {}
+)
 
 func NewVaultEncryption(configuration settings.IConfiguration) (*VaultEncryption, error) {
-	logger := initializeLogger(configuration)
+	logger, err := initializeLogger(configuration)
+	if err != nil {
+		return nil, err
+	}
 
 	httpClient := &http.Client{
 		Timeout: 30 * time.Second,
@@ -40,7 +46,7 @@ func NewVaultEncryption(configuration settings.IConfiguration) (*VaultEncryption
 	}, nil
 }
 
-func initializeLogger(configuration settings.IConfiguration) *log.Entry {
+func initializeLogger(configuration settings.IConfiguration) (*log.Entry, error) {
 	logger := log.WithFields(log.Fields{
 		"context":  "encryption",
 		"instance": "vault",
@@ -48,17 +54,16 @@ func initializeLogger(configuration settings.IConfiguration) *log.Entry {
 	})
 
 	logger.Debug("initializing vault configuration")
-	if configuration.Vault().RoleID() == "" {
-		logger.Warn("vault role_id is empty")
-	}
-	if configuration.Vault().SecretID() == "" {
-		logger.Warn("vault secret_id is empty")
+	if _, err := configuration.Vault().AuthBackend(); err != nil {
+		logger.WithError(err).
+			Error("vault auth configuration is invalid")
+		return nil, err
 	}
 	if configuration.Vault().TokenName() == "" {
 		logger.Warn("vault token name is empty")
 	}
 
-	return logger
+	return logger, nil
 }
 
 func (vault VaultEncryption) Health() models.Health {
@@ -80,33 +85,6 @@ func (vault VaultEncryption) Health() models.Health {
 	}
 
 	return *models.NewHealth(name, status, version)
-}
-
-func (vault VaultEncryption) login() error {
-	vault.logger.Debug("attempting to find and renew existing tokens")
-	token, err := vault.client.Auth().Token().RenewSelf(60)
-	if err == nil && token != nil {
-		vault.logger.Debug("token renewal successful")
-		vault.client.SetToken(token.Auth.ClientToken)
-		return nil
-	} else {
-		vault.logger.Debug("unable to find or renew existing tokens")
-	}
-
-	vault.logger.Debug("attempting to login to vault")
-	secret, err := vault.client.Logical().Write("auth/approle/login", map[string]interface{}{
-		"role_id":   vault.configuration.Vault().RoleID(),
-		"secret_id": vault.configuration.Vault().SecretID(),
-	})
-	if err != nil {
-		vault.logger.WithError(err).
-			Error("unable to login to vault")
-		return err
-	}
-
-	vault.logger.Debug("login to vault successful")
-	vault.client.SetToken(secret.Auth.ClientToken)
-	return nil
 }
 
 func (vault VaultEncryption) Encrypt(content string) (encryptedContent string, err error) {

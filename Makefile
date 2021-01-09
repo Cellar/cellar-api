@@ -157,8 +157,9 @@ services: clean-services
 	@docker-compose pull
 	@docker-compose up -d redis vault
 	@make vault-configure
-	@echo "VAULT_ROLE_ID=$$(make -s vault-role-id)" >> .env
-	@echo "VAULT_SECRET_ID=$$(make -s vault-secret-id)" >> .env
+	@echo "VAULT_AUTH_BACKEND=approle" >> .env
+	@echo "VAULT_APPROLE_ROLE_ID=$$(make -s vault-role-id)" >> .env
+	@echo "VAULT_APPROLE_SECRET_ID=$$(make -s vault-secret-id)" >> .env
 	@echo "VAULT_TOKEN_NAME=${VAULT_TOKEN_NAME}" >> .env
 
 clean-services:
