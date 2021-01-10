@@ -12,7 +12,7 @@ func (vault EncryptionClient) login() error {
 	}
 
 	vault.logger.Debug("attempting to login to vault")
-	authBackend, err := vault.configuration.Vault().AuthBackend()
+	authBackend, err := vault.configuration.AuthBackend()
 	if err != nil {
 		return err
 	}

@@ -9,7 +9,7 @@ import (
 )
 
 func injectDependencies(router *gin.Engine, cfg settings.IConfiguration) {
-	vaultEncryptionClient, err := vault.NewEncryptionClient(cfg)
+	vaultEncryptionClient, err := vault.NewEncryptionClient(cfg.Vault())
 	HandleError("error while initializing vault connection", err)
 	dataStore := datastore.NewRedisDataStore(cfg)
 

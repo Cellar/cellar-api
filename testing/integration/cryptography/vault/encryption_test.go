@@ -14,7 +14,7 @@ import (
 
 func TestWhenGettingHealth(t *testing.T) {
 	cfg := settings.NewConfiguration()
-	sut, err := vault.NewEncryptionClient(*cfg)
+	sut, err := vault.NewEncryptionClient(cfg.Vault())
 	if err != nil {
 		t.Error(err)
 	}
@@ -27,7 +27,7 @@ func TestWhenGettingHealth(t *testing.T) {
 
 func TestEncryption(t *testing.T) {
 	cfg := settings.NewConfiguration()
-	sut, err := vault.NewEncryptionClient(*cfg)
+	sut, err := vault.NewEncryptionClient(cfg.Vault())
 	if err != nil {
 		t.Error(err)
 	}

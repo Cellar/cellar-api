@@ -14,11 +14,11 @@ import (
 
 type EncryptionClient struct {
 	client        *api.Client
-	configuration settings.IConfiguration
+	configuration settings.IVaultConfiguration
 	logger        *log.Entry
 }
 
-func NewEncryptionClient(configuration settings.IConfiguration) (*EncryptionClient, error) {
+func NewEncryptionClient(configuration settings.IVaultConfiguration) (*EncryptionClient, error) {
 	logger, err := initializeLogger(configuration)
 	if err != nil {
 		return nil, err
@@ -29,7 +29,7 @@ func NewEncryptionClient(configuration settings.IConfiguration) (*EncryptionClie
 	}
 
 	client, err := api.NewClient(&api.Config{
-		Address:    configuration.Vault().Address(),
+		Address:    configuration.Address(),
 		HttpClient: httpClient,
 	})
 	if err != nil {
@@ -43,20 +43,20 @@ func NewEncryptionClient(configuration settings.IConfiguration) (*EncryptionClie
 	}, nil
 }
 
-func initializeLogger(configuration settings.IConfiguration) (*log.Entry, error) {
+func initializeLogger(configuration settings.IVaultConfiguration) (*log.Entry, error) {
 	logger := log.WithFields(log.Fields{
-		"context":  "encryption",
-		"instance": "vault",
-		"host":     configuration.Vault().Address(),
+		"context":      "encryption",
+		"instance":     "vault",
+		"host":         configuration.Address(),
 	})
 
 	logger.Debug("initializing vault configuration")
-	if _, err := configuration.Vault().AuthBackend(); err != nil {
+	if _, err := configuration.AuthBackend(); err != nil {
 		logger.WithError(err).
 			Error("vault auth configuration is invalid")
 		return nil, err
 	}
-	if configuration.Vault().TokenName() == "" {
+	if configuration.TokenName() == "" {
 		logger.Warn("vault token name is empty")
 	}
 
@@ -93,7 +93,7 @@ func (vault EncryptionClient) Encrypt(content string) (encryptedContent string, 
 	base64Content := base64.StdEncoding.EncodeToString([]byte(content))
 
 	vault.logger.Debug("attempting to encrypt content with vault")
-	path := fmt.Sprintf("transit/encrypt/%s", vault.configuration.Vault().TokenName())
+	path := fmt.Sprintf("transit/encrypt/%s", vault.configuration.TokenName())
 	response, err := vault.client.Logical().Write(path, map[string]interface{}{
 		"plaintext": base64Content,
 	})
@@ -120,7 +120,7 @@ func (vault EncryptionClient) Decrypt(content string) (decryptedContent string, 
 	}
 
 	vault.logger.Debug("attempting to decrypt content with vault")
-	path := fmt.Sprintf("transit/decrypt/%s", vault.configuration.Vault().TokenName())
+	path := fmt.Sprintf("transit/decrypt/%s", vault.configuration.TokenName())
 	response, err := vault.client.Logical().Write(path, map[string]interface{}{
 		"ciphertext": content,
 	})
