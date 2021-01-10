@@ -4,6 +4,7 @@
 
 - add support for [AWS IAM authentication](https://www.vaultproject.io/docs/auth/aws.html) in Vault
 - restructure vault configuration to have sub-levels for each type of authentication
+  - vault auth backend path is now required
 
 
 ## 1.0.1

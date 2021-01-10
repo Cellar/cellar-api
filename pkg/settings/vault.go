@@ -55,7 +55,7 @@ func NewAppRoleAuthBackend() (*AppRoleAuthBackend, error) {
 	secretId := viper.GetString(vaultAppRoleSecretIdKey)
 	if secretId == "" && roleId == "" {
 		return nil, nil
-	} else if roleId != "" {
+	} else if roleId == "" {
 		return nil, errors.New("AppRole Role ID is empty")
 	} else if secretId == "" {
 		return nil, errors.New("AppRole Secret ID is empty")
