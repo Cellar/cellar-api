@@ -74,8 +74,8 @@ test-unit:
   before_script:
     - apt-get update && apt-get install -y jq
     - make vault-configure
-    - export VAULT_ROLE_ID=$(make vault-role-id)
-    - export VAULT_SECRET_ID=$(make vault-secret-id)
+    - export VAULT_APPROLE_ROLE_ID=$(make vault-role-id)
+    - export VAULT_APPROLE_SECRET_ID=$(make vault-secret-id)
 
 test-integration:
   extends: .api-test-depends
