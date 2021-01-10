@@ -99,7 +99,6 @@ pages:
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       when: manual
-      allow_failure: true
   before_script:
     - apk add --no-cache make
   script:
@@ -116,7 +115,6 @@ publish-binary:
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       when: manual
-      allow_failure: true
   script:
     - make publish
       APP_VERSION=${APP_VERSION}
@@ -135,7 +133,6 @@ publish-docker:
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       when: manual
-      allow_failure: true
   script:
     - make docker-publish APP_VERSION=${APP_VERSION} IMAGE_NAME=${IMAGE_NAME} IMAGE_TAG=${APP_VERSION}
     - make docker-publish APP_VERSION=${APP_VERSION} IMAGE_NAME=${IMAGE_NAME} IMAGE_TAG=latest
@@ -150,7 +147,6 @@ release:
     - job: pages
       artifacts: true
     - job: publish-docker
-  allow_failure: true
   image: registry.gitlab.com/gitlab-org/release-cli:latest
   before_script:
     - apk add --no-cache make
