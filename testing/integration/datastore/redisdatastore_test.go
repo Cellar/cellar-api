@@ -3,7 +3,7 @@
 package datastore
 
 import (
-	"cellar/pkg/datastore"
+	"cellar/pkg/datastore/redis"
 	"cellar/pkg/models"
 	"cellar/pkg/settings"
 	"cellar/testing/testhelpers"
@@ -15,7 +15,7 @@ import (
 
 func TestWhenGettingHealth(t *testing.T) {
 	cfg := settings.NewConfiguration()
-	sut := datastore.NewRedisDataStore(cfg.Redis())
+	sut := redis.NewDataStore(cfg.Redis())
 	actual := sut.Health()
 
 	t.Run("should return name", testhelpers.EqualsF("redis", strings.ToLower(actual.Name)))
@@ -26,7 +26,7 @@ func TestWhenGettingHealth(t *testing.T) {
 func TestWhenWritingSecret(t *testing.T) {
 	cfg := settings.NewConfiguration()
 	redisClient := testhelpers.GetRedisClient(cfg.Redis())
-	sut := datastore.NewRedisDataStore(cfg.Redis())
+	sut := redis.NewDataStore(cfg.Redis())
 
 	secret := *models.NewSecret(
 		testhelpers.RandomId(t),
@@ -36,7 +36,7 @@ func TestWhenWritingSecret(t *testing.T) {
 		testhelpers.EpochFromNow(time.Minute),
 	)
 
-	keys := datastore.NewRedisKeySet(secret.ID)
+	keys := redis.NewRedisKeySet(secret.ID)
 
 	err := sut.WriteSecret(secret)
 
@@ -94,8 +94,8 @@ func TestWhenWritingSecret(t *testing.T) {
 
 func TestWhenReadingSecret(t *testing.T) {
 	cfg := settings.NewConfiguration()
-	redis := testhelpers.GetRedisClient(cfg.Redis())
-	sut := datastore.NewRedisDataStore(cfg.Redis())
+	redisClient := testhelpers.GetRedisClient(cfg.Redis())
+	sut := redis.NewDataStore(cfg.Redis())
 
 	expected := *models.NewSecret(
 		testhelpers.RandomId(t),
@@ -105,13 +105,13 @@ func TestWhenReadingSecret(t *testing.T) {
 		testhelpers.EpochFromNow(time.Minute),
 	)
 
-	keys := datastore.NewRedisKeySet(expected.ID)
+	keys := redis.NewRedisKeySet(expected.ID)
 
 	testhelpers.Ok(t, sut.WriteSecret(expected))
 
 	t.Cleanup(func() {
-		_ = redis.Del(keys.AllKeys()...).Err()
-		_ = redis.Close()
+		_ = redisClient.Del(keys.AllKeys()...).Err()
+		_ = redisClient.Close()
 	})
 
 	actual := sut.ReadSecret(expected.ID)
@@ -124,8 +124,8 @@ func TestWhenReadingSecret(t *testing.T) {
 
 func TestWenDeletingSecret(t *testing.T) {
 	cfg := settings.NewConfiguration()
-	redis := testhelpers.GetRedisClient(cfg.Redis())
-	sut := datastore.NewRedisDataStore(cfg.Redis())
+	redisClient := testhelpers.GetRedisClient(cfg.Redis())
+	sut := redis.NewDataStore(cfg.Redis())
 
 	secret := *models.NewSecret(
 		testhelpers.RandomId(t),
@@ -135,13 +135,13 @@ func TestWenDeletingSecret(t *testing.T) {
 		testhelpers.EpochFromNow(time.Minute),
 	)
 
-	keys := datastore.NewRedisKeySet(secret.ID)
+	keys := redis.NewRedisKeySet(secret.ID)
 
 	testhelpers.Ok(t, sut.WriteSecret(secret))
 
 	t.Cleanup(func() {
-		_ = redis.Del(keys.AllKeys()...).Err()
-		_ = redis.Close()
+		_ = redisClient.Del(keys.AllKeys()...).Err()
+		_ = redisClient.Close()
 	})
 
 	deleted, err := sut.DeleteSecret(secret.ID)
@@ -149,22 +149,22 @@ func TestWenDeletingSecret(t *testing.T) {
 	t.Run("should not return error", testhelpers.OkF(err))
 
 	t.Run("should not find content", func(t *testing.T) {
-		val, err := redis.Exists(keys.Content()).Result()
+		val, err := redisClient.Exists(keys.Content()).Result()
 		testhelpers.Ok(t, err)
 		testhelpers.Equals(t, int64(0), val)
 	})
 	t.Run("should not find max access", func(t *testing.T) {
-		val, err := redis.Exists(keys.AccessLimit()).Result()
+		val, err := redisClient.Exists(keys.AccessLimit()).Result()
 		testhelpers.Ok(t, err)
 		testhelpers.Equals(t, int64(0), val)
 	})
 	t.Run("should should not find access", func(t *testing.T) {
-		val, err := redis.Exists(keys.Access()).Result()
+		val, err := redisClient.Exists(keys.Access()).Result()
 		testhelpers.Ok(t, err)
 		testhelpers.Equals(t, int64(0), val)
 	})
 	t.Run("should not find expiration", func(t *testing.T) {
-		val, err := redis.Exists(keys.ExpirationEpoch()).Result()
+		val, err := redisClient.Exists(keys.ExpirationEpoch()).Result()
 		testhelpers.Ok(t, err)
 		testhelpers.Equals(t, int64(0), val)
 	})
@@ -172,8 +172,8 @@ func TestWenDeletingSecret(t *testing.T) {
 
 func TestWhenIncreasingSecretAccess(t *testing.T) {
 	cfg := settings.NewConfiguration()
-	redis := testhelpers.GetRedisClient(cfg.Redis())
-	sut := datastore.NewRedisDataStore(cfg.Redis())
+	redisClient := testhelpers.GetRedisClient(cfg.Redis())
+	sut := redis.NewDataStore(cfg.Redis())
 
 	secret := *models.NewSecret(
 		testhelpers.RandomId(t),
@@ -183,13 +183,13 @@ func TestWhenIncreasingSecretAccess(t *testing.T) {
 		testhelpers.EpochFromNow(time.Minute),
 	)
 
-	keys := datastore.NewRedisKeySet(secret.ID)
+	keys := redis.NewRedisKeySet(secret.ID)
 
 	testhelpers.Ok(t, sut.WriteSecret(secret))
 
 	t.Cleanup(func() {
-		_ = redis.Del(keys.AllKeys()...).Err()
-		_ = redis.Close()
+		_ = redisClient.Del(keys.AllKeys()...).Err()
+		_ = redisClient.Close()
 	})
 
 	actual, err := sut.IncreaseAccessCount(secret.ID)
@@ -197,12 +197,12 @@ func TestWhenIncreasingSecretAccess(t *testing.T) {
 	t.Run("should not return error", testhelpers.OkF(err))
 	t.Run("should increase access count", testhelpers.EqualsF(int64(1), actual))
 	t.Run("should increase access count in datastore", func(t *testing.T) {
-		val, err := redis.Get(keys.Access()).Int()
+		val, err := redisClient.Get(keys.Access()).Int()
 		testhelpers.Ok(t, err)
 		testhelpers.Equals(t, 1, val)
 	})
 	t.Run("should not increase access limit in datastore", func(t *testing.T) {
-		val, err := redis.Get(keys.AccessLimit()).Int()
+		val, err := redisClient.Get(keys.AccessLimit()).Int()
 		testhelpers.Ok(t, err)
 		testhelpers.Equals(t, secret.AccessLimit, val)
 	})

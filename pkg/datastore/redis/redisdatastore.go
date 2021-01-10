@@ -1,4 +1,4 @@
-package datastore
+package redis
 
 import (
 	"cellar/pkg/models"
@@ -10,20 +10,21 @@ import (
 	"strings"
 )
 
-type RedisDataStore struct {
-	client *redis.Client
-	logger *log.Entry
-}
-
-type RedisInfo struct {
-	Version string `json:"redis_version"`
-}
+type (
+	DataStore struct {
+		client *redis.Client
+		logger *log.Entry
+	}
+	Info struct {
+		Version string `json:"redis_version"`
+	}
+)
 
 const redisIdFieldKey = "redis_key"
 
-func NewRedisDataStore(configuration settings.IRedisConfiguration) *RedisDataStore {
+func NewDataStore(configuration settings.IRedisConfiguration) *DataStore {
 
-	return &RedisDataStore{
+	return &DataStore{
 		client: redis.NewClient(&redis.Options{
 			Addr:     fmt.Sprintf("%s:%d", configuration.Host(), configuration.Port()),
 			Password: configuration.Password(),
@@ -48,7 +49,7 @@ func initializeLogger(configuration settings.IRedisConfiguration) *log.Entry {
 	return logger
 }
 
-func (redis RedisDataStore) Health() models.Health {
+func (redis DataStore) Health() models.Health {
 	name := "Redis"
 	status := models.HealthStatus(models.Unhealthy)
 	version := "Unknown"
@@ -69,7 +70,7 @@ func (redis RedisDataStore) Health() models.Health {
 	return *models.NewHealth(name, status, version)
 }
 
-func (redis RedisDataStore) WriteSecret(secret models.Secret) error {
+func (redis DataStore) WriteSecret(secret models.Secret) error {
 	keySet := NewRedisKeySet(secret.ID)
 	redis.logger.WithField(redisIdFieldKey, keySet.id).Debug("Writing secret to datastore")
 
@@ -93,7 +94,7 @@ func (redis RedisDataStore) WriteSecret(secret models.Secret) error {
 	return nil
 }
 
-func (redis RedisDataStore) ReadSecret(id string) (secret *models.Secret) {
+func (redis DataStore) ReadSecret(id string) (secret *models.Secret) {
 	keySet := NewRedisKeySet(id)
 	redis.logger.WithField(redisIdFieldKey, keySet.id).Debug("reading secret from redis")
 
@@ -126,19 +127,19 @@ func (redis RedisDataStore) ReadSecret(id string) (secret *models.Secret) {
 	)
 }
 
-func (redis RedisDataStore) IncreaseAccessCount(id string) (accessCount int64, err error) {
+func (redis DataStore) IncreaseAccessCount(id string) (accessCount int64, err error) {
 	keySet := NewRedisKeySet(id)
 	redis.logger.WithField(redisIdFieldKey, keySet.id).Debug("increasing secret access count in redis")
 	return redis.client.Incr(keySet.Access()).Result()
 }
 
-func (redis RedisDataStore) DeleteSecret(id string) (bool, error) {
+func (redis DataStore) DeleteSecret(id string) (bool, error) {
 	keySet := NewRedisKeySet(id)
 	redis.logger.WithField(redisIdFieldKey, keySet.id).Debug("deleting secret from redis")
 	numDeleted, err := redis.client.Del(keySet.AllKeys()...).Result()
 	return numDeleted > int64(0), err
 }
 
-func (redis RedisDataStore) Close() error {
+func (redis DataStore) Close() error {
 	return redis.client.Close()
 }

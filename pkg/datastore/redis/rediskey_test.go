@@ -1,14 +1,14 @@
-package datastore_test
+package redis_test
 
 import (
-	"cellar/pkg/datastore"
+	"cellar/pkg/datastore/redis"
 	"cellar/testing/testhelpers"
 	"fmt"
 	"testing"
 )
 
 var id = "1234567890"
-var sut = datastore.NewRedisKeySet(id)
+var sut = redis.NewRedisKeySet(id)
 
 var keys = struct {
 	access          string
