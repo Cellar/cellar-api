@@ -8,21 +8,21 @@ import (
 )
 
 const (
-	vaultKey                = "vault."
-	vaultTokenNameKey       = vaultKey + "token_name"
-	vaultAddressKey         = vaultKey + "address"
-	vaultAuthBackend        = vaultKey + "auth_backend"
+	vaultKey          = "vault."
+	vaultTokenNameKey = vaultKey + "token_name"
+	vaultAddressKey   = vaultKey + "address"
+	vaultAuthBackend  = vaultKey + "auth_backend"
 
 	vaultApprole            = vaultKey + "approle."
 	vaultAppRoleRoleIdKey   = vaultApprole + "role_id"
 	vaultAppRoleSecretIdKey = vaultApprole + "secret_id"
 
-	vaultAwsIam             = vaultKey + "awsiam."
-	vaultAwsIamRole         = vaultAwsIam + "role"
+	vaultAwsIam     = vaultKey + "awsiam."
+	vaultAwsIamRole = vaultAwsIam + "role"
 )
 
 type (
-	VaultConfiguration struct{}
+	VaultConfiguration  struct{}
 	IVaultConfiguration interface {
 		Address() string
 		TokenName() string
@@ -33,14 +33,14 @@ type (
 		LoginParameters() map[string]interface{}
 	}
 	AwsIamAuthBackend struct {
-		Role string
-		RequestMethod string
-		RequestUrl string
-		RequestBody string
+		Role           string
+		RequestMethod  string
+		RequestUrl     string
+		RequestBody    string
 		RequestHeaders string
 	}
 	AppRoleAuthBackend struct {
-		RoleId string
+		RoleId   string
 		SecretId string
 	}
 )
@@ -110,7 +110,7 @@ func (appRole AppRoleAuthBackend) LoginPath() string {
 
 func (appRole AppRoleAuthBackend) LoginParameters() map[string]interface{} {
 	return map[string]interface{}{
-		"role_id": viper.GetString(vaultAppRoleRoleIdKey),
+		"role_id":   viper.GetString(vaultAppRoleRoleIdKey),
 		"secret_id": viper.GetString(vaultAppRoleSecretIdKey),
 	}
 }
@@ -121,10 +121,10 @@ func (awsIam AwsIamAuthBackend) LoginPath() string {
 
 func (awsIam AwsIamAuthBackend) LoginParameters() map[string]interface{} {
 	return map[string]interface{}{
-		"role": awsIam.Role,
+		"role":                    awsIam.Role,
 		"iam_http_request_method": awsIam.RequestMethod,
-		"iam_request_url": awsIam.RequestUrl,
-		"iam_request_headers": awsIam.RequestHeaders,
-		"iam_request_body": awsIam.RequestBody,
+		"iam_request_url":         awsIam.RequestUrl,
+		"iam_request_headers":     awsIam.RequestHeaders,
+		"iam_request_body":        awsIam.RequestBody,
 	}
 }

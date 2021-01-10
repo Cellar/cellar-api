@@ -1,6 +1,6 @@
 package vault
 
-func (vault VaultEncryption) login() error {
+func (vault EncryptionClient) login() error {
 	vault.logger.Debug("attempting to find and renew existing tokens")
 	token, err := vault.client.Auth().Token().RenewSelf(60)
 	if err == nil && token != nil {

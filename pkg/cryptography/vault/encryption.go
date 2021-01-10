@@ -12,15 +12,13 @@ import (
 	"time"
 )
 
-type (
-	VaultEncryption struct {
-		client        *api.Client
-		configuration settings.IConfiguration
-		logger        *log.Entry
-	}
-)
+type EncryptionClient struct {
+	client        *api.Client
+	configuration settings.IConfiguration
+	logger        *log.Entry
+}
 
-func NewVaultEncryption(configuration settings.IConfiguration) (*VaultEncryption, error) {
+func NewEncryptionClient(configuration settings.IConfiguration) (*EncryptionClient, error) {
 	logger, err := initializeLogger(configuration)
 	if err != nil {
 		return nil, err
@@ -38,7 +36,7 @@ func NewVaultEncryption(configuration settings.IConfiguration) (*VaultEncryption
 		return nil, err
 	}
 
-	return &VaultEncryption{
+	return &EncryptionClient{
 		client:        client,
 		configuration: configuration,
 		logger:        logger,
@@ -65,7 +63,7 @@ func initializeLogger(configuration settings.IConfiguration) (*log.Entry, error)
 	return logger, nil
 }
 
-func (vault VaultEncryption) Health() models.Health {
+func (vault EncryptionClient) Health() models.Health {
 	name := "Vault"
 	status := models.HealthStatus(models.Unhealthy)
 	version := "Unknown"
@@ -86,7 +84,7 @@ func (vault VaultEncryption) Health() models.Health {
 	return *models.NewHealth(name, status, version)
 }
 
-func (vault VaultEncryption) Encrypt(content string) (encryptedContent string, err error) {
+func (vault EncryptionClient) Encrypt(content string) (encryptedContent string, err error) {
 	err = vault.login()
 	if err != nil {
 		return
@@ -115,7 +113,7 @@ func (vault VaultEncryption) Encrypt(content string) (encryptedContent string, e
 	return "", errors.New("unexpected response while encrypting secret")
 }
 
-func (vault VaultEncryption) Decrypt(content string) (decryptedContent string, err error) {
+func (vault EncryptionClient) Decrypt(content string) (decryptedContent string, err error) {
 	err = vault.login()
 	if err != nil {
 		return
