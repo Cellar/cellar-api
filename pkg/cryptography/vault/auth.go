@@ -1,7 +1,5 @@
 package vault
 
-import log "github.com/sirupsen/logrus"
-
 func (vault VaultEncryption) login() error {
 	vault.logger.Debug("attempting to find and renew existing tokens")
 	token, err := vault.client.Auth().Token().RenewSelf(60)
@@ -16,7 +14,6 @@ func (vault VaultEncryption) login() error {
 	vault.logger.Debug("attempting to login to vault")
 	authBackend, err := vault.configuration.Vault().AuthBackend()
 	if err != nil {
-		log.Error("returning")
 		return err
 	}
 	secret, err := vault.client.Logical().Write(authBackend.LoginPath(), authBackend.LoginParameters())

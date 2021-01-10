@@ -4,21 +4,20 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sts"
 	"io/ioutil"
 )
 
-type AwsIamRequestInfo struct {
-	RequestUrl string
-	RequestBody string
-	RequestHeaders string
+type IamRequestInfo struct {
+	Method  string
+	Url     string
+	Body    string
+	Headers string
 }
 
-func GetAwsIamRequestInfo(role string) (info AwsIamRequestInfo, err error) {
-	stsSession, err := session.NewSession(&aws.Config{
-		Region: aws.String("us-east-1")})
+func GetAwsIamRequestInfo(role string) (info IamRequestInfo, err error) {
+	stsSession, err := session.NewSession(&aws.Config{})
 	if err != nil {
 		return info, err
 	}
@@ -48,18 +47,10 @@ func GetAwsIamRequestInfo(role string) (info AwsIamRequestInfo, err error) {
 	if err != nil {
 		return info, err
 	}
-	return AwsIamRequestInfo{
-		RequestUrl:     base64.StdEncoding.EncodeToString([]byte(stsRequest.HTTPRequest.URL.String())),
-		RequestHeaders:    base64.StdEncoding.EncodeToString(headersJson),
-		RequestBody: base64.StdEncoding.EncodeToString(requestBody),
+	return IamRequestInfo{
+		Method:  "POST",
+		Url:     base64.StdEncoding.EncodeToString([]byte(stsRequest.HTTPRequest.URL.String())),
+		Headers: base64.StdEncoding.EncodeToString(headersJson),
+		Body:    base64.StdEncoding.EncodeToString(requestBody),
 	}, nil
-}
-
-func stsSigningResolver(service, region string, optFns ...func(*endpoints.Options)) (endpoints.ResolvedEndpoint, error) {
-	defaultEndpoint, err := endpoints.DefaultResolver().EndpointFor(service, region, optFns...)
-	if err != nil {
-		return defaultEndpoint, err
-	}
-	defaultEndpoint.SigningRegion = region
-	return defaultEndpoint, nil
 }

@@ -4,7 +4,6 @@ import (
 	"cellar/pkg/aws"
 	"errors"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
@@ -35,6 +34,10 @@ type (
 	}
 	AwsIamAuthBackend struct {
 		Role string
+		RequestMethod string
+		RequestUrl string
+		RequestBody string
+		RequestHeaders string
 	}
 	AppRoleAuthBackend struct {
 		RoleId string
@@ -69,8 +72,16 @@ func NewAwsIamAuthBackend() (*AwsIamAuthBackend, error) {
 	if role == "" {
 		return nil, errors.New("AWS IAM Role is empty")
 	}
+	requestInfo, err := aws.GetAwsIamRequestInfo(viper.GetString(vaultAuthBackend))
+	if err != nil {
+		return nil, err
+	}
 	return &AwsIamAuthBackend{
-		Role: role,
+		Role:           role,
+		RequestMethod:  requestInfo.Method,
+		RequestUrl:     requestInfo.Url,
+		RequestBody:    requestInfo.Body,
+		RequestHeaders: requestInfo.Headers,
 	}, nil
 }
 
@@ -109,24 +120,11 @@ func (awsIam AwsIamAuthBackend) LoginPath() string {
 }
 
 func (awsIam AwsIamAuthBackend) LoginParameters() map[string]interface{} {
-	requestInfo, err := aws.GetAwsIamRequestInfo(viper.GetString(vaultAuthBackend))
-	log.WithError(err).Error("error retrieving aws creds")
-	if err != nil {
-		return nil
-	}
-	mp := map[string]interface{}{
-		"role": viper.GetString(vaultAwsIamRole),
-		"iam_http_request_method": viper.GetString(vaultAppRoleSecretIdKey),
-		"iam_request_url": requestInfo.RequestUrl,
-		"iam_request_body": requestInfo.RequestBody,
-		"iam_request_headers": requestInfo.RequestHeaders,
-	}
-	log.Warnf("%v", mp)
 	return map[string]interface{}{
-		"role": viper.GetString(vaultAwsIamRole),
-		"iam_http_request_method": "POST",
-		"iam_request_url": requestInfo.RequestUrl,
-		"iam_request_body": requestInfo.RequestBody,
-		"iam_request_headers": requestInfo.RequestHeaders,
+		"role": awsIam.Role,
+		"iam_http_request_method": awsIam.RequestMethod,
+		"iam_request_url": awsIam.RequestUrl,
+		"iam_request_headers": awsIam.RequestHeaders,
+		"iam_request_body": awsIam.RequestBody,
 	}
 }
