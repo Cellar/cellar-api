@@ -15,7 +15,7 @@ import (
 
 func TestWhenGettingHealth(t *testing.T) {
 	cfg := settings.NewConfiguration()
-	sut := datastore.NewRedisDataStore(*cfg)
+	sut := datastore.NewRedisDataStore(cfg.Redis())
 	actual := sut.Health()
 
 	t.Run("should return name", testhelpers.EqualsF("redis", strings.ToLower(actual.Name)))
@@ -25,8 +25,8 @@ func TestWhenGettingHealth(t *testing.T) {
 
 func TestWhenWritingSecret(t *testing.T) {
 	cfg := settings.NewConfiguration()
-	redisClient := testhelpers.GetRedisClient(*cfg)
-	sut := datastore.NewRedisDataStore(*cfg)
+	redisClient := testhelpers.GetRedisClient(cfg.Redis())
+	sut := datastore.NewRedisDataStore(cfg.Redis())
 
 	secret := *models.NewSecret(
 		testhelpers.RandomId(t),
@@ -94,8 +94,8 @@ func TestWhenWritingSecret(t *testing.T) {
 
 func TestWhenReadingSecret(t *testing.T) {
 	cfg := settings.NewConfiguration()
-	redis := testhelpers.GetRedisClient(*cfg)
-	sut := datastore.NewRedisDataStore(*cfg)
+	redis := testhelpers.GetRedisClient(cfg.Redis())
+	sut := datastore.NewRedisDataStore(cfg.Redis())
 
 	expected := *models.NewSecret(
 		testhelpers.RandomId(t),
@@ -124,8 +124,8 @@ func TestWhenReadingSecret(t *testing.T) {
 
 func TestWenDeletingSecret(t *testing.T) {
 	cfg := settings.NewConfiguration()
-	redis := testhelpers.GetRedisClient(*cfg)
-	sut := datastore.NewRedisDataStore(*cfg)
+	redis := testhelpers.GetRedisClient(cfg.Redis())
+	sut := datastore.NewRedisDataStore(cfg.Redis())
 
 	secret := *models.NewSecret(
 		testhelpers.RandomId(t),
@@ -172,8 +172,8 @@ func TestWenDeletingSecret(t *testing.T) {
 
 func TestWhenIncreasingSecretAccess(t *testing.T) {
 	cfg := settings.NewConfiguration()
-	redis := testhelpers.GetRedisClient(*cfg)
-	sut := datastore.NewRedisDataStore(*cfg)
+	redis := testhelpers.GetRedisClient(cfg.Redis())
+	sut := datastore.NewRedisDataStore(cfg.Redis())
 
 	secret := *models.NewSecret(
 		testhelpers.RandomId(t),

@@ -28,11 +28,11 @@ func RandomId(tb testing.TB) string {
 	return hex.EncodeToString(bytes)
 }
 
-func GetRedisClient(cfg settings.Configuration) *redis.Client {
+func GetRedisClient(cfg settings.IRedisConfiguration) *redis.Client {
 	return redis.NewClient(&redis.Options{
-		Addr:     fmt.Sprintf("%s:%d", cfg.Redis().Host(), cfg.Redis().Port()),
-		Password: cfg.Redis().Password(),
-		DB:       cfg.Redis().DB(),
+		Addr:     fmt.Sprintf("%s:%d", cfg.Host(), cfg.Port()),
+		Password: cfg.Password(),
+		DB:       cfg.DB(),
 	})
 }
 

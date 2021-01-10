@@ -21,27 +21,27 @@ type RedisInfo struct {
 
 const redisIdFieldKey = "redis_key"
 
-func NewRedisDataStore(configuration settings.IConfiguration) *RedisDataStore {
+func NewRedisDataStore(configuration settings.IRedisConfiguration) *RedisDataStore {
 
 	return &RedisDataStore{
 		client: redis.NewClient(&redis.Options{
-			Addr:     fmt.Sprintf("%s:%d", configuration.Redis().Host(), configuration.Redis().Port()),
-			Password: configuration.Redis().Password(),
-			DB:       configuration.Redis().DB(),
+			Addr:     fmt.Sprintf("%s:%d", configuration.Host(), configuration.Port()),
+			Password: configuration.Password(),
+			DB:       configuration.DB(),
 		}),
 		logger: initializeLogger(configuration),
 	}
 }
 
-func initializeLogger(configuration settings.IConfiguration) *log.Entry {
+func initializeLogger(configuration settings.IRedisConfiguration) *log.Entry {
 	logger := log.WithFields(log.Fields{
 		"context":  "datastore",
 		"instance": "redis",
-		"address":  fmt.Sprintf("%s:%d", configuration.Redis().Host(), configuration.Redis().Port()),
+		"address":  fmt.Sprintf("%s:%d", configuration.Host(), configuration.Port()),
 	})
 
 	logger.Debug("initializing redis configuration")
-	if configuration.Redis().Password() == "" {
+	if configuration.Password() == "" {
 		logger.Warn("redis password is empty")
 	}
 
