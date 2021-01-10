@@ -19,12 +19,12 @@ if [ -z "$REDIS_PASSWORD" ]; then
   [ -z "$REDIS_PASSWORD_FILE" ] || export REDIS_PASSWORD=$(cat "$REDIS_PASSWORD_FILE")
 fi
 
-if [ -z "$VAULT_ROLE_ID" ]; then
-  [ -z "$VAULT_ROLE_ID_FILE" ] || export VAULT_ROLE_ID=$(cat "$VAULT_ROLE_ID_FILE")
+if [ -z "$VAULT_APPROLE_ROLE_ID" ]; then
+  [ -z "$VAULT_APPROLE_ROLE_ID_FILE" ] || export VAULT_APPROLE_ROLE_ID=$(cat "$VAULT_APPROLE_ROLE_ID_FILE")
 fi
 
-if [ -z "$VAULT_SECRET_ID" ]; then
-  [ -z "$VAULT_SECRET_ID_FILE" ] || export VAULT_SECRET_ID=$(cat "$VAULT_SECRET_ID_FILE")
+if [ -z "$VAULT_APPROLE_SECRET_ID" ]; then
+  [ -z "$VAULT_APPROLE_SECRET_ID_FILE" ] || export VAULT_APPROLE_SECRET_ID=$(cat "$VAULT_APPROLE_SECRET_ID_FILE")
 fi
 
 if [ -z "$VAULT_TOKEN_NAME" ]; then
@@ -34,8 +34,9 @@ fi
 verify_present "REDIS_HOST" "$REDIS_HOST"
 
 verify_present "VAULT_ADDRESS" "$VAULT_ADDRESS"
-verify_present "VAULT_ROLE_ID" "$VAULT_ROLE_ID"
-verify_present "VAULT_SECRET_ID" "$VAULT_SECRET_ID"
+verify_present "VAULT_AUTH_BACKEND" "$VAULT_AUTH_BACKEND"
+verify_present "VAULT_APPROLE_ROLE_ID" "$VAULT_ROLE_ID"
+verify_present "VAULT_APPROLE_SECRET_ID" "$VAULT_SECRET_ID"
 verify_present "VAULT_TOKEN_NAME" "$VAULT_TOKEN_NAME"
 
 exec /app/cellar $@
