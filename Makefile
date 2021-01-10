@@ -58,7 +58,11 @@ test-unit:
 
 test-integration:
 	$(LOG) "Running integration tests"
-	@go test -tags=integration -race ./testing/integration/...
+	@VAULT_AUTH_BACKEND=approle \
+	 VAULT_APPROLE_ROLE_ID=${VAULT_APPROLE_ROLE_ID} \
+	 VAULT_APPROLE_SECRET_ID=${VAULT_APPROLE_SECRET_ID} \
+	 VAULT_TOKEN_NAME=${VAULT_TOKEN_NAME} \
+	 go test -tags=integration -race ./testing/integration/...
 
 test-acceptance:
 	$(LOG) "Running acceptance tests"
