@@ -26,9 +26,9 @@ type (
 	IVaultConfiguration interface {
 		Address() string
 		TokenName() string
-		AuthBackend() (IAuthBackend, error)
+		AuthBackend() (IVaultAuthBackend, error)
 	}
-	IAuthBackend interface {
+	IVaultAuthBackend interface {
 		LoginPath() string
 		LoginParameters() map[string]interface{}
 	}
@@ -93,7 +93,7 @@ func (vlt VaultConfiguration) TokenName() string {
 	return viper.GetString(vaultTokenNameKey)
 }
 
-func (vlt VaultConfiguration) AuthBackend() (IAuthBackend, error) {
+func (vlt VaultConfiguration) AuthBackend() (IVaultAuthBackend, error) {
 	if backend, err := NewAppRoleAuthBackend(); backend != nil || err != nil {
 		return backend, err
 	}
