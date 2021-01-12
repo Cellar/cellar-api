@@ -18,6 +18,7 @@ dist/
 # Dependency directories (remove the comment below to include it)
 # vendor/
 .env
+.env.*
 
 # Created by .ignore support plugin (hsz.mobi)
 ### JetBrains template

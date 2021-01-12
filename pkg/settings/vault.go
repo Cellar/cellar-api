@@ -23,7 +23,6 @@ const (
 
 	vaultGcpIam     = vaultKey + "gcpiam."
 	vaultGcpIamRole = vaultGcpIam + "role"
-	vaultGcpIamServiceAcct = vaultGcpIam + "service_account_email"
 )
 
 type (
@@ -79,7 +78,8 @@ func NewAppRoleAuthBackend() (*AppRoleAuthBackend, error) {
 func NewAwsIamAuthBackend() (*AwsIamAuthBackend, error) {
 	role := viper.GetString(vaultAwsIamRole)
 	if role == "" {
-		return nil, errors.New("AWS IAM Role is empty")
+		//return nil, errors.New("AWS IAM Role is empty")
+		return nil, nil
 	}
 	requestInfo, err := aws.GetAwsIamRequestInfo(viper.GetString(vaultAuthBackend))
 	if err != nil {
@@ -97,13 +97,9 @@ func NewAwsIamAuthBackend() (*AwsIamAuthBackend, error) {
 func NewGcpIamAuthBackend() (*GcpIamAuthBackend, error) {
 	role := viper.GetString(vaultGcpIamRole)
 	if role == "" {
-		return nil, errors.New("GCP IAM Role is empty")
+		return nil, nil
 	}
-	serviceAccount := viper.GetString(vaultGcpIamServiceAcct)
-	if serviceAccount == "" {
-		return nil, errors.New("GCP IAM Service Account Email is empty")
-	}
-	jwt, err := gcp.GetGcpRequestInfo(role, serviceAccount)
+	jwt, err := gcp.GetGcpIamRequestInfo(role)
 	if err != nil {
 		return nil, err
 	}
@@ -126,6 +122,9 @@ func (vlt VaultConfiguration) AuthBackend() (IVaultAuthBackend, error) {
 		return backend, err
 	}
 	if backend, err := NewAwsIamAuthBackend(); backend != nil || err != nil {
+		return backend, err
+	}
+	if backend, err := NewGcpIamAuthBackend(); backend != nil || err != nil {
 		return backend, err
 	}
 

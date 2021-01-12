@@ -93,9 +93,11 @@ build:
 	$(LOG) "Building all source files"
 	go build ./...
 
-publish:
+package:
 	$(LOG) "Building cellar binary '${PACKAGE_ID}'"
 	@go build -o ${PACKAGE_ID} -ldflags="-X main.version=${APP_VERSION}" cellar/cmd/cellar
+
+publish: package
 	$(LOG) "Uploading cellar binary to ${PACKAGE_URL}"
 	@curl \
 		--header "JOB-TOKEN: ${PACKAGE_TOKEN}" \
