@@ -2,6 +2,7 @@ package settings
 
 import (
 	"cellar/pkg/aws"
+	"cellar/pkg/gcp"
 	"errors"
 	"fmt"
 	"github.com/spf13/viper"
@@ -19,6 +20,10 @@ const (
 
 	vaultAwsIam     = vaultKey + "awsiam."
 	vaultAwsIamRole = vaultAwsIam + "role"
+
+	vaultGcpIam     = vaultKey + "gcpiam."
+	vaultGcpIamRole = vaultGcpIam + "role"
+	vaultGcpIamServiceAcct = vaultGcpIam + "service_account_email"
 )
 
 type (
@@ -32,6 +37,10 @@ type (
 		LoginPath() string
 		LoginParameters() map[string]interface{}
 	}
+	AppRoleAuthBackend struct {
+		RoleId   string
+		SecretId string
+	}
 	AwsIamAuthBackend struct {
 		Role           string
 		RequestMethod  string
@@ -39,9 +48,9 @@ type (
 		RequestBody    string
 		RequestHeaders string
 	}
-	AppRoleAuthBackend struct {
-		RoleId   string
-		SecretId string
+	GcpIamAuthBackend struct {
+		Role      string
+		SignedJwt string
 	}
 )
 
@@ -82,6 +91,25 @@ func NewAwsIamAuthBackend() (*AwsIamAuthBackend, error) {
 		RequestUrl:     requestInfo.Url,
 		RequestBody:    requestInfo.Body,
 		RequestHeaders: requestInfo.Headers,
+	}, nil
+}
+
+func NewGcpIamAuthBackend() (*GcpIamAuthBackend, error) {
+	role := viper.GetString(vaultGcpIamRole)
+	if role == "" {
+		return nil, errors.New("GCP IAM Role is empty")
+	}
+	serviceAccount := viper.GetString(vaultGcpIamServiceAcct)
+	if serviceAccount == "" {
+		return nil, errors.New("GCP IAM Service Account Email is empty")
+	}
+	jwt, err := gcp.GetGcpRequestInfo(role, serviceAccount)
+	if err != nil {
+		return nil, err
+	}
+	return &GcpIamAuthBackend{
+		Role:      role,
+		SignedJwt: jwt,
 	}, nil
 }
 
@@ -128,3 +156,16 @@ func (awsIam AwsIamAuthBackend) LoginParameters() map[string]interface{} {
 		"iam_request_body":        awsIam.RequestBody,
 	}
 }
+
+
+func (gcpIam GcpIamAuthBackend) LoginPath() string {
+	return fmt.Sprintf("auth/%s/login", viper.GetString(vaultAuthBackend))
+}
+
+func (gcpIam GcpIamAuthBackend) LoginParameters() map[string]interface{} {
+	return map[string]interface{}{
+		"role": gcpIam.Role,
+		"jwt":  gcpIam.SignedJwt,
+	}
+}
+
