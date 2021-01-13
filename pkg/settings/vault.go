@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/spf13/viper"
+	"io/ioutil"
 )
 
 const (
@@ -25,6 +26,9 @@ const (
 
 	vaultGcpIam     = vaultAuth + "gcpiam."
 	vaultGcpIamRole = vaultGcpIam + "role"
+
+	vaultKubernetes     = vaultAuth + "kubernetes."
+	vaultKubernetesRole = vaultKubernetes + "role"
 )
 
 type (
@@ -53,6 +57,10 @@ type (
 		MountPath string
 		Role      string
 	}
+	KubernetesAuth struct {
+		MountPath string
+		Role      string
+	}
 )
 
 func NewVaultConfiguration() *VaultConfiguration {
@@ -77,6 +85,7 @@ func (vlt VaultConfiguration) AuthConfiguration() (IVaultAuthConfiguration, erro
 		NewAppRoleAuth(mountPath),
 		NewAwsIamAuth(mountPath),
 		NewGcpIamAuth(mountPath),
+		NewKubernetesAuth(mountPath),
 	}
 	var backend IVaultAuthConfiguration = nil
 	for _, authBackend := range authBackends {
@@ -99,9 +108,9 @@ func (vlt VaultConfiguration) AuthConfiguration() (IVaultAuthConfiguration, erro
 	return backend, nil
 }
 
-/**********
-* APPROLE *
-**********/
+/*************
+* APPROLE    *
+*************/
 func NewAppRoleAuth(mountPath string) *AppRoleAuth {
 	return &AppRoleAuth{
 		MountPath: mountPath,
@@ -135,9 +144,9 @@ func (appRole AppRoleAuth) LoginParameters() (map[string]interface{}, error) {
 	}, nil
 }
 
-/**********
-* AWS IAM *
-**********/
+/*************
+* AWS IAM    *
+*************/
 func NewAwsIamAuth(mountPath string) *AwsIamAuth {
 	return &AwsIamAuth{
 		MountPath: mountPath,
@@ -151,7 +160,7 @@ func (awsIam AwsIamAuth) Empty() bool {
 
 func (awsIam AwsIamAuth) Validate() error {
 	if awsIam.Role == "" {
-		return errors.New("AWS IAM Role is empty")
+		return errors.New("AWS IAM role is empty")
 	}
 	return nil
 }
@@ -174,9 +183,9 @@ func (awsIam AwsIamAuth) LoginParameters() (map[string]interface{}, error) {
 	}, nil
 }
 
-/**********
-* GCP IAM *
-**********/
+/*************
+* GCP IAM    *
+*************/
 func NewGcpIamAuth(mountPath string) *GcpIamAuth {
 	return &GcpIamAuth{
 		MountPath: mountPath,
@@ -190,7 +199,7 @@ func (gcpIam GcpIamAuth) Empty() bool {
 
 func (gcpIam GcpIamAuth) Validate() error {
 	if gcpIam.Role == "" {
-		return errors.New("GCP IAM Role is empty")
+		return errors.New("GCP IAM role is empty")
 	}
 	return nil
 }
@@ -207,5 +216,45 @@ func (gcpIam GcpIamAuth) LoginParameters() (map[string]interface{}, error) {
 	return map[string]interface{}{
 		"role": gcpIam.Role,
 		"jwt":  signedJwt,
+	}, nil
+}
+
+/*************
+* Kubernetes *
+*************/
+func NewKubernetesAuth(mountPath string) *KubernetesAuth {
+	return &KubernetesAuth{
+		MountPath: mountPath,
+		Role: viper.GetString(vaultKubernetesRole),
+	}
+}
+
+func (k8s KubernetesAuth) Empty() bool {
+	return k8s.Role == ""
+}
+
+func (k8s KubernetesAuth) Validate() error {
+	if k8s.Role == "" {
+		return errors.New("kubernetes role is empty")
+	}
+	return nil
+}
+
+func (k8s KubernetesAuth) LoginPath() string {
+	return fmt.Sprintf("auth/%s/login", k8s.MountPath)
+}
+
+func (k8s KubernetesAuth) LoginParameters() (map[string]interface{}, error) {
+	jwtBytes, err := ioutil.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/token")
+	if err != nil {
+		return nil, err
+	}
+	jwt := string(jwtBytes)
+	if jwt == "" {
+		return nil, errors.New("kubernetes service account jwt was found to be empty")
+	}
+	return map[string]interface{}{
+		"role": k8s.Role,
+		"jwt":  jwt,
 	}, nil
 }
