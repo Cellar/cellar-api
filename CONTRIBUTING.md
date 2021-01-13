@@ -142,7 +142,7 @@ In some cases it may be necessary to use multiple endpoints for a single test.
 #### DataStore and Cryptography Interfaces
 
 Within `pkg/datastore` and `pkg/cryptography` there is an interface for datastores and for cryptography engines.
-Adding a new datastore or cryptography engine is as simple as implementing one of those interfaces.
+Adding a new datastore or cryptography engine is as simple as implementing one of those interfaces in a new package.
 Then simply expose the new implementations using settings `pkg/settings`.
 
 If you need to re-generate mocks for any reason, you can do so with the `generate-mocks` target:
@@ -174,7 +174,7 @@ make swag init
 This project uses [semantic versioning][semver].
 To update the version, change the `APP_VERSION` variable in [`.gitlab-ci.yml`][gitlab-ci].
 Then make sure add a list of changes to the [CHANGELOG.md][changelog].
-Tagging and release will be handled automatically through the [CI/CD pipelines][pipelines] in GitLab.
+Tagging and releasing will be handled automatically through the [CI/CD pipelines][pipelines] in GitLab.
 
 
 ### Final Thoughts
