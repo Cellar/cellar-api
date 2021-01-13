@@ -65,8 +65,8 @@ test-unit:
     VAULT_LOCAL_ADDR: http://vault:8200
     VAULT_ADDRESS: http://vault:8200
     VAULT_ROOT_TOKEN: vault-admin
-    VAULT_TOKEN_NAME: cellar-testing
-    VAULT_AUTH_BACKEND: approle
+    VAULT_ENCRYPTION_TOKEN_NAME: cellar-testing
+    VAULT_AUTH_MOUNT_PATH: approle
   services:
     - name: redis:6.0-alpine
       alias: redis
@@ -75,8 +75,8 @@ test-unit:
   before_script:
     - apt-get update && apt-get install -y jq
     - make vault-configure
-    - export VAULT_APPROLE_ROLE_ID=$(make vault-role-id)
-    - export VAULT_APPROLE_SECRET_ID=$(make vault-secret-id)
+    - export VAULT_AUTH_APPROLE_ROLE_ID=$(make vault-role-id)
+    - export VAULT_AUTH_APPROLE_SECRET_ID=$(make vault-secret-id)
 
 test-integration:
   extends: .api-test-depends

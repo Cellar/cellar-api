@@ -9,9 +9,9 @@ import (
 )
 
 const (
-	vaultKey          = "vault."
-	vaultTokenNameKey = vaultKey + "token_name"
-	vaultAddressKey   = vaultKey + "address"
+	vaultKey                 = "vault."
+	vaultAddressKey          = vaultKey + "address"
+	vaultEncryptionTokenName = vaultKey + "encryption_token_name"
 
 	vaultAuth          = vaultKey + "auth."
 	vaultAuthMountPath = vaultAuth + "mount_path"
@@ -31,7 +31,7 @@ type (
 	VaultConfiguration  struct{}
 	IVaultConfiguration interface {
 		Address() string
-		TokenName() string
+		EncryptionTokenName() string
 		AuthConfiguration() (IVaultAuthConfiguration, error)
 	}
 	IVaultAuthConfiguration interface {
@@ -40,15 +40,18 @@ type (
 		LoginPath() string
 		LoginParameters() (map[string]interface{}, error)
 	}
-	AppRoleAuthBackend struct {
-		RoleId   string
-		SecretId string
+	AppRoleAuth struct {
+		MountPath string
+		RoleId    string
+		SecretId  string
 	}
-	AwsIamAuthBackend struct {
-		Role string
+	AwsIamAuth struct {
+		MountPath string
+		Role      string
 	}
-	GcpIamAuthBackend struct {
-		Role string
+	GcpIamAuth struct {
+		MountPath string
+		Role      string
 	}
 )
 
@@ -61,15 +64,19 @@ func (vlt VaultConfiguration) Address() string {
 	return viper.GetString(vaultAddressKey)
 }
 
-func (vlt VaultConfiguration) TokenName() string {
-	return viper.GetString(vaultTokenNameKey)
+func (vlt VaultConfiguration) EncryptionTokenName() string {
+	return viper.GetString(vaultEncryptionTokenName)
 }
 
 func (vlt VaultConfiguration) AuthConfiguration() (IVaultAuthConfiguration, error) {
+	mountPath := viper.GetString(vaultAuthMountPath)
+	if mountPath == "" {
+		return nil, fmt.Errorf("%s is empty", vaultAuthMountPath)
+	}
 	var authBackends = []IVaultAuthConfiguration{
-		NewAppRoleAuthBackend(),
-		NewAwsIamAuthBackend(),
-		NewGcpIamAuthBackend(),
+		NewAppRoleAuth(mountPath),
+		NewAwsIamAuth(mountPath),
+		NewGcpIamAuth(mountPath),
 	}
 	var backend IVaultAuthConfiguration = nil
 	for _, authBackend := range authBackends {
@@ -95,18 +102,19 @@ func (vlt VaultConfiguration) AuthConfiguration() (IVaultAuthConfiguration, erro
 /**********
 * APPROLE *
 **********/
-func NewAppRoleAuthBackend() *AppRoleAuthBackend {
-	return &AppRoleAuthBackend{
+func NewAppRoleAuth(mountPath string) *AppRoleAuth {
+	return &AppRoleAuth{
+		MountPath: mountPath,
 		RoleId:   viper.GetString(vaultAppRoleRoleIdKey),
 		SecretId: viper.GetString(vaultAppRoleSecretIdKey),
 	}
 }
 
-func (appRole AppRoleAuthBackend) Empty() bool {
+func (appRole AppRoleAuth) Empty() bool {
 	return appRole.RoleId == "" && appRole.SecretId == ""
 }
 
-func (appRole AppRoleAuthBackend) Validate() error {
+func (appRole AppRoleAuth) Validate() error {
 	if appRole.RoleId == "" {
 		return errors.New("AppRole Role ID is empty")
 	}
@@ -116,11 +124,11 @@ func (appRole AppRoleAuthBackend) Validate() error {
 	return nil
 }
 
-func (appRole AppRoleAuthBackend) LoginPath() string {
-	return fmt.Sprintf("auth/%s/login", viper.GetString(vaultAuthMountPath))
+func (appRole AppRoleAuth) LoginPath() string {
+	return fmt.Sprintf("auth/%s/login", appRole.MountPath)
 }
 
-func (appRole AppRoleAuthBackend) LoginParameters() (map[string]interface{}, error) {
+func (appRole AppRoleAuth) LoginParameters() (map[string]interface{}, error) {
 	return map[string]interface{}{
 		"role_id":   viper.GetString(vaultAppRoleRoleIdKey),
 		"secret_id": viper.GetString(vaultAppRoleSecretIdKey),
@@ -130,28 +138,29 @@ func (appRole AppRoleAuthBackend) LoginParameters() (map[string]interface{}, err
 /**********
 * AWS IAM *
 **********/
-func NewAwsIamAuthBackend() *AwsIamAuthBackend {
-	return &AwsIamAuthBackend{
+func NewAwsIamAuth(mountPath string) *AwsIamAuth {
+	return &AwsIamAuth{
+		MountPath: mountPath,
 		Role: viper.GetString(vaultAwsIamRole),
 	}
 }
 
-func (awsIam AwsIamAuthBackend) Empty() bool {
+func (awsIam AwsIamAuth) Empty() bool {
 	return awsIam.Role == ""
 }
 
-func (awsIam AwsIamAuthBackend) Validate() error {
+func (awsIam AwsIamAuth) Validate() error {
 	if awsIam.Role == "" {
 		return errors.New("AWS IAM Role is empty")
 	}
 	return nil
 }
 
-func (awsIam AwsIamAuthBackend) LoginPath() string {
-	return fmt.Sprintf("auth/%s/login", viper.GetString(vaultAuthMountPath))
+func (awsIam AwsIamAuth) LoginPath() string {
+	return fmt.Sprintf("auth/%s/login", awsIam.MountPath)
 }
 
-func (awsIam AwsIamAuthBackend) LoginParameters() (map[string]interface{}, error) {
+func (awsIam AwsIamAuth) LoginParameters() (map[string]interface{}, error) {
 	requestInfo, err := aws.GetAwsIamRequestInfo(viper.GetString(vaultAuthMountPath))
 	if err != nil {
 		return nil, err
@@ -168,28 +177,29 @@ func (awsIam AwsIamAuthBackend) LoginParameters() (map[string]interface{}, error
 /**********
 * GCP IAM *
 **********/
-func NewGcpIamAuthBackend() *GcpIamAuthBackend {
-	return &GcpIamAuthBackend{
+func NewGcpIamAuth(mountPath string) *GcpIamAuth {
+	return &GcpIamAuth{
+		MountPath: mountPath,
 		Role: viper.GetString(vaultGcpIamRole),
 	}
 }
 
-func (gcpIam GcpIamAuthBackend) Empty() bool {
+func (gcpIam GcpIamAuth) Empty() bool {
 	return gcpIam.Role == ""
 }
 
-func (gcpIam GcpIamAuthBackend) Validate() error {
+func (gcpIam GcpIamAuth) Validate() error {
 	if gcpIam.Role == "" {
-		return errors.New("AWS IAM Role is empty")
+		return errors.New("GCP IAM Role is empty")
 	}
 	return nil
 }
 
-func (gcpIam GcpIamAuthBackend) LoginPath() string {
-	return fmt.Sprintf("auth/%s/login", viper.GetString(vaultAuthMountPath))
+func (gcpIam GcpIamAuth) LoginPath() string {
+	return fmt.Sprintf("auth/%s/login", gcpIam.MountPath)
 }
 
-func (gcpIam GcpIamAuthBackend) LoginParameters() (map[string]interface{}, error) {
+func (gcpIam GcpIamAuth) LoginParameters() (map[string]interface{}, error) {
 	signedJwt, err := gcp.GetGcpIamRequestInfo(gcpIam.Role)
 	if err != nil {
 		return nil, err

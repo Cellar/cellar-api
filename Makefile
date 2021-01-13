@@ -22,7 +22,7 @@ REDOC_FILE ?= cellar-api-reference.html
 
 VAULT_LOCAL_ADDR ?= http://127.0.0.1:8200
 VAULT_ROOT_TOKEN ?= vault-admin
-VAULT_TOKEN_NAME ?= cellar-key
+VAULT_ENCRYPTION_TOKEN_NAME ?= cellar-key
 VAULT_ROLE_NAME ?= cellar-testing
 
 VAULT_REQUEST := @curl --header "X-Vault-Token: ${VAULT_ROOT_TOKEN}"
@@ -58,10 +58,10 @@ test-unit:
 
 test-integration:
 	$(LOG) "Running integration tests"
-	@VAULT_AUTH_BACKEND=approle \
-	 VAULT_APPROLE_ROLE_ID=${VAULT_APPROLE_ROLE_ID} \
-	 VAULT_APPROLE_SECRET_ID=${VAULT_APPROLE_SECRET_ID} \
-	 VAULT_TOKEN_NAME=${VAULT_TOKEN_NAME} \
+	@VAULT_AUTH_MOUNT_PATH=approle \
+	 VAULT_AUTH_APPROLE_ROLE_ID=${VAULT_AUTH_APPROLE_ROLE_ID} \
+	 VAULT_AUTH_APPROLE_SECRET_ID=${VAULT_AUTH_APPROLE_SECRET_ID} \
+	 VAULT_ENCRYPTION_TOKEN_NAME=${VAULT_ENCRYPTION_TOKEN_NAME} \
 	 go test -tags=integration -race ./testing/integration/...
 
 test-acceptance:
@@ -70,10 +70,10 @@ test-acceptance:
 
 run:
 	$(LOG) "Running Cellar"
-	@VAULT_AUTH_BACKEND=approle \
-	 VAULT_APPROLE_ROLE_ID=${VAULT_APPROLE_ROLE_ID} \
-	 VAULT_APPROLE_SECRET_ID=${VAULT_APPROLE_SECRET_ID} \
-	 VAULT_TOKEN_NAME=${VAULT_TOKEN_NAME} \
+	@VAULT_AUTH_MOUNT_PATH=approle \
+	 VAULT_AUTH_APPROLE_ROLE_ID=${VAULT_AUTH_APPROLE_ROLE_ID} \
+	 VAULT_AUTH_APPROLE_SECRET_ID=${VAULT_AUTH_APPROLE_SECRET_ID} \
+	 VAULT_ENCRYPTION_TOKEN_NAME=${VAULT_ENCRYPTION_TOKEN_NAME} \
 	 go run cellar/cmd/cellar
 
 run-daemon:
@@ -132,7 +132,7 @@ vault-enable-transit:
 		--data '{"type": "transit"}' \
 		${VAULT_LOCAL_ADDR}/v1/sys/mounts/transit
 	$(VAULT_REQUEST) -sX POST \
-		${VAULT_LOCAL_ADDR}/v1/transit/keys/${VAULT_TOKEN_NAME}
+		${VAULT_LOCAL_ADDR}/v1/transit/keys/${VAULT_ENCRYPTION_TOKEN_NAME}
 
 vault-enable-auth:
 	$(LOG) "Enabling approle authentication transit secrets engine"
@@ -164,10 +164,10 @@ services: clean-services
 	@docker-compose pull
 	@docker-compose up -d redis vault
 	@make vault-configure
-	@echo "VAULT_AUTH_BACKEND=approle" >> .env
-	@echo "VAULT_APPROLE_ROLE_ID=$$(make -s vault-role-id)" >> .env
-	@echo "VAULT_APPROLE_SECRET_ID=$$(make -s vault-secret-id)" >> .env
-	@echo "VAULT_TOKEN_NAME=${VAULT_TOKEN_NAME}" >> .env
+	@echo "VAULT_AUTH_MOUNT_PATH=approle" >> .env
+	@echo "VAULT_AUTH_APPROLE_ROLE_ID=$$(make -s vault-role-id)" >> .env
+	@echo "VAULT_AUTH_APPROLE_SECRET_ID=$$(make -s vault-secret-id)" >> .env
+	@echo "VAULT_ENCRYPTION_TOKEN_NAME=${VAULT_ENCRYPTION_TOKEN_NAME}" >> .env
 
 clean-services:
 	@[ -f ".env" ] || touch .env

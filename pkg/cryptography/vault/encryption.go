@@ -56,7 +56,7 @@ func initializeLogger(configuration settings.IVaultConfiguration) (*log.Entry, e
 			Error("vault auth configuration is invalid")
 		return nil, err
 	}
-	if configuration.TokenName() == "" {
+	if configuration.EncryptionTokenName() == "" {
 		logger.Warn("vault token name is empty")
 	}
 
@@ -93,7 +93,7 @@ func (vault EncryptionClient) Encrypt(content string) (encryptedContent string, 
 	base64Content := base64.StdEncoding.EncodeToString([]byte(content))
 
 	vault.logger.Debug("attempting to encrypt content with vault")
-	path := fmt.Sprintf("transit/encrypt/%s", vault.configuration.TokenName())
+	path := fmt.Sprintf("transit/encrypt/%s", vault.configuration.EncryptionTokenName())
 	response, err := vault.client.Logical().Write(path, map[string]interface{}{
 		"plaintext": base64Content,
 	})
@@ -120,7 +120,7 @@ func (vault EncryptionClient) Decrypt(content string) (decryptedContent string, 
 	}
 
 	vault.logger.Debug("attempting to decrypt content with vault")
-	path := fmt.Sprintf("transit/decrypt/%s", vault.configuration.TokenName())
+	path := fmt.Sprintf("transit/decrypt/%s", vault.configuration.EncryptionTokenName())
 	response, err := vault.client.Logical().Write(path, map[string]interface{}{
 		"ciphertext": content,
 	})

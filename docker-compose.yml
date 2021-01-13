@@ -35,7 +35,7 @@ services:
       DISABLE_SWAGGER:
       LOGGING_LEVEL: "DEBUG"
       VAULT_ADDRESS: http://vault:8200
-      VAULT_TOKEN_NAME: cellar-key
+      VAULT_ENCRYPTION_TOKEN_NAME: cellar-key
     env_file:
       - .env
 
