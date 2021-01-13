@@ -3,6 +3,7 @@ module cellar
 go 1.15
 
 require (
+	cloud.google.com/go v0.46.3
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/aws/aws-sdk-go v1.36.23
 	github.com/frankban/quicktest v1.10.1 // indirect

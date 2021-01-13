@@ -45,13 +45,13 @@ func NewEncryptionClient(configuration settings.IVaultConfiguration) (*Encryptio
 
 func initializeLogger(configuration settings.IVaultConfiguration) (*log.Entry, error) {
 	logger := log.WithFields(log.Fields{
-		"context":      "encryption",
-		"instance":     "vault",
-		"host":         configuration.Address(),
+		"context":  "encryption",
+		"instance": "vault",
+		"host":     configuration.Address(),
 	})
 
 	logger.Debug("initializing vault configuration")
-	if _, err := configuration.AuthBackend(); err != nil {
+	if _, err := configuration.AuthConfiguration(); err != nil {
 		logger.WithError(err).
 			Error("vault auth configuration is invalid")
 		return nil, err
