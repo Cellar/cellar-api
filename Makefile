@@ -45,7 +45,7 @@ redoc:
 	$(LOG) "Generating redoc site"
 	@npx redoc-cli bundle \
 		-o ${REDOC_FILE} \
-		--title "Cellar API ${APP_VERSION}" \
+		--title \"Cellar API ${APP_VERSION}\" \
 		cmd/cellar/docs/swagger.yaml
 
 generate-mocks:
