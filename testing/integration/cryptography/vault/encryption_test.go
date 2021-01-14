@@ -32,7 +32,7 @@ func TestEncryption(t *testing.T) {
 		t.Error(err)
 	}
 	content := "some secret content"
-	encrypted, err := sut.Encrypt(content)
+	encrypted, err := sut.Encrypt([]byte(content))
 	t.Run("when encrypting", func(t *testing.T) {
 		t.Run("should not return error", testhelpers.EqualsF(nil, err))
 		t.Run("should return encrypted in the right format", testhelpers.AssertF(func() bool {

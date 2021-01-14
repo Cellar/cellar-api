@@ -9,7 +9,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/go-redis/redis/v7"
+	"io"
 	"io/ioutil"
+	"mime/multipart"
 	"net/http"
 	"testing"
 	"time"
@@ -63,4 +65,38 @@ func CreateSecret(t *testing.T, cfg settings.IConfiguration, content string, acc
 
 func EpochFromNow(duration time.Duration) int64 {
 	return time.Now().UTC().Add(duration).Unix()
+}
+
+func PostFormData(t *testing.T, uri string, formData map[string]string, fileFormData map[string]string) *http.Response {
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+
+
+	for key, content := range fileFormData {
+		filename := RandomId(t)
+		fileContents := bytes.NewBufferString(content)
+		part, err := writer.CreateFormFile(key, filename)
+		Ok(t, err)
+
+		_, err = io.Copy(part, fileContents)
+		Ok(t, err)
+	}
+
+	for key, val := range formData {
+		Ok(t, writer.WriteField(key, val))
+	}
+
+	err := writer.Close()
+	Ok(t, err)
+
+	request, err := http.NewRequest("POST", uri, body)
+	Ok(t, err)
+
+	request.Header.Set("Content-Type", writer.FormDataContentType())
+
+	client := &http.Client{}
+	resp, err := client.Do(request)
+	Ok(t, err)
+
+	return resp
 }

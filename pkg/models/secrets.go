@@ -1,6 +1,7 @@
 package models
 
 import (
+	"mime/multipart"
 	"time"
 )
 
@@ -8,6 +9,13 @@ type CreateSecretRequest struct {
 	Content         *string `json:"content" example:"my very secret text"`
 	AccessLimit     *int    `json:"access_limit" example:"10"`
 	ExpirationEpoch *int64  `json:"expiration_epoch" example:"1577836800"`
+}
+
+type CreateSecretFileRequest struct {
+	FileHeader      *multipart.FileHeader `json:"file"`
+	Content         *string               `json:"content" example:"my very secret text"`
+	AccessLimit     *int                  `json:"access_limit" example:"10"`
+	ExpirationEpoch *int64                `json:"expiration_epoch" example:"1577836800"`
 }
 
 type SecretMetadataResponse struct {

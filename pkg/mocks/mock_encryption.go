@@ -49,7 +49,7 @@ func (mr *MockEncryptionMockRecorder) Decrypt(arg0 interface{}) *gomock.Call {
 }
 
 // Encrypt mocks base method
-func (m *MockEncryption) Encrypt(arg0 string) (string, error) {
+func (m *MockEncryption) Encrypt(arg0 []byte) (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Encrypt", arg0)
 	ret0, _ := ret[0].(string)

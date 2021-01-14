@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"bytes"
 	"cellar/pkg/cryptography"
 	"cellar/pkg/datastore"
 	"cellar/pkg/models"
@@ -8,6 +9,8 @@ import (
 	"encoding/hex"
 	"errors"
 	log "github.com/sirupsen/logrus"
+	"io"
+	"mime/multipart"
 	"time"
 )
 
@@ -16,6 +19,88 @@ func getLogger(secretId string) *log.Entry {
 		"context":  "secret commands",
 		"secretId": secretId,
 	})
+}
+
+func CreateSecretV2(dataStore datastore.DataStore, encryption cryptography.Encryption, request models.CreateSecretFileRequest) (response models.SecretMetadataResponse, isValidationError bool, err error) {
+	isValidationError = false
+
+	id, err := randomId()
+	if err != nil {
+		return
+	}
+
+	logger := getLogger(id)
+	logger.Info("Encrypting new secret content")
+
+	var contentBytes []byte
+	if request.Content != nil {
+		contentBytes = []byte(*request.Content)
+	} else {
+		var file multipart.File
+		file, err = request.FileHeader.Open()
+		if err != nil {
+			logger.WithError(err).
+				Error("Error loading secret file")
+			return
+		}
+		defer func() {
+			if err := file.Close(); err != nil {
+				logger.WithError(err).
+					Warn("Error closing secret file")
+			}
+		}()
+		buf := bytes.NewBuffer(nil)
+		if _, err = io.Copy(buf, file); err != nil {
+			logger.WithError(err).
+				Error("Error reading secret file content")
+			return
+		}
+		contentBytes = buf.Bytes()
+	}
+	secretContent, err := encryption.Encrypt(contentBytes)
+	if err != nil {
+		logger.WithError(err).
+			Error("Error encrypting new secret content")
+		return
+	}
+
+	var accessLimit int
+	if request.AccessLimit == nil {
+		accessLimit = 0
+	} else {
+		accessLimit = *request.AccessLimit
+	}
+
+	secret := models.NewSecret(
+		id,
+		secretContent,
+		0,
+		accessLimit,
+		*request.ExpirationEpoch,
+	)
+
+	if secret.Duration() < time.Minute*10 {
+		return response, true, errors.New("expiration must be at least 10 minutes in the future")
+	}
+
+	logger = logger.WithFields(log.Fields{
+		"secretAccessLimit": secret.AccessLimit,
+		"secretExpiration":  secret.Expiration().Format(),
+	})
+	logger.Info("Writing new secret to datastore")
+	err = dataStore.WriteSecret(*secret)
+	if err != nil {
+		logger.WithError(err).Error("Error writing new secret to datastore")
+		return
+	}
+
+	response = models.SecretMetadataResponse{
+		ID:          secret.ID,
+		AccessCount: secret.AccessCount,
+		AccessLimit: secret.AccessLimit,
+		Expiration:  secret.Expiration(),
+	}
+	return
 }
 
 func CreateSecret(dataStore datastore.DataStore, encryption cryptography.Encryption, request models.CreateSecretRequest) (response models.SecretMetadataResponse, isValidationError bool, err error) {
@@ -28,7 +113,8 @@ func CreateSecret(dataStore datastore.DataStore, encryption cryptography.Encrypt
 
 	logger := getLogger(id)
 	logger.Info("Encrypting new secret content")
-	secretContent, err := encryption.Encrypt(*request.Content)
+
+	secretContent, err := encryption.Encrypt([]byte(*request.Content))
 	if err != nil {
 		logger.WithError(err).
 			Error("Error encrypting new secret content")

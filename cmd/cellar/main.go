@@ -3,9 +3,9 @@ package main
 import (
 	"cellar/pkg/controllers"
 	secretsV1 "cellar/pkg/controllers/v1"
+	secretsV2 "cellar/pkg/controllers/v2"
 	"cellar/pkg/middleware"
 	"cellar/pkg/settings"
-
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -41,6 +41,17 @@ func addRoutes(router *gin.Engine) {
 			secrets.POST(":id/access", secretsV1.AccessSecretContent)
 			secrets.GET(":id", secretsV1.GetSecretMetadata)
 			secrets.DELETE(":id", secretsV1.DeleteSecret)
+		}
+	}
+
+	v2 := router.Group("/v2")
+	{
+		secrets := v2.Group("/secrets")
+		{
+			secrets.POST("", secretsV2.CreateSecret)
+			secrets.POST(":id/access", secretsV2.AccessSecretContent)
+			secrets.GET(":id", secretsV2.GetSecretMetadata)
+			secrets.DELETE(":id", secretsV2.DeleteSecret)
 		}
 	}
 }
