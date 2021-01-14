@@ -2,6 +2,7 @@ package main
 
 import (
 	"cellar/pkg/controllers"
+	secretsV1 "cellar/pkg/controllers/v1"
 	"cellar/pkg/middleware"
 	"cellar/pkg/settings"
 
@@ -36,10 +37,10 @@ func addRoutes(router *gin.Engine) {
 	{
 		secrets := v1.Group("/secrets")
 		{
-			secrets.POST("", controllers.CreateSecret)
-			secrets.POST(":id/access", controllers.AccessSecretContent)
-			secrets.GET(":id", controllers.GetSecretMetadata)
-			secrets.DELETE(":id", controllers.DeleteSecret)
+			secrets.POST("", secretsV1.CreateSecret)
+			secrets.POST(":id/access", secretsV1.AccessSecretContent)
+			secrets.GET(":id", secretsV1.GetSecretMetadata)
+			secrets.DELETE(":id", secretsV1.DeleteSecret)
 		}
 	}
 }

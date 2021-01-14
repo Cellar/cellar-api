@@ -84,13 +84,13 @@ func (vault EncryptionClient) Health() models.Health {
 	return *models.NewHealth(name, status, version)
 }
 
-func (vault EncryptionClient) Encrypt(content string) (encryptedContent string, err error) {
+func (vault EncryptionClient) Encrypt(content []byte) (encryptedContent string, err error) {
 	err = vault.login()
 	if err != nil {
 		return
 	}
 
-	base64Content := base64.StdEncoding.EncodeToString([]byte(content))
+	base64Content := base64.StdEncoding.EncodeToString(content)
 
 	vault.logger.Debug("attempting to encrypt content with vault")
 	path := fmt.Sprintf("transit/encrypt/%s", vault.configuration.EncryptionTokenName())
