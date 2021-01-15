@@ -46,6 +46,6 @@ func TestEncryption(t *testing.T) {
 	decrypted, err := sut.Decrypt(encrypted)
 	t.Run("when decrypting", func(t *testing.T) {
 		t.Run("should not return error", testhelpers.EqualsF(nil, err))
-		t.Run("should return initial content", testhelpers.EqualsF(content, decrypted))
+		t.Run("should return initial content", testhelpers.EqualsF(content, string(decrypted)))
 	})
 }

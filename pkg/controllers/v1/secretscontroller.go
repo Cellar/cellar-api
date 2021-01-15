@@ -92,7 +92,7 @@ func AccessSecretContent(c *gin.Context) {
 	} else {
 		c.JSON(http.StatusOK, models.SecretContentResponse{
 			ID:      secret.ID,
-			Content: secret.Content,
+			Content: string(secret.Content),
 		})
 	}
 }

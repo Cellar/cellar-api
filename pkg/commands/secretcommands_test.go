@@ -135,11 +135,10 @@ func TestWhenCreatingASecretWithTooShortExpiration(t *testing.T) {
 func TestWhenAccessingASecret(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
-	encryptedData := testhelpers.RandomId(t)
-
 	secret := models.Secret{
 		ID:              testhelpers.RandomId(t),
-		CipherText:      encryptedData,
+		Content:         []byte(testhelpers.RandomId(t)),
+		CipherText:      testhelpers.RandomId(t),
 		ContentType:     models.ContentTypeText,
 		AccessLimit:     100,
 		ExpirationEpoch: testhelpers.EpochFromNow(time.Minute),
@@ -147,8 +146,8 @@ func TestWhenAccessingASecret(t *testing.T) {
 
 	encryption := mocks.NewMockEncryption(ctrl)
 	encryption.EXPECT().
-		Decrypt(encryptedData).
-		Return(secret.CipherText, nil)
+		Decrypt(secret.CipherText).
+		Return(secret.Content, nil)
 
 	dataStore := mocks.NewMockDataStore(ctrl)
 	dataStore.EXPECT().
@@ -162,10 +161,57 @@ func TestWhenAccessingASecret(t *testing.T) {
 	testhelpers.Ok(t, err)
 
 	t.Run("should return ID", testhelpers.EqualsF(secret.ID, response.ID))
-	t.Run("should return correct content", testhelpers.EqualsF(secret.CipherText, response.Content))
+	t.Run("should return correct content", testhelpers.EqualsF(secret.Content, response.Content))
 	t.Run("should decrypt content", func(t *testing.T) {
 		encryption.EXPECT().
-			Decrypt(encryptedData).
+			Decrypt(secret.CipherText).
+			Times(1)
+	})
+	t.Run("should access from database", func(t *testing.T) {
+		dataStore.EXPECT().
+			ReadSecret(secret.ID).
+			Times(1)
+	})
+	t.Run("should increase access", func(t *testing.T) {
+		dataStore.EXPECT().
+			IncreaseAccessCount(secret.ID).
+			Times(1)
+	})
+}
+
+func TestWhenAccessingASecretFile(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	secret := models.Secret{
+		ID:              testhelpers.RandomId(t),
+		Content:         []byte(testhelpers.RandomId(t)),
+		CipherText:      testhelpers.RandomId(t),
+		ContentType:     models.ContentTypeFile,
+		AccessLimit:     100,
+		ExpirationEpoch: testhelpers.EpochFromNow(time.Minute),
+	}
+
+	encryption := mocks.NewMockEncryption(ctrl)
+	encryption.EXPECT().
+		Decrypt(secret.CipherText).
+		Return(secret.Content, nil)
+
+	dataStore := mocks.NewMockDataStore(ctrl)
+	dataStore.EXPECT().
+		ReadSecret(secret.ID).
+		Return(&secret)
+	dataStore.EXPECT().
+		IncreaseAccessCount(secret.ID).
+		Return(int64(1), nil)
+
+	response, err := commands.AccessSecret(dataStore, encryption, secret.ID)
+	testhelpers.Ok(t, err)
+
+	t.Run("should return ID", testhelpers.EqualsF(secret.ID, response.ID))
+	t.Run("should return correct content", testhelpers.EqualsF(secret.Content, response.Content))
+	t.Run("should decrypt content", func(t *testing.T) {
+		encryption.EXPECT().
+			Decrypt(secret.CipherText).
 			Times(1)
 	})
 	t.Run("should access from database", func(t *testing.T) {

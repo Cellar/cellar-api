@@ -59,7 +59,7 @@ func CreateSecret(dataStore datastore.DataStore, encryption cryptography.Encrypt
 	return
 }
 
-func AccessSecret(dataStore datastore.DataStore, encryption cryptography.Encryption, id string) (*models.SecretContentResponse, error) {
+func AccessSecret(dataStore datastore.DataStore, encryption cryptography.Encryption, id string) (*models.Secret, error) {
 
 	secret := dataStore.ReadSecret(id)
 	if secret == nil {
@@ -93,9 +93,10 @@ func AccessSecret(dataStore datastore.DataStore, encryption cryptography.Encrypt
 		return nil, err
 	}
 
-	return &models.SecretContentResponse{
+	return &models.Secret{
 		ID:      id,
 		Content: content,
+		ContentType: secret.ContentType,
 	}, nil
 }
 

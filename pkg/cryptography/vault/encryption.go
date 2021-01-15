@@ -113,7 +113,7 @@ func (vault EncryptionClient) Encrypt(content []byte) (encryptedContent string, 
 	return "", errors.New("unexpected response while encrypting secret")
 }
 
-func (vault EncryptionClient) Decrypt(content string) (decryptedContent string, err error) {
+func (vault EncryptionClient) Decrypt(content string) (decryptedContent []byte, err error) {
 	err = vault.login()
 	if err != nil {
 		return
@@ -133,10 +133,14 @@ func (vault EncryptionClient) Decrypt(content string) (decryptedContent string, 
 
 	if val, ok := response.Data["plaintext"]; ok {
 		base64Content := val.(string)
-		bytes, err := base64.StdEncoding.DecodeString(base64Content)
-		vault.logger.Debug("content decryption successful")
-		return string(bytes), err
+		if bytes, err := base64.StdEncoding.DecodeString(base64Content); err != nil {
+			vault.logger.WithError(err).
+				Error("error base64 decoding decrypted content")
+		} else {
+			vault.logger.Debug("content decryption successful")
+			return bytes, nil
+		}
 	}
 
-	return "", errors.New("unexpected response while decrypting secret")
+	return nil, errors.New("unexpected response while decrypting secret")
 }

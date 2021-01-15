@@ -8,5 +8,5 @@ var Key = "CRYPTOGRAPHY"
 type Encryption interface {
 	Health() models.Health
 	Encrypt(content []byte) (encryptedContent string, err error)
-	Decrypt(content string) (decryptedContent string, err error)
+	Decrypt(content string) (decryptedContent []byte, err error)
 }

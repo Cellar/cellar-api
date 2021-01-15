@@ -1,12 +1,14 @@
 package controllers
 
 import (
+	"bytes"
 	"cellar/pkg/commands"
 	"cellar/pkg/controllers"
 	"cellar/pkg/cryptography"
 	"cellar/pkg/datastore"
 	"cellar/pkg/models"
 	"errors"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/swaggo/swag/example/celler/httputil"
 	"net/http"
@@ -92,10 +94,11 @@ func CreateSecret(c *gin.Context) {
 }
 
 // @Summary Access Secret Content
-// @Produce json
+// @Produce json,application/octet-stream
 // @Accept json
 // @Param id path string true "Secret ID"
 // @Success 200 {object} models.SecretContentResponse
+// @Success 200 {file} models.SecretContentResponse
 // @Failure 404 {object} httputil.HTTPError
 // @Failure 500 {object} httputil.HTTPError
 // @Router /v2/secrets/{id}/access [post]
@@ -110,10 +113,20 @@ func AccessSecretContent(c *gin.Context) {
 		return
 	} else if secret == nil {
 		c.Status(http.StatusNotFound)
+	} else if secret.ContentType == models.ContentTypeFile {
+		reader := bytes.NewReader(secret.Content)
+		contentLength := reader.Size()
+		contentType := "application/octet-stream"
+
+		extraHeaders := map[string]string{
+			"Content-Disposition": fmt.Sprintf(`attachment; filename="cellar-%s"`, secret.ID[:8]),
+		}
+
+		c.DataFromReader(http.StatusOK, contentLength, contentType, reader, extraHeaders)
 	} else {
 		c.JSON(http.StatusOK, models.SecretContentResponse{
 			ID:      secret.ID,
-			Content: secret.Content,
+			Content: string(secret.Content),
 		})
 	}
 }

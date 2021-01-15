@@ -34,10 +34,10 @@ func (m *MockEncryption) EXPECT() *MockEncryptionMockRecorder {
 }
 
 // Decrypt mocks base method
-func (m *MockEncryption) Decrypt(arg0 string) (string, error) {
+func (m *MockEncryption) Decrypt(arg0 string) ([]byte, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Decrypt", arg0)
-	ret0, _ := ret[0].(string)
+	ret0, _ := ret[0].([]byte)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
