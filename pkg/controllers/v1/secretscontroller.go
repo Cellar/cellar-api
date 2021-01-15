@@ -51,15 +51,22 @@ func CreateSecret(c *gin.Context) {
 		secret.AccessLimit = *body.AccessLimit
 	}
 
-	if response, isValidationError, err := commands.CreateSecretV2(dataStore, encryption,secret); err != nil {
+	if metadata, isValidationError, err := commands.CreateSecret(dataStore, encryption,secret); err != nil {
 		if isValidationError {
 			httputil.NewError(c, http.StatusBadRequest, err)
 		} else {
 			httputil.NewError(c, http.StatusInternalServerError, err)
 		}
 		return
+	} else if metadata == nil {
+		httputil.NewError(c, http.StatusInternalServerError, errors.New("unexpected error while creating secret"))
 	} else {
-		c.JSON(http.StatusCreated, response)
+		c.JSON(http.StatusCreated, models.SecretMetadataResponse{
+			ID:          metadata.ID,
+			AccessCount: metadata.AccessCount,
+			AccessLimit: metadata.AccessLimit,
+			Expiration:  metadata.Expiration,
+		})
 	}
 }
 
@@ -106,7 +113,12 @@ func GetSecretMetadata(c *gin.Context) {
 	if secretMetadata := commands.GetSecretMetadata(dataStore, id); secretMetadata == nil {
 		c.Status(http.StatusNotFound)
 	} else {
-		c.JSON(http.StatusOK, secretMetadata)
+		c.JSON(http.StatusOK, models.SecretMetadataResponse{
+			ID:          secretMetadata.ID,
+			AccessCount: secretMetadata.AccessCount,
+			AccessLimit: secretMetadata.AccessLimit,
+			Expiration:  secretMetadata.Expiration,
+		})
 	}
 }
 

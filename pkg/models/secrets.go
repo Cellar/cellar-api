@@ -43,11 +43,18 @@ type (
 		ExpirationEpoch int64
 	}
 
+	SecretMetadata struct {
+		ID          string
+		ContentType ContentType
+		AccessCount int
+		AccessLimit int
+		Expiration  FormattedTime
+	}
+
 	SecretContentResponse struct {
 		ID      string `json:"id" example:"22b6fff1be15d1fd54b7b8ec6ad22e80e66275195c914c4b0f9652248a498680"`
 		Content string `json:"content" example:"my very secret text"`
 	}
-	SecretContentResponseV2 SecretContentResponse
 )
 
 func (secret *Secret) Expiration() FormattedTime {
@@ -56,4 +63,14 @@ func (secret *Secret) Expiration() FormattedTime {
 
 func (secret *Secret) Duration() time.Duration {
 	return time.Until(secret.Expiration().Time().UTC())
+}
+
+func (secret *Secret) Metadata() *SecretMetadata {
+	return &SecretMetadata{
+		ID:          secret.ID,
+		ContentType: ContentType(secret.ContentType),
+		AccessCount: secret.AccessCount,
+		AccessLimit: secret.AccessLimit,
+		Expiration:  secret.Expiration(),
+	}
 }

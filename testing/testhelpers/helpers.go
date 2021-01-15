@@ -13,6 +13,7 @@ import (
 	"io/ioutil"
 	"mime/multipart"
 	"net/http"
+	"strconv"
 	"testing"
 	"time"
 )
@@ -37,19 +38,18 @@ func GetRedisClient(cfg settings.IRedisConfiguration) *redis.Client {
 		DB:       cfg.DB(),
 	})
 }
-
-func CreateSecret(t *testing.T, cfg settings.IConfiguration, content string, accessLimit int) models.SecretMetadataResponse {
+func CreateSecretV1(t *testing.T, cfg settings.IConfiguration, content string, accessLimit int) models.SecretMetadataResponse {
 	secret := map[string]interface{}{
-		"content":          content,
 		"access_limit":     accessLimit,
 		"expiration_epoch": EpochFromNow(time.Hour),
+		"content":          content,
 	}
+
 	body, err := json.Marshal(secret)
 	Ok(t, err)
 
-	createResp, err := http.Post(cfg.App().ClientAddress()+"/v1/secrets", "application/json", bytes.NewBuffer(body))
+	createResp, err := http.Post(fmt.Sprintf(cfg.App().ClientAddress()+"/v1/secrets"), "application/json", bytes.NewBuffer(body))
 	OkF(err)
-
 	defer func() {
 		Ok(t, createResp.Body.Close())
 	}()
@@ -58,6 +58,31 @@ func CreateSecret(t *testing.T, cfg settings.IConfiguration, content string, acc
 	Ok(t, err)
 
 	var createdSecret models.SecretMetadataResponse
+	Ok(t, json.Unmarshal(responseBody, &createdSecret))
+
+	return createdSecret
+}
+
+func CreateSecretV2(t *testing.T, cfg settings.IConfiguration, contentType models.ContentType, content string, accessLimit int) models.SecretMetadataResponseV2 {
+	formData := map[string]string{
+		"access_limit":     strconv.Itoa(accessLimit),
+		"expiration_epoch": strconv.FormatInt(EpochFromNow(time.Hour), 10),
+	}
+	fileFormData := map[string]string{}
+	if contentType == models.ContentTypeText {
+		formData["content"] = content
+	} else {
+		fileFormData["file"] = content
+	}
+	createResp := PostFormData(t, fmt.Sprintf(cfg.App().ClientAddress() + "/v2/secrets"), formData, fileFormData)
+	defer func() {
+		Ok(t, createResp.Body.Close())
+	}()
+
+	responseBody, err := ioutil.ReadAll(createResp.Body)
+	Ok(t, err)
+
+	var createdSecret models.SecretMetadataResponseV2
 	Ok(t, json.Unmarshal(responseBody, &createdSecret))
 
 	return createdSecret

@@ -18,7 +18,7 @@ func getLogger(secretId string) *log.Entry {
 	})
 }
 
-func CreateSecretV2(dataStore datastore.DataStore, encryption cryptography.Encryption, secret models.Secret) (response models.SecretMetadataResponseV2, isValidationError bool, err error) {
+func CreateSecret(dataStore datastore.DataStore, encryption cryptography.Encryption, secret models.Secret) (response *models.SecretMetadata, isValidationError bool, err error) {
 	isValidationError = false
 
 	id, err := randomId()
@@ -55,13 +55,7 @@ func CreateSecretV2(dataStore datastore.DataStore, encryption cryptography.Encry
 		return
 	}
 
-	response = models.SecretMetadataResponseV2{
-		ID:          secret.ID,
-		AccessCount: secret.AccessCount,
-		AccessLimit: secret.AccessLimit,
-		ContentType: models.ContentType(secret.ContentType),
-		Expiration:  secret.Expiration(),
-	}
+	response = secret.Metadata()
 	return
 }
 
@@ -105,20 +99,16 @@ func AccessSecret(dataStore datastore.DataStore, encryption cryptography.Encrypt
 	}, nil
 }
 
-func GetSecretMetadata(dataStore datastore.DataStore, id string) *models.SecretMetadataResponse {
-	getLogger(id).Info("Querying for secret metadata")
+func GetSecretMetadata(dataStore datastore.DataStore, id string) *models.SecretMetadata {
+	logger := getLogger(id)
+	logger.Info("Querying for secret metadata")
 
 	secret := dataStore.ReadSecret(id)
 	if secret == nil {
 		return nil
 	}
 
-	return &models.SecretMetadataResponse{
-		ID:          secret.ID,
-		AccessCount: secret.AccessCount,
-		AccessLimit: secret.AccessLimit,
-		Expiration:  secret.Expiration(),
-	}
+	return secret.Metadata()
 }
 
 func DeleteSecret(dataStore datastore.DataStore, id string) (bool, error) {

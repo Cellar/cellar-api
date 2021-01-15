@@ -34,7 +34,7 @@ func TestWhenCreatingASecretFromContent(t *testing.T) {
 		ExpirationEpoch: testhelpers.EpochFromNow(expectedDuration),
 	}
 
-	response, _, err := commands.CreateSecretV2(dataStore, encryption, expectedSecret)
+	response, _, err := commands.CreateSecret(dataStore, encryption, expectedSecret)
 	testhelpers.Ok(t, err)
 	t.Run("should return ID", testhelpers.AssertF(len(response.ID) == 64, "expected ID length of 64 got: %d", len(response.ID)))
 	t.Run("should return access count of zero", testhelpers.EqualsF(0, response.AccessCount))
@@ -77,7 +77,7 @@ func TestWhenCreatingASecretFromFile(t *testing.T) {
 		ExpirationEpoch: testhelpers.EpochFromNow(expectedDuration),
 	}
 
-	response, _, err := commands.CreateSecretV2(dataStore, encryption, expectedSecret)
+	response, _, err := commands.CreateSecret(dataStore, encryption, expectedSecret)
 	testhelpers.Ok(t, err)
 	t.Run("should return ID", testhelpers.AssertF(len(response.ID) == 64, "expected ID length of 64 got: %d", len(response.ID)))
 	t.Run("should return access count of zero", testhelpers.EqualsF(0, response.AccessCount))
@@ -122,7 +122,7 @@ func TestWhenCreatingASecretWithTooShortExpiration(t *testing.T) {
 		ExpirationEpoch: expirationEpoch,
 	}
 
-	_, isValidationError, err := commands.CreateSecretV2(dataStore, encryption, secretRequest)
+	_, isValidationError, err := commands.CreateSecret(dataStore, encryption, secretRequest)
 	t.Run("should return validation error", testhelpers.EqualsF(true, isValidationError))
 	t.Run("should return an error", testhelpers.AssertF(err != nil, "error should not be nil"))
 	t.Run("should not to database", func(t *testing.T) {

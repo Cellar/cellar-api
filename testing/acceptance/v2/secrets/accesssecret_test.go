@@ -15,7 +15,7 @@ import (
 func TestWhenAccessingSecretContent(t *testing.T) {
 	cfg := testhelpers.GetConfiguration()
 	content := "Super Secret Test Content"
-	secret := testhelpers.CreateSecret(t, cfg, content, 10)
+	secret := testhelpers.CreateSecretV2(t, cfg, models.ContentTypeText, content, 10)
 
 	path := fmt.Sprintf("%s/v2/secrets/%s/access", cfg.App().ClientAddress(), secret.ID)
 	resp, err := http.Post(path, "application/json", nil)
@@ -47,7 +47,7 @@ func TestWhenAccessingSecretContentForSecretThatDoesntExist(t *testing.T) {
 func TestWhenAccessingSecretWithAccessLimitOfOne(t *testing.T) {
 	cfg := testhelpers.GetConfiguration()
 	content := "Super Secret Test Content"
-	secret := testhelpers.CreateSecret(t, cfg, content, 1)
+	secret := testhelpers.CreateSecretV2(t, cfg, models.ContentTypeText, content, 1)
 
 	path := fmt.Sprintf("%s/v2/secrets/%s/access", cfg.App().ClientAddress(), secret.ID)
 	response1, err := http.Post(path, "application/json", nil)

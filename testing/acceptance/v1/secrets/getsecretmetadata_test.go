@@ -15,7 +15,7 @@ import (
 func TestWhenGettingSecret(t *testing.T) {
 	cfg := testhelpers.GetConfiguration()
 	content := "Super Secret Test Content"
-	secret := testhelpers.CreateSecret(t, cfg, content, 10)
+	secret := testhelpers.CreateSecretV1(t, cfg, content, 10)
 
 	path := fmt.Sprintf("%s/v1/secrets/%s", cfg.App().ClientAddress(), secret.ID)
 	resp, err := http.Get(path)

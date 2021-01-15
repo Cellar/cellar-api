@@ -72,6 +72,24 @@ definitions:
         example: 22b6fff1be15d1fd54b7b8ec6ad22e80e66275195c914c4b0f9652248a498680
         type: string
     type: object
+  models.SecretMetadataResponseV2:
+    properties:
+      access_count:
+        example: 1
+        type: integer
+      access_limit:
+        example: 10
+        type: integer
+      content_type:
+        example: text
+        type: string
+      expiration:
+        example: 1970-01-01 00:00:00 UTC
+        type: string
+      id:
+        example: 22b6fff1be15d1fd54b7b8ec6ad22e80e66275195c914c4b0f9652248a498680
+        type: string
+    type: object
 info:
   contact:
     email: johansen.parker@gmail.com
@@ -222,7 +240,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/models.SecretMetadataResponse'
+            $ref: '#/definitions/models.SecretMetadataResponseV2'
         "400":
           description: Bad Request
           schema:
@@ -271,7 +289,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.SecretMetadataResponse'
+            $ref: '#/definitions/models.SecretMetadataResponseV2'
         "404":
           description: Not Found
           schema:

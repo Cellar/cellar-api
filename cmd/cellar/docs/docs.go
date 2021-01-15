@@ -244,7 +244,7 @@ var doc = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/models.SecretMetadataResponse"
+                            "$ref": "#/definitions/models.SecretMetadataResponseV2"
                         }
                     },
                     "400": {
@@ -284,7 +284,7 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.SecretMetadataResponse"
+                            "$ref": "#/definitions/models.SecretMetadataResponseV2"
                         }
                     },
                     "404": {
@@ -472,6 +472,31 @@ var doc = `{
                 "access_limit": {
                     "type": "integer",
                     "example": 10
+                },
+                "expiration": {
+                    "type": "string",
+                    "example": "1970-01-01 00:00:00 UTC"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "22b6fff1be15d1fd54b7b8ec6ad22e80e66275195c914c4b0f9652248a498680"
+                }
+            }
+        },
+        "models.SecretMetadataResponseV2": {
+            "type": "object",
+            "properties": {
+                "access_count": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "access_limit": {
+                    "type": "integer",
+                    "example": 10
+                },
+                "content_type": {
+                    "type": "string",
+                    "example": "text"
                 },
                 "expiration": {
                     "type": "string",

@@ -71,15 +71,23 @@ func CreateSecret(c *gin.Context) {
 		secret.ContentType = models.ContentTypeFile
 	}
 
-	if response, isValidationError, err := commands.CreateSecretV2(dataStore, encryption, secret); err != nil {
+	if metadata, isValidationError, err := commands.CreateSecret(dataStore, encryption, secret); err != nil {
 		if isValidationError {
 			httputil.NewError(c, http.StatusBadRequest, err)
 		} else {
 			httputil.NewError(c, http.StatusInternalServerError, err)
 		}
 		return
+	} else if metadata == nil {
+		httputil.NewError(c, http.StatusInternalServerError, errors.New("unexpected error while creating secret"))
 	} else {
-		c.JSON(http.StatusCreated, response)
+		c.JSON(http.StatusCreated, models.SecretMetadataResponseV2{
+			ID:          metadata.ID,
+			AccessCount: metadata.AccessCount,
+			AccessLimit: metadata.AccessLimit,
+			ContentType: metadata.ContentType,
+			Expiration:  metadata.Expiration,
+		})
 	}
 }
 
@@ -114,7 +122,7 @@ func AccessSecretContent(c *gin.Context) {
 // @Produce json
 // @Accept json
 // @Param id path string true "Secret ID"
-// @Success 200 {object} models.SecretMetadataResponse
+// @Success 200 {object} models.SecretMetadataResponseV2
 // @Failure 404 {object} httputil.HTTPError
 // @Failure 500 {object} httputil.HTTPError
 // @Router /v2/secrets/{id} [get]
@@ -126,7 +134,13 @@ func GetSecretMetadata(c *gin.Context) {
 	if secretMetadata := commands.GetSecretMetadata(dataStore, id); secretMetadata == nil {
 		c.Status(http.StatusNotFound)
 	} else {
-		c.JSON(http.StatusOK, secretMetadata)
+		c.JSON(http.StatusOK, models.SecretMetadataResponseV2{
+			ID:          secretMetadata.ID,
+			AccessCount: secretMetadata.AccessCount,
+			AccessLimit: secretMetadata.AccessLimit,
+			ContentType: secretMetadata.ContentType,
+			Expiration:  secretMetadata.Expiration,
+		})
 	}
 }
 

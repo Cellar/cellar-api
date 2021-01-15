@@ -3,6 +3,7 @@
 package secrets
 
 import (
+	"cellar/pkg/models"
 	"cellar/testing/testhelpers"
 	"fmt"
 	"net/http"
@@ -13,7 +14,7 @@ func TestWhenDeletingASecret(t *testing.T) {
 	cfg := testhelpers.GetConfiguration()
 	client := &http.Client{}
 	content := "Super Secret Test Content"
-	secret := testhelpers.CreateSecret(t, cfg, content, 10)
+	secret := testhelpers.CreateSecretV2(t, cfg, models.ContentTypeText, content, 10)
 
 	path := fmt.Sprintf("%s/v2/secrets/%s", cfg.App().ClientAddress(), secret.ID)
 	req, err := http.NewRequest(http.MethodDelete, path, nil)
