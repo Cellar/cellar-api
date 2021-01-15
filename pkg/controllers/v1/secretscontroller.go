@@ -24,6 +24,7 @@ func CreateSecret(c *gin.Context) {
 	encryption := c.MustGet(cryptography.Key).(cryptography.Encryption)
 
 	var body models.CreateSecretRequest
+	var secret models.Secret
 	if err := c.ShouldBindJSON(&body); err != nil {
 		httputil.NewError(c, http.StatusBadRequest, err)
 		return
@@ -32,14 +33,25 @@ func CreateSecret(c *gin.Context) {
 	if body.Content == nil {
 		httputil.NewError(c, http.StatusBadRequest, errors.New("required parameter: content"))
 		return
+	} else {
+		secret.Content = []byte(*body.Content)
+		secret.ContentType = string(models.ContentTypeText)
 	}
 
 	if body.ExpirationEpoch == nil {
 		httputil.NewError(c, http.StatusBadRequest, errors.New("required parameter: duration"))
 		return
+	} else {
+		secret.ExpirationEpoch = *body.ExpirationEpoch
 	}
 
-	if response, isValidationError, err := commands.CreateSecret(dataStore, encryption, body); err != nil {
+	if body.AccessLimit == nil {
+		secret.AccessLimit = 0
+	} else {
+		secret.AccessLimit = *body.AccessLimit
+	}
+
+	if response, isValidationError, err := commands.CreateSecretV2(dataStore, encryption,secret); err != nil {
 		if isValidationError {
 			httputil.NewError(c, http.StatusBadRequest, err)
 		} else {

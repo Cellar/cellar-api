@@ -32,12 +32,13 @@ func TestWhenCreatingASecretFromContent(t *testing.T) {
 	responseBody, err := ioutil.ReadAll(resp.Body)
 	testhelpers.Ok(t, err)
 
-	var actual models.SecretMetadataResponse
+	var actual models.SecretMetadataResponseV2
 	testhelpers.Ok(t, json.Unmarshal(responseBody, &actual))
 
 	t.Run("id should not be empty", testhelpers.NotEqualsF("", actual.ID))
 	t.Run("access limit should set", testhelpers.EqualsF(expectedAccessLimit, actual.AccessLimit))
 	t.Run("expiration should be set", testhelpers.EqualsF(expectedExpiration.Format("2006-01-02 15:04:05 UTC"), actual.Expiration.Format()))
+	t.Run("content type should be text", testhelpers.EqualsF("text", string(actual.ContentType)))
 }
 
 func TestWhenCreatingASecretFromFile(t *testing.T) {
@@ -59,12 +60,13 @@ func TestWhenCreatingASecretFromFile(t *testing.T) {
 	responseBody, err := ioutil.ReadAll(resp.Body)
 	testhelpers.Ok(t, err)
 
-	var actual models.SecretMetadataResponse
+	var actual models.SecretMetadataResponseV2
 	testhelpers.Ok(t, json.Unmarshal(responseBody, &actual))
 
 	t.Run("id should not be empty", testhelpers.NotEqualsF("", actual.ID))
 	t.Run("access limit should set", testhelpers.EqualsF(expectedAccessLimit, actual.AccessLimit))
 	t.Run("expiration should be set", testhelpers.EqualsF(expectedExpiration.Format("2006-01-02 15:04:05 UTC"), actual.Expiration.Format()))
+	t.Run("content type should be file", testhelpers.EqualsF("file", string(actual.ContentType)))
 }
 
 func TestWhenCreatingASecretAndExpirationIsTooShort(t *testing.T) {
@@ -113,12 +115,13 @@ func TestWhenCreatingASecretFromContentWithoutAccessLimit(t *testing.T) {
 	responseBody, err := ioutil.ReadAll(resp.Body)
 	testhelpers.Ok(t, err)
 
-	var actual models.SecretMetadataResponse
+	var actual models.SecretMetadataResponseV2
 	testhelpers.Ok(t, json.Unmarshal(responseBody, &actual))
 
 	t.Run("id should not be empty", testhelpers.NotEqualsF("", actual.ID))
 	t.Run("access limit should set to 0", testhelpers.EqualsF(0, actual.AccessLimit))
 	t.Run("expiration should be set", testhelpers.EqualsF(expectedExpiration.Format("2006-01-02 15:04:05 UTC"), actual.Expiration.Format()))
+	t.Run("content type should be text", testhelpers.EqualsF("text", string(actual.ContentType)))
 }
 
 func TestWhenCreatingASecretFromFileWithoutAccessLimit(t *testing.T) {
@@ -135,12 +138,13 @@ func TestWhenCreatingASecretFromFileWithoutAccessLimit(t *testing.T) {
 	responseBody, err := ioutil.ReadAll(resp.Body)
 	testhelpers.Ok(t, err)
 
-	var actual models.SecretMetadataResponse
+	var actual models.SecretMetadataResponseV2
 	testhelpers.Ok(t, json.Unmarshal(responseBody, &actual))
 
 	t.Run("id should not be empty", testhelpers.NotEqualsF("", actual.ID))
 	t.Run("access limit should set to 0", testhelpers.EqualsF(0, actual.AccessLimit))
 	t.Run("expiration should be set", testhelpers.EqualsF(expectedExpiration.Format("2006-01-02 15:04:05 UTC"), actual.Expiration.Format()))
+	t.Run("content type should be file", testhelpers.EqualsF("file", string(actual.ContentType)))
 }
 
 func TestWhenCreatingASecretWithoutExpiration(t *testing.T) {

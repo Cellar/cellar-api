@@ -18,6 +18,10 @@ func (key RedisKey) Access() string {
 	return key.buildKey("access")()
 }
 
+func (key RedisKey) ContentType() string {
+	return key.buildKey("contenttype")()
+}
+
 func (key RedisKey) Content() string {
 	return key.buildKey("content")()
 }
@@ -28,6 +32,7 @@ func (key RedisKey) ExpirationEpoch() string {
 
 func (key RedisKey) AllKeys() []string {
 	return []string{
+		key.ContentType(),
 		key.Content(),
 		key.Access(),
 		key.AccessLimit(),

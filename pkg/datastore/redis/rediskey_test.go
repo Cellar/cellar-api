@@ -12,11 +12,13 @@ var sut = redis.NewRedisKeySet(id)
 
 var keys = struct {
 	access          string
+	contentType     string
 	content         string
 	accessLimit     string
 	expirationEpoch string
 }{
 	access:          fmt.Sprintf("secrets:%s:access", id),
+	contentType:     fmt.Sprintf("secrets:%s:contenttype", id),
 	content:         fmt.Sprintf("secrets:%s:content", id),
 	accessLimit:     fmt.Sprintf("secrets:%s:accesslimit", id),
 	expirationEpoch: fmt.Sprintf("secrets:%s:expirationepoch", id),
@@ -24,6 +26,10 @@ var keys = struct {
 
 func TestRedisKey_Access(t *testing.T) {
 	testhelpers.Equals(t, keys.access, sut.Access())
+}
+
+func TestRedisKey_ContentType(t *testing.T) {
+	testhelpers.Equals(t, keys.contentType, sut.ContentType())
 }
 
 func TestRedisKey_Content(t *testing.T) {
@@ -39,7 +45,7 @@ func TestRedisKey_ExpirationEpoch(t *testing.T) {
 }
 
 func TestRedisKey_AllKeys(t *testing.T) {
-	for _, expected := range []string{keys.content, keys.access, keys.accessLimit, keys.expirationEpoch} {
+	for _, expected := range []string{keys.contentType, keys.content, keys.access, keys.accessLimit, keys.expirationEpoch} {
 		found := false
 		for _, actual := range sut.AllKeys() {
 			if actual == expected {

@@ -28,13 +28,13 @@ func TestWhenWritingSecret(t *testing.T) {
 	redisClient := testhelpers.GetRedisClient(cfg.Redis())
 	sut := redis.NewDataStore(cfg.Redis())
 
-	secret := *models.NewSecret(
-		testhelpers.RandomId(t),
-		testhelpers.RandomId(t),
-		0,
-		50,
-		testhelpers.EpochFromNow(time.Minute),
-	)
+	secret := models.Secret{
+		ID:              testhelpers.RandomId(t),
+		CipherText:      testhelpers.RandomId(t),
+		ContentType:     models.ContentTypeText,
+		AccessLimit:     50,
+		ExpirationEpoch: testhelpers.EpochFromNow(time.Minute),
+	}
 
 	keys := redis.NewRedisKeySet(secret.ID)
 
@@ -46,10 +46,15 @@ func TestWhenWritingSecret(t *testing.T) {
 	})
 
 	t.Run("should not return error", testhelpers.OkF(err))
-	t.Run("should insert content into redis", func(t *testing.T) {
+	t.Run("should insert content type into redis", func(t *testing.T) {
+		val, err := redisClient.Get(keys.ContentType()).Result()
+		testhelpers.Ok(t, err)
+		testhelpers.Equals(t, secret.ContentType, val)
+	})
+	t.Run("should insert cipher text into redis", func(t *testing.T) {
 		val, err := redisClient.Get(keys.Content()).Result()
 		testhelpers.Ok(t, err)
-		testhelpers.Equals(t, secret.Content, val)
+		testhelpers.Equals(t, secret.CipherText, val)
 	})
 	t.Run("should insert access limit into redis", func(t *testing.T) {
 		val, err := redisClient.Get(keys.AccessLimit()).Result()
@@ -78,6 +83,12 @@ func TestWhenWritingSecret(t *testing.T) {
 		testhelpers.Ok(t, err)
 		testhelpers.Assert(t, actualExpiration.Sub(secret.Expiration().Time()) <= time.Second, "Data store TTL should expire within a second of requested")
 	})
+	t.Run("should set TTL on content type", func(t *testing.T) {
+		val, err := redisClient.TTL(keys.ContentType()).Result()
+		actualExpiration := time.Now().Add(val).UTC()
+		testhelpers.Ok(t, err)
+		testhelpers.Assert(t, actualExpiration.Sub(secret.Expiration().Time()) <= time.Second, "Data store TTL should expire within a second of requested")
+	})
 	t.Run("should set TTL on content", func(t *testing.T) {
 		val, err := redisClient.TTL(keys.Content()).Result()
 		actualExpiration := time.Now().Add(val).UTC()
@@ -97,13 +108,13 @@ func TestWhenReadingSecret(t *testing.T) {
 	redisClient := testhelpers.GetRedisClient(cfg.Redis())
 	sut := redis.NewDataStore(cfg.Redis())
 
-	expected := *models.NewSecret(
-		testhelpers.RandomId(t),
-		testhelpers.RandomId(t),
-		0,
-		50,
-		testhelpers.EpochFromNow(time.Minute),
-	)
+	expected := models.Secret{
+		ID:              testhelpers.RandomId(t),
+		CipherText:      testhelpers.RandomId(t),
+		ContentType:     models.ContentTypeText,
+		AccessLimit:     50,
+		ExpirationEpoch: testhelpers.EpochFromNow(time.Minute),
+	}
 
 	keys := redis.NewRedisKeySet(expected.ID)
 
@@ -117,6 +128,8 @@ func TestWhenReadingSecret(t *testing.T) {
 	actual := sut.ReadSecret(expected.ID)
 
 	t.Run("should return ID", testhelpers.EqualsF(expected.ID, actual.ID))
+	t.Run("should return content", testhelpers.EqualsF(expected.CipherText, actual.CipherText))
+	t.Run("should return content type", testhelpers.EqualsF(expected.ContentType, actual.ContentType))
 	t.Run("should return access count", testhelpers.EqualsF(0, actual.AccessCount))
 	t.Run("should return access limit", testhelpers.EqualsF(expected.AccessLimit, actual.AccessLimit))
 	t.Run("should return correct expiration", testhelpers.EqualsF(expected.Expiration().Format(), actual.Expiration().Format()))
@@ -127,13 +140,13 @@ func TestWenDeletingSecret(t *testing.T) {
 	redisClient := testhelpers.GetRedisClient(cfg.Redis())
 	sut := redis.NewDataStore(cfg.Redis())
 
-	secret := *models.NewSecret(
-		testhelpers.RandomId(t),
-		testhelpers.RandomId(t),
-		0,
-		50,
-		testhelpers.EpochFromNow(time.Minute),
-	)
+	secret := models.Secret{
+		ID:              testhelpers.RandomId(t),
+		CipherText:      models.ContentTypeText,
+		ContentType:     testhelpers.RandomId(t),
+		AccessLimit:     50,
+		ExpirationEpoch: testhelpers.EpochFromNow(time.Minute),
+	}
 
 	keys := redis.NewRedisKeySet(secret.ID)
 
@@ -148,6 +161,11 @@ func TestWenDeletingSecret(t *testing.T) {
 	t.Run("should return true", testhelpers.EqualsF(true, deleted))
 	t.Run("should not return error", testhelpers.OkF(err))
 
+	t.Run("should not find content type", func(t *testing.T) {
+		val, err := redisClient.Exists(keys.ContentType()).Result()
+		testhelpers.Ok(t, err)
+		testhelpers.Equals(t, int64(0), val)
+	})
 	t.Run("should not find content", func(t *testing.T) {
 		val, err := redisClient.Exists(keys.Content()).Result()
 		testhelpers.Ok(t, err)
@@ -175,13 +193,13 @@ func TestWhenIncreasingSecretAccess(t *testing.T) {
 	redisClient := testhelpers.GetRedisClient(cfg.Redis())
 	sut := redis.NewDataStore(cfg.Redis())
 
-	secret := *models.NewSecret(
-		testhelpers.RandomId(t),
-		testhelpers.RandomId(t),
-		0,
-		50,
-		testhelpers.EpochFromNow(time.Minute),
-	)
+	secret := models.Secret{
+		ID:              testhelpers.RandomId(t),
+		CipherText:      models.ContentTypeText,
+		ContentType:     testhelpers.RandomId(t),
+		AccessLimit:     50,
+		ExpirationEpoch: testhelpers.EpochFromNow(time.Minute),
+	}
 
 	keys := redis.NewRedisKeySet(secret.ID)
 

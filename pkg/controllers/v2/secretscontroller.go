@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"cellar/pkg/commands"
+	"cellar/pkg/controllers"
 	"cellar/pkg/cryptography"
 	"cellar/pkg/datastore"
 	"cellar/pkg/models"
@@ -13,10 +14,13 @@ import (
 )
 
 // @Summary Create Secret
-// @Produce json
+// @Produce application/json
 // @Accept multipart/form-data
-// @Param secret body models.CreateSecretRequest true "Add secret"
-// @Success 201 {object} models.SecretMetadataResponse
+// @Param content formData string false "Secret content"
+// @Param access_limit formData int false "Access limit"
+// @Param expiration_epoch formData int true "Expiration of the secret in Unix Epoch Time"
+// @Param file formData file false "Secret content as a file"
+// @Success 201 {object} models.SecretMetadataResponseV2
 // @Failure 400 {object} httputil.HTTPError
 // @Failure 500 {object} httputil.HTTPError
 // @Router /v2/secrets [post]
@@ -24,14 +28,14 @@ func CreateSecret(c *gin.Context) {
 	dataStore := c.MustGet(datastore.Key).(datastore.DataStore)
 	encryption := c.MustGet(cryptography.Key).(cryptography.Encryption)
 
-	var body models.CreateSecretFileRequest
+	var secret models.Secret
 
 	if accessLimitStr := c.PostForm("access_limit"); accessLimitStr != "" {
 		if accessLimit, err := strconv.Atoi(accessLimitStr); err != nil {
 			httputil.NewError(c, http.StatusBadRequest, errors.New("optional parameter: access_limit: invalid value"))
 			return
 		} else {
-			body.AccessLimit = &accessLimit
+			secret.AccessLimit = accessLimit
 		}
 	}
 
@@ -39,7 +43,7 @@ func CreateSecret(c *gin.Context) {
 		httputil.NewError(c, http.StatusBadRequest, errors.New("required parameter: expiration_epoch"))
 		return
 	} else {
-		body.ExpirationEpoch = &expirationEpoch
+		secret.ExpirationEpoch = expirationEpoch
 	}
 
 	content := c.PostForm("content")
@@ -56,12 +60,18 @@ func CreateSecret(c *gin.Context) {
 		httputil.NewError(c, http.StatusBadRequest, errors.New("required parameter: file or content"))
 		return
 	} else if content != "" {
-		body.Content = &content
+		secret.Content = []byte(content)
+		secret.ContentType = models.ContentTypeText
 	} else {
-		body.FileHeader = fileHeader
+		secret.Content, err = controllers.FileToBytes(fileHeader)
+		if err != nil {
+			httputil.NewError(c, http.StatusBadRequest, err)
+			return
+		}
+		secret.ContentType = models.ContentTypeFile
 	}
 
-	if response, isValidationError, err := commands.CreateSecretV2(dataStore, encryption, body); err != nil {
+	if response, isValidationError, err := commands.CreateSecretV2(dataStore, encryption, secret); err != nil {
 		if isValidationError {
 			httputil.NewError(c, http.StatusBadRequest, err)
 		} else {

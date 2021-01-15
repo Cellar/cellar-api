@@ -194,4 +194,117 @@ paths:
           schema:
             $ref: '#/definitions/httputil.HTTPError'
       summary: Access Secret Content
+  /v2/secrets:
+    post:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: Secret content
+        in: formData
+        name: content
+        type: string
+      - description: Access limit
+        in: formData
+        name: access_limit
+        type: integer
+      - description: Expiration of the secret in Unix Epoch Time
+        in: formData
+        name: expiration_epoch
+        required: true
+        type: integer
+      - description: Secret content as a file
+        in: formData
+        name: file
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.SecretMetadataResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+      summary: Create Secret
+  /v2/secrets/{id}:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: Secret ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: ""
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+      summary: Delete Secret
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Secret ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.SecretMetadataResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+      summary: Get Secret Metadata
+  /v2/secrets/{id}/access:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Secret ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.SecretContentResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+      summary: Access Secret Content
 swagger: "2.0"

@@ -82,7 +82,11 @@ func (redis DataStore) WriteSecret(secret models.Secret) error {
 	if err != nil {
 		return err
 	}
-	err = redis.client.Set(keySet.Content(), secret.Content, secret.Duration()).Err()
+	err = redis.client.Set(keySet.ContentType(), secret.ContentType, secret.Duration()).Err()
+	if err != nil {
+		return err
+	}
+	err = redis.client.Set(keySet.Content(), secret.CipherText, secret.Duration()).Err()
 	if err != nil {
 		return err
 	}
@@ -103,6 +107,11 @@ func (redis DataStore) ReadSecret(id string) (secret *models.Secret) {
 		return nil
 	}
 
+	contentType, err := redis.client.Get(keySet.ContentType()).Result()
+	if err != nil {
+		return nil
+	}
+
 	content, err := redis.client.Get(keySet.Content()).Result()
 	if err != nil {
 		return nil
@@ -118,13 +127,14 @@ func (redis DataStore) ReadSecret(id string) (secret *models.Secret) {
 		return nil
 	}
 
-	return models.NewSecret(
-		id,
-		content,
-		accessCount,
-		accessLimit,
-		expirationEpoch,
-	)
+	return &models.Secret{
+		ID:              id,
+		CipherText:      content,
+		ContentType:     contentType,
+		AccessCount:     accessCount,
+		AccessLimit:     accessLimit,
+		ExpirationEpoch: expirationEpoch,
+	}
 }
 
 func (redis DataStore) IncreaseAccessCount(id string) (accessCount int64, err error) {

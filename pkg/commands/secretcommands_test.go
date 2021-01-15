@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func TestWhenCreatingASecret(t *testing.T) {
+func TestWhenCreatingASecretFromContent(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
 	encryptedData := testhelpers.RandomId(t)
@@ -27,25 +27,66 @@ func TestWhenCreatingASecret(t *testing.T) {
 
 	expectedDuration := time.Minute * 11
 	expectedExpiration := time.Now().Add(expectedDuration).UTC()
-	expirationEpoch := testhelpers.EpochFromNow(expectedDuration)
-
-	content := "Super Secret Test Content"
-	accessLimit := 100
-	secretRequest := models.CreateSecretRequest{
-		Content:         &content,
-		AccessLimit:     &accessLimit,
-		ExpirationEpoch: &expirationEpoch,
+	expectedSecret := models.Secret{
+		Content:         []byte("Super Secret Test Content"),
+		ContentType:     models.ContentTypeText,
+		AccessLimit:     100,
+		ExpirationEpoch: testhelpers.EpochFromNow(expectedDuration),
 	}
 
-	response, _, err := commands.CreateSecret(dataStore, encryption, secretRequest)
+	response, _, err := commands.CreateSecretV2(dataStore, encryption, expectedSecret)
 	testhelpers.Ok(t, err)
 	t.Run("should return ID", testhelpers.AssertF(len(response.ID) == 64, "expected ID length of 64 got: %d", len(response.ID)))
 	t.Run("should return access count of zero", testhelpers.EqualsF(0, response.AccessCount))
-	t.Run("should return access limit", testhelpers.EqualsF(*secretRequest.AccessLimit, response.AccessLimit))
-	t.Run("should return duration", testhelpers.EqualsF(expectedExpiration.Format("2006-01-02 15:04:05 UTC"), response.Expiration.Format()))
+	t.Run("should return access limit", testhelpers.EqualsF(expectedSecret.AccessLimit, response.AccessLimit))
+	t.Run("should return content type", testhelpers.EqualsF(models.ContentType(expectedSecret.ContentType), response.ContentType))
+	t.Run("should return expiration", testhelpers.EqualsF(expectedExpiration.Format("2006-01-02 15:04:05 UTC"), response.Expiration.Format()))
 	t.Run("should encrypt content", func(t *testing.T) {
 		encryption.EXPECT().
-			Encrypt(secretRequest).
+			Encrypt(expectedSecret.Content).
+			Times(1)
+	})
+	t.Run("should write to database", func(t *testing.T) {
+		dataStore.EXPECT().
+			WriteSecret(gomock.Any()).
+			Times(1)
+	})
+}
+
+func TestWhenCreatingASecretFromFile(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	encryptedData := testhelpers.RandomId(t)
+
+	encryption := mocks.NewMockEncryption(ctrl)
+	encryption.EXPECT().
+		Encrypt(gomock.Any()).
+		Return(encryptedData, nil)
+
+	dataStore := mocks.NewMockDataStore(ctrl)
+	dataStore.EXPECT().
+		WriteSecret(gomock.Any()).
+		Return(nil)
+
+	expectedDuration := time.Minute * 11
+	expectedExpiration := time.Now().Add(expectedDuration).UTC()
+	expectedSecret := models.Secret{
+		Content:         []byte("Super Secret Test Content"),
+		ContentType:     models.ContentTypeFile,
+		AccessLimit:     100,
+		ExpirationEpoch: testhelpers.EpochFromNow(expectedDuration),
+	}
+
+	response, _, err := commands.CreateSecretV2(dataStore, encryption, expectedSecret)
+	testhelpers.Ok(t, err)
+	t.Run("should return ID", testhelpers.AssertF(len(response.ID) == 64, "expected ID length of 64 got: %d", len(response.ID)))
+	t.Run("should return access count of zero", testhelpers.EqualsF(0, response.AccessCount))
+	t.Run("should return access limit", testhelpers.EqualsF(expectedSecret.AccessLimit, response.AccessLimit))
+	t.Run("should return content type", testhelpers.EqualsF(models.ContentType(expectedSecret.ContentType), response.ContentType))
+	t.Run("should return expiration", testhelpers.EqualsF(expectedExpiration.Format("2006-01-02 15:04:05 UTC"), response.Expiration.Format()))
+	t.Run("should encrypt content", func(t *testing.T) {
+		encryption.EXPECT().
+			Encrypt(expectedSecret.Content).
 			Times(1)
 	})
 	t.Run("should write to database", func(t *testing.T) {
@@ -75,13 +116,13 @@ func TestWhenCreatingASecretWithTooShortExpiration(t *testing.T) {
 
 	content := "Super Secret Test Content"
 	accessLimit := 100
-	secretRequest := models.CreateSecretRequest{
-		Content:         &content,
-		AccessLimit:     &accessLimit,
-		ExpirationEpoch: &expirationEpoch,
+	secretRequest := models.Secret{
+		Content:         []byte(content),
+		AccessLimit:     accessLimit,
+		ExpirationEpoch: expirationEpoch,
 	}
 
-	_, isValidationError, err := commands.CreateSecret(dataStore, encryption, secretRequest)
+	_, isValidationError, err := commands.CreateSecretV2(dataStore, encryption, secretRequest)
 	t.Run("should return validation error", testhelpers.EqualsF(true, isValidationError))
 	t.Run("should return an error", testhelpers.AssertF(err != nil, "error should not be nil"))
 	t.Run("should not to database", func(t *testing.T) {
@@ -96,23 +137,23 @@ func TestWhenAccessingASecret(t *testing.T) {
 
 	encryptedData := testhelpers.RandomId(t)
 
-	secret := models.NewSecret(
-		testhelpers.RandomId(t),
-		encryptedData,
-		0,
-		100,
-		testhelpers.EpochFromNow(time.Minute),
-	)
+	secret := models.Secret{
+		ID:              testhelpers.RandomId(t),
+		CipherText:      encryptedData,
+		ContentType:     models.ContentTypeText,
+		AccessLimit:     100,
+		ExpirationEpoch: testhelpers.EpochFromNow(time.Minute),
+	}
 
 	encryption := mocks.NewMockEncryption(ctrl)
 	encryption.EXPECT().
 		Decrypt(encryptedData).
-		Return(secret.Content, nil)
+		Return(secret.CipherText, nil)
 
 	dataStore := mocks.NewMockDataStore(ctrl)
 	dataStore.EXPECT().
 		ReadSecret(secret.ID).
-		Return(secret)
+		Return(&secret)
 	dataStore.EXPECT().
 		IncreaseAccessCount(secret.ID).
 		Return(int64(1), nil)
@@ -121,7 +162,7 @@ func TestWhenAccessingASecret(t *testing.T) {
 	testhelpers.Ok(t, err)
 
 	t.Run("should return ID", testhelpers.EqualsF(secret.ID, response.ID))
-	t.Run("should return correct content", testhelpers.EqualsF(secret.Content, response.Content))
+	t.Run("should return correct content", testhelpers.EqualsF(secret.CipherText, response.Content))
 	t.Run("should decrypt content", func(t *testing.T) {
 		encryption.EXPECT().
 			Decrypt(encryptedData).
@@ -174,18 +215,19 @@ func TestWhenGettingSecretMetadata(t *testing.T) {
 
 	encryptedData := testhelpers.RandomId(t)
 
-	secret := models.NewSecret(
-		testhelpers.RandomId(t),
-		encryptedData,
-		1,
-		100,
-		testhelpers.EpochFromNow(time.Minute),
-	)
+	secret := models.Secret{
+		ID:              testhelpers.RandomId(t),
+		CipherText:      encryptedData,
+		ContentType:     models.ContentTypeText,
+		AccessCount:     1,
+		AccessLimit:     100,
+		ExpirationEpoch: testhelpers.EpochFromNow(time.Minute),
+	}
 
 	dataStore := mocks.NewMockDataStore(ctrl)
 	dataStore.EXPECT().
 		ReadSecret(secret.ID).
-		Return(secret)
+		Return(&secret)
 
 	response := commands.GetSecretMetadata(dataStore, secret.ID)
 	t.Run("should return ID", testhelpers.EqualsF(secret.ID, response.ID))
