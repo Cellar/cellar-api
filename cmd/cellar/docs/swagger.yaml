@@ -311,6 +311,7 @@ paths:
         type: string
       produces:
       - application/json
+      - application/octet-stream
       responses:
         "200":
           description: OK
@@ -324,5 +325,6 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/httputil.HTTPError'
-      summary: Access Secret Content
+      summary: Access Secret Content. If the content is a file it the response will
+        be an application/octet-stream
 swagger: "2.0"

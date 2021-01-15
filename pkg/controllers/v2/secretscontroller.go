@@ -93,12 +93,11 @@ func CreateSecret(c *gin.Context) {
 	}
 }
 
-// @Summary Access Secret Content
-// @Produce json,application/octet-stream
-// @Accept json
+// @Summary Access Secret Content. If the content is a file it the response will be an application/octet-stream
+// @Produce application/json,application/octet-stream
+// @Accept application/json
 // @Param id path string true "Secret ID"
 // @Success 200 {object} models.SecretContentResponse
-// @Success 200 {file} models.SecretContentResponse
 // @Failure 404 {object} httputil.HTTPError
 // @Failure 500 {object} httputil.HTTPError
 // @Router /v2/secrets/{id}/access [post]

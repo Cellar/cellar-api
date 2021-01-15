@@ -343,9 +343,10 @@ var doc = `{
                     "application/json"
                 ],
                 "produces": [
-                    "application/json"
+                    "application/json",
+                    "application/octet-stream"
                 ],
-                "summary": "Access Secret Content",
+                "summary": "Access Secret Content. If the content is a file it the response will be an application/octet-stream",
                 "parameters": [
                     {
                         "type": "string",
