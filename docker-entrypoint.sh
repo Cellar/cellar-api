@@ -35,7 +35,7 @@ verify_present "REDIS_HOST" "$REDIS_HOST"
 
 verify_present "VAULT_ADDRESS" "$VAULT_ADDRESS"
 verify_present "VAULT_AUTH_MOUNT_PATH" "$VAULT_AUTH_MOUNT_PATH"
-verify_present "VAULT_ENCRYPTION_TOKEN_NAME" "$VAULT_TOKEN_NAME"
+verify_present "VAULT_ENCRYPTION_TOKEN_NAME" "$VAULT_ENCRYPTION_TOKEN_NAME"
 
 exec /app/cellar $@
 
