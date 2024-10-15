@@ -6,6 +6,7 @@ import (
 	secretsV2 "cellar/pkg/controllers/v2"
 	"cellar/pkg/middleware"
 	"cellar/pkg/settings"
+
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -15,10 +16,10 @@ var version string = "0.0.0"
 
 // @title Cellar
 // @description Simple secret sharing with the infrastructure you already trust
-// @contact.name Parker Johansen
-// @contact.email johansen.parker@gmail.com
+// @contact.name Aria Vesta
+// @contact.email dev@ariavesta.com
 // @license.name MIT
-// @license.url https://gitlab.com/cellar-app/cellar-api/-/blob/148abea87dfbba32ab1aefc1ab36b2de1f652c9e/LICENSE.txt
+// @license.url https://gitlab.com/cellar-app/cellar-api/-/blob/main/LICENSE.txt
 func main() {
 	router := gin.New()
 	settings.SetAppVersion(version)

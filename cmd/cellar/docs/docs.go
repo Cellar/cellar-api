@@ -19,12 +19,12 @@ var doc = `{
         "description": "{{.Description}}",
         "title": "{{.Title}}",
         "contact": {
-            "name": "Parker Johansen",
-            "email": "johansen.parker@gmail.com"
+            "name": "Aria Vesta",
+            "email": "dev@ariavesta.com"
         },
         "license": {
             "name": "MIT",
-            "url": "https://gitlab.com/cellar-app/cellar-api/-/blob/148abea87dfbba32ab1aefc1ab36b2de1f652c9e/LICENSE.txt"
+            "url": "https://gitlab.com/cellar-app/cellar-api/-/blob/main/LICENSE.txt"
         },
         "version": "{{.Version}}"
     },
@@ -146,9 +146,7 @@ var doc = `{
                     }
                 ],
                 "responses": {
-                    "204": {
-                        "description": ""
-                    },
+                    "204": {},
                     "404": {
                         "description": "Not Found",
                         "schema": {
@@ -319,9 +317,7 @@ var doc = `{
                     }
                 ],
                 "responses": {
-                    "204": {
-                        "description": ""
-                    },
+                    "204": {},
                     "404": {
                         "description": "Not Found",
                         "schema": {
@@ -431,9 +427,11 @@ var doc = `{
             "type": "object",
             "properties": {
                 "datastore": {
+                    "type": "object",
                     "$ref": "#/definitions/models.Health"
                 },
                 "encryption": {
+                    "type": "object",
                     "$ref": "#/definitions/models.Health"
                 },
                 "host": {

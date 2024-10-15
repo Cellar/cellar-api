@@ -36,8 +36,10 @@ definitions:
     properties:
       datastore:
         $ref: '#/definitions/models.Health'
+        type: object
       encryption:
         $ref: '#/definitions/models.Health'
+        type: object
       host:
         example: localhost
         type: string
@@ -92,12 +94,12 @@ definitions:
     type: object
 info:
   contact:
-    email: johansen.parker@gmail.com
-    name: Parker Johansen
+    email: dev@ariavesta.com
+    name: Aria Vesta
   description: Simple secret sharing with the infrastructure you already trust
   license:
     name: MIT
-    url: https://gitlab.com/cellar-app/cellar-api/-/blob/148abea87dfbba32ab1aefc1ab36b2de1f652c9e/LICENSE.txt
+    url: https://gitlab.com/cellar-app/cellar-api/-/blob/main/LICENSE.txt
   title: Cellar
 paths:
   /health-check:
@@ -150,8 +152,7 @@ paths:
       produces:
       - application/json
       responses:
-        "204":
-          description: ""
+        "204": {}
         "404":
           description: Not Found
           schema:
@@ -263,8 +264,7 @@ paths:
       produces:
       - application/json
       responses:
-        "204":
-          description: ""
+        "204": {}
         "404":
           description: Not Found
           schema:

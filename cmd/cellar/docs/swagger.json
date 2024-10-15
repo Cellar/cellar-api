@@ -4,12 +4,12 @@
         "description": "Simple secret sharing with the infrastructure you already trust",
         "title": "Cellar",
         "contact": {
-            "name": "Parker Johansen",
-            "email": "johansen.parker@gmail.com"
+            "name": "Aria Vesta",
+            "email": "dev@ariavesta.com"
         },
         "license": {
             "name": "MIT",
-            "url": "https://gitlab.com/cellar-app/cellar-api/-/blob/148abea87dfbba32ab1aefc1ab36b2de1f652c9e/LICENSE.txt"
+            "url": "https://gitlab.com/cellar-app/cellar-api/-/blob/main/LICENSE.txt"
         }
     },
     "paths": {
@@ -128,9 +128,7 @@
                     }
                 ],
                 "responses": {
-                    "204": {
-                        "description": ""
-                    },
+                    "204": {},
                     "404": {
                         "description": "Not Found",
                         "schema": {
@@ -301,9 +299,7 @@
                     }
                 ],
                 "responses": {
-                    "204": {
-                        "description": ""
-                    },
+                    "204": {},
                     "404": {
                         "description": "Not Found",
                         "schema": {
@@ -413,9 +409,11 @@
             "type": "object",
             "properties": {
                 "datastore": {
+                    "type": "object",
                     "$ref": "#/definitions/models.Health"
                 },
                 "encryption": {
+                    "type": "object",
                     "$ref": "#/definitions/models.Health"
                 },
                 "host": {
