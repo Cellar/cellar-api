@@ -16,6 +16,7 @@ import (
 )
 
 // @Summary Create Secret
+// @Tags v2
 // @Produce application/json
 // @Accept multipart/form-data
 // @Param content formData string false "Secret content"
@@ -94,6 +95,7 @@ func CreateSecret(c *gin.Context) {
 }
 
 // @Summary Access Secret Content. If the content is a file it the response will be an application/octet-stream
+// @Tags v2
 // @Produce application/json,application/octet-stream
 // @Accept application/json
 // @Param id path string true "Secret ID"
@@ -131,6 +133,7 @@ func AccessSecretContent(c *gin.Context) {
 }
 
 // @Summary Get Secret Metadata
+// @Tags v2
 // @Produce json
 // @Accept json
 // @Param id path string true "Secret ID"
@@ -157,6 +160,7 @@ func GetSecretMetadata(c *gin.Context) {
 }
 
 // @Summary Delete Secret
+// @Tags v2
 // @Produce json
 // @Accept json
 // @Param id path string true "Secret ID"

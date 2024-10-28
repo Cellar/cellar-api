@@ -9,6 +9,7 @@ import (
 )
 
 // @Summary Health Check
+// @Tags common
 // @Produce  json
 // @Success 200 {object} models.HealthResponse
 // @Router /health-check [get]

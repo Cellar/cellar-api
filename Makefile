@@ -18,7 +18,7 @@ PACKAGE_URL := ${PACKAGE_REGISTRY_URL}/${PACKAGE_NAME}/${APP_VERSION}/${PACKAGE_
 RELEASE_TAG := v${APP_VERSION}
 RELEASE_NAME := "Release ${PACKAGE_NAME} ${RELEASE_TAG}"
 
-REDOC_FILE ?= cellar-api-reference.html
+REDOC_FILE ?= cellar-api-reference
 
 VAULT_LOCAL_ADDR ?= http://127.0.0.1:8200
 VAULT_ROOT_TOKEN ?= vault-admin
@@ -39,18 +39,21 @@ LOG := @sh -c '\
 
 swag-init:
 	$(LOG) "Generating Swagger documentation"
-	$(LOG) "Generating V1"
-	@swag i --parseDependency -g main.go -dir pkg/controllers/v1 --instanceName v1
-	$(LOG) "Generating V2"
-	@swag i --parseDependency -g main.go -dir pkg/controllers/v2 --instanceName v2
+	@swag i --parseDependency -g main.go -dir pkg/controllers -o docs --ot json
+	@curl -X 'POST' \
+		'https://converter.swagger.io/api/convert' \
+		-H 'accept: application/json' \
+		-H 'Content-Type: application/json' \
+		-d @docs/swagger.json | jq > docs/swagger3.json
+	@mv docs/swagger3.json docs/swagger.json
 
 
 redoc:
 	$(LOG) "Generating redoc site"
 	@npx @redocly/cli build-docs \
+		--config .redocly.yaml \
 		-o ${REDOC_FILE} \
-		--title "\"Cellar API ${APP_VERSION}\"" \
-		cmd/cellar/docs/swagger.yaml
+		cellar
 
 generate-mocks:
 	$(LOG) "Running go generate"

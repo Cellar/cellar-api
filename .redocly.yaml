@@ -1,6 +1,6 @@
 apis:
-  cellar@v1:
-    root: docs/v1_swagger.yaml
-  cellar@v2:
-    root: docs/v2_swagger.yaml
+  cellar:
+    root: docs/swagger.json
+    labels:
+      - common
 

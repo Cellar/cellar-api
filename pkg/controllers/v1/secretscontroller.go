@@ -12,6 +12,7 @@ import (
 )
 
 // @Summary Create Secret
+// @Tags v1
 // @Produce json
 // @Accept json
 // @Param secret body models.CreateSecretRequest true "Add secret"
@@ -51,7 +52,7 @@ func CreateSecret(c *gin.Context) {
 		secret.AccessLimit = *body.AccessLimit
 	}
 
-	if metadata, isValidationError, err := commands.CreateSecret(dataStore, encryption,secret); err != nil {
+	if metadata, isValidationError, err := commands.CreateSecret(dataStore, encryption, secret); err != nil {
 		if isValidationError {
 			httputil.NewError(c, http.StatusBadRequest, err)
 		} else {
@@ -71,6 +72,7 @@ func CreateSecret(c *gin.Context) {
 }
 
 // @Summary Access Secret Content
+// @Tags v1
 // @Produce json
 // @Accept json
 // @Param id path string true "Secret ID"
@@ -98,6 +100,7 @@ func AccessSecretContent(c *gin.Context) {
 }
 
 // @Summary Get Secret Metadata
+// @Tags v1
 // @Produce json
 // @Accept json
 // @Param id path string true "Secret ID"
@@ -123,6 +126,7 @@ func GetSecretMetadata(c *gin.Context) {
 }
 
 // @Summary Delete Secret
+// @Tags v1
 // @Produce json
 // @Accept json
 // @Param id path string true "Secret ID"
