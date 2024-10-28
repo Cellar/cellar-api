@@ -11,7 +11,7 @@ variables:
   PACKAGE_REGISTRY_URL: ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic
 
 .api:
-  image: golang:1.15-buster
+  image: golang:1.23-bookworm
   cache:
     key:
       files:

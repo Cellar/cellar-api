@@ -39,7 +39,7 @@ LOG := @sh -c '\
 
 swag-init:
 	$(LOG) "Generating Swagger documentation"
-	@swag i --parseDependency -g main.go -dir pkg/controllers -o docs --ot json
+	@swag i --parseDependency -g main.go -dir pkg/controllers -o docs --ot json,go
 	@curl -X 'POST' \
 		'https://converter.swagger.io/api/convert' \
 		-H 'accept: application/json' \

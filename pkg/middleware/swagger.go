@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"cellar/cmd/cellar/docs"
+	"cellar/docs"
 	"cellar/pkg/settings"
 	"strings"
 )
