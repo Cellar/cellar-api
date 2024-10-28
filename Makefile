@@ -168,8 +168,8 @@ services: clean-services
 	@[ -f ".env" ] && rm -f .env
 	@touch .env
 	$(LOG) "Starting API dependencies"
-	@docker-compose pull
-	@docker-compose up -d redis vault
+	@docker compose pull
+	@docker compose up -d redis vault
 	@make vault-configure
 	@echo "VAULT_AUTH_MOUNT_PATH=approle" >> .env
 	@echo "VAULT_AUTH_APPROLE_ROLE_ID=$$(make -s vault-role-id)" >> .env
@@ -178,6 +178,6 @@ services: clean-services
 
 clean-services:
 	@[ -f ".env" ] || touch .env
-	@docker-compose down
-	@docker-compose rm -svf
+	@docker compose down
+	@docker compose rm -svf
 	@basename ${PWD} | xargs -I % docker volume rm -f %_redis_data
