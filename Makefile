@@ -39,11 +39,15 @@ LOG := @sh -c '\
 
 swag-init:
 	$(LOG) "Generating Swagger documentation"
-	@cd cmd/cellar && swag init --parseDependency
+	$(LOG) "Generating V1"
+	@swag i --parseDependency -g main.go -dir pkg/controllers/v1 --instanceName v1
+	$(LOG) "Generating V2"
+	@swag i --parseDependency -g main.go -dir pkg/controllers/v2 --instanceName v2
+
 
 redoc:
 	$(LOG) "Generating redoc site"
-	@npx redoc-cli bundle \
+	@npx @redocly/cli build-docs \
 		-o ${REDOC_FILE} \
 		--title "\"Cellar API ${APP_VERSION}\"" \
 		cmd/cellar/docs/swagger.yaml

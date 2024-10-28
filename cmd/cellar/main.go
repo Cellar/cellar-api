@@ -2,10 +2,13 @@ package main
 
 import (
 	"cellar/pkg/controllers"
-	secretsV1 "cellar/pkg/controllers/v1"
-	secretsV2 "cellar/pkg/controllers/v2"
+	v1 "cellar/pkg/controllers/v1"
+	v2 "cellar/pkg/controllers/v2"
 	"cellar/pkg/middleware"
 	"cellar/pkg/settings"
+	"golang.org/x/net/webdav"
+	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
@@ -14,12 +17,6 @@ import (
 
 var version string = "0.0.0"
 
-// @title Cellar
-// @description Simple secret sharing with the infrastructure you already trust
-// @contact.name Aria Vesta
-// @contact.email dev@ariavesta.com
-// @license.name MIT
-// @license.url https://gitlab.com/cellar-app/cellar-api/-/blob/main/LICENSE.txt
 func main() {
 	router := gin.New()
 	settings.SetAppVersion(version)
@@ -34,25 +31,24 @@ func addRoutes(router *gin.Engine) {
 
 	router.GET("/health-check", controllers.HealthCheck)
 
-	v1 := router.Group("/v1")
-	{
-		secrets := v1.Group("/secrets")
-		{
-			secrets.POST("", secretsV1.CreateSecret)
-			secrets.POST(":id/access", secretsV1.AccessSecretContent)
-			secrets.GET(":id", secretsV1.GetSecretMetadata)
-			secrets.DELETE(":id", secretsV1.DeleteSecret)
+	router.GET("/swagger/v1/*any", DisablingWrapHandler(swaggerFiles.Handler, "DISABLE_SWAGGER", ginSwagger.InstanceName("v1")))
+	v1.Register(router)
+
+	router.GET("/swagger/v2/*any", DisablingWrapHandler(swaggerFiles.Handler, "DISABLE_SWAGGER", ginSwagger.InstanceName("v2")))
+	v2.Register(router)
+
+}
+
+// DisablingWrapHandler turn handler off
+// if specified environment variable passed.
+func DisablingWrapHandler(handler *webdav.Handler, envName string, options ...func(*ginSwagger.Config)) gin.HandlerFunc {
+	if os.Getenv(envName) != "" {
+		return func(c *gin.Context) {
+			// Simulate behavior when route unspecified and
+			// return 404 HTTP code
+			c.String(http.StatusNotFound, "")
 		}
 	}
 
-	v2 := router.Group("/v2")
-	{
-		secrets := v2.Group("/secrets")
-		{
-			secrets.POST("", secretsV2.CreateSecret)
-			secrets.POST(":id/access", secretsV2.AccessSecretContent)
-			secrets.GET(":id", secretsV2.GetSecretMetadata)
-			secrets.DELETE(":id", secretsV2.DeleteSecret)
-		}
-	}
+	return ginSwagger.WrapHandler(handler, options...)
 }

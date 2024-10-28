@@ -1,3 +1,4 @@
+basePath: /v2
 definitions:
   httputil.HTTPError:
     properties:
@@ -8,67 +9,10 @@ definitions:
         example: status bad request
         type: string
     type: object
-  models.CreateSecretRequest:
-    properties:
-      access_limit:
-        example: 10
-        type: integer
-      content:
-        example: my very secret text
-        type: string
-      expiration_epoch:
-        example: 1577836800
-        type: integer
-    type: object
-  models.Health:
-    properties:
-      name:
-        example: Redis
-        type: string
-      status:
-        example: healthy
-        type: string
-      version:
-        example: 1.0.0
-        type: string
-    type: object
-  models.HealthResponse:
-    properties:
-      datastore:
-        $ref: '#/definitions/models.Health'
-        type: object
-      encryption:
-        $ref: '#/definitions/models.Health'
-        type: object
-      host:
-        example: localhost
-        type: string
-      status:
-        example: healthy
-        type: string
-      version:
-        example: 1.0.0
-        type: string
-    type: object
   models.SecretContentResponse:
     properties:
       content:
         example: my very secret text
-        type: string
-      id:
-        example: 22b6fff1be15d1fd54b7b8ec6ad22e80e66275195c914c4b0f9652248a498680
-        type: string
-    type: object
-  models.SecretMetadataResponse:
-    properties:
-      access_count:
-        example: 1
-        type: integer
-      access_limit:
-        example: 10
-        type: integer
-      expiration:
-        example: 1970-01-01 00:00:00 UTC
         type: string
       id:
         example: 22b6fff1be15d1fd54b7b8ec6ad22e80e66275195c914c4b0f9652248a498680
@@ -96,123 +40,13 @@ info:
   contact:
     email: dev@ariavesta.com
     name: Aria Vesta
+    url: http://cellar-app.io
   description: Simple secret sharing with the infrastructure you already trust
   license:
     name: MIT
     url: https://gitlab.com/cellar-app/cellar-api/-/blob/main/LICENSE.txt
   title: Cellar
 paths:
-  /health-check:
-    get:
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.HealthResponse'
-      summary: Health Check
-  /v1/secrets:
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: Add secret
-        in: body
-        name: secret
-        required: true
-        schema:
-          $ref: '#/definitions/models.CreateSecretRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/models.SecretMetadataResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/httputil.HTTPError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/httputil.HTTPError'
-      summary: Create Secret
-  /v1/secrets/{id}:
-    delete:
-      consumes:
-      - application/json
-      parameters:
-      - description: Secret ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "204": {}
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/httputil.HTTPError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/httputil.HTTPError'
-      summary: Delete Secret
-    get:
-      consumes:
-      - application/json
-      parameters:
-      - description: Secret ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.SecretMetadataResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/httputil.HTTPError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/httputil.HTTPError'
-      summary: Get Secret Metadata
-  /v1/secrets/{id}/access:
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: Secret ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.SecretContentResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/httputil.HTTPError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/httputil.HTTPError'
-      summary: Access Secret Content
   /v2/secrets:
     post:
       consumes:
@@ -264,7 +98,8 @@ paths:
       produces:
       - application/json
       responses:
-        "204": {}
+        "204":
+          description: ""
         "404":
           description: Not Found
           schema:

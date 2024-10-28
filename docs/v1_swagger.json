@@ -1,0 +1,242 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Simple secret sharing with the infrastructure you already trust",
+        "title": "Cellar",
+        "contact": {
+            "name": "Aria Vesta",
+            "url": "http://cellar-app.io",
+            "email": "dev@ariavesta.com"
+        },
+        "license": {
+            "name": "MIT",
+            "url": "https://gitlab.com/cellar-app/cellar-api/-/blob/main/LICENSE.txt"
+        }
+    },
+    "basePath": "/v1",
+    "paths": {
+        "/v1/secrets": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Create Secret",
+                "parameters": [
+                    {
+                        "description": "Add secret",
+                        "name": "secret",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.CreateSecretRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.SecretMetadataResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/secrets/{id}": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Get Secret Metadata",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Secret ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.SecretMetadataResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Delete Secret",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Secret ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": ""
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/secrets/{id}/access": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Access Secret Content",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Secret ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.SecretContentResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "httputil.HTTPError": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer",
+                    "example": 400
+                },
+                "message": {
+                    "type": "string",
+                    "example": "status bad request"
+                }
+            }
+        },
+        "models.CreateSecretRequest": {
+            "type": "object",
+            "properties": {
+                "access_limit": {
+                    "type": "integer",
+                    "example": 10
+                },
+                "content": {
+                    "type": "string",
+                    "example": "my very secret text"
+                },
+                "expiration_epoch": {
+                    "type": "integer",
+                    "example": 1577836800
+                }
+            }
+        },
+        "models.SecretContentResponse": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string",
+                    "example": "my very secret text"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "22b6fff1be15d1fd54b7b8ec6ad22e80e66275195c914c4b0f9652248a498680"
+                }
+            }
+        },
+        "models.SecretMetadataResponse": {
+            "type": "object",
+            "properties": {
+                "access_count": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "access_limit": {
+                    "type": "integer",
+                    "example": 10
+                },
+                "expiration": {
+                    "type": "string",
+                    "example": "1970-01-01 00:00:00 UTC"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "22b6fff1be15d1fd54b7b8ec6ad22e80e66275195c914c4b0f9652248a498680"
+                }
+            }
+        }
+    }
+}
