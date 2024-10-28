@@ -27,13 +27,11 @@ func main() {
 }
 
 func addRoutes(router *gin.Engine) {
-	router.GET("/swagger/*any", DisablingWrapHandler(swaggerFiles.Handler, "DISABLE_SWAGGER", ginSwagger.InstanceName("common")))
+	router.GET("/swagger/*any", DisablingWrapHandler(swaggerFiles.Handler, "DISABLE_SWAGGER"))
 	router.GET("/health-check", controllers.HealthCheck)
 
-	router.GET("/swagger/v1/*any", DisablingWrapHandler(swaggerFiles.Handler, "DISABLE_SWAGGER", ginSwagger.InstanceName("v1")))
 	v1.Register(router)
 
-	router.GET("/swagger/v2/*any", DisablingWrapHandler(swaggerFiles.Handler, "DISABLE_SWAGGER", ginSwagger.InstanceName("v2")))
 	v2.Register(router)
 
 }

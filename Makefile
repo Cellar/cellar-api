@@ -170,6 +170,7 @@ services: clean-services
 	$(LOG) "Starting API dependencies"
 	@docker compose pull
 	@docker compose up -d redis vault
+	@sleep 3s
 	@make vault-configure
 	@echo "VAULT_AUTH_MOUNT_PATH=approle" >> .env
 	@echo "VAULT_AUTH_APPROLE_ROLE_ID=$$(make -s vault-role-id)" >> .env
