@@ -1,4 +1,4 @@
-FROM  golang:1.15-alpine3.12 as build
+FROM  golang:1.23-alpine AS build
 
 WORKDIR /cellar
 
@@ -12,7 +12,7 @@ ARG APP_VERSION
 
 RUN go build -o /out/cellar -ldflags="-X main.version=${APP_VERSION}" cellar/cmd/cellar
 
-FROM alpine:3.12
+FROM alpine:3
 
 ARG GID=9001
 ARG GROUP=cellar
