@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package datastore
@@ -15,7 +16,7 @@ import (
 
 func TestWhenGettingHealth(t *testing.T) {
 	cfg := settings.NewConfiguration()
-	sut := redis.NewDataStore(cfg.Redis())
+	sut := redis.NewDataStore(cfg.Datastore().Redis())
 	actual := sut.Health()
 
 	t.Run("should return name", testhelpers.EqualsF("redis", strings.ToLower(actual.Name)))
@@ -25,8 +26,8 @@ func TestWhenGettingHealth(t *testing.T) {
 
 func TestWhenWritingSecret(t *testing.T) {
 	cfg := settings.NewConfiguration()
-	redisClient := testhelpers.GetRedisClient(cfg.Redis())
-	sut := redis.NewDataStore(cfg.Redis())
+	redisClient := testhelpers.GetRedisClient(cfg.Datastore().Redis())
+	sut := redis.NewDataStore(cfg.Datastore().Redis())
 
 	secret := models.Secret{
 		ID:              testhelpers.RandomId(t),
@@ -105,8 +106,8 @@ func TestWhenWritingSecret(t *testing.T) {
 
 func TestWhenReadingSecret(t *testing.T) {
 	cfg := settings.NewConfiguration()
-	redisClient := testhelpers.GetRedisClient(cfg.Redis())
-	sut := redis.NewDataStore(cfg.Redis())
+	redisClient := testhelpers.GetRedisClient(cfg.Datastore().Redis())
+	sut := redis.NewDataStore(cfg.Datastore().Redis())
 
 	expected := models.Secret{
 		ID:              testhelpers.RandomId(t),
@@ -137,8 +138,8 @@ func TestWhenReadingSecret(t *testing.T) {
 
 func TestWenDeletingSecret(t *testing.T) {
 	cfg := settings.NewConfiguration()
-	redisClient := testhelpers.GetRedisClient(cfg.Redis())
-	sut := redis.NewDataStore(cfg.Redis())
+	redisClient := testhelpers.GetRedisClient(cfg.Datastore().Redis())
+	sut := redis.NewDataStore(cfg.Datastore().Redis())
 
 	secret := models.Secret{
 		ID:              testhelpers.RandomId(t),
@@ -190,8 +191,8 @@ func TestWenDeletingSecret(t *testing.T) {
 
 func TestWhenIncreasingSecretAccess(t *testing.T) {
 	cfg := settings.NewConfiguration()
-	redisClient := testhelpers.GetRedisClient(cfg.Redis())
-	sut := redis.NewDataStore(cfg.Redis())
+	redisClient := testhelpers.GetRedisClient(cfg.Datastore().Redis())
+	sut := redis.NewDataStore(cfg.Datastore().Redis())
 
 	secret := models.Secret{
 		ID:              testhelpers.RandomId(t),

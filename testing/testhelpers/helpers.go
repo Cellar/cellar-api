@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"cellar/pkg/models"
 	"cellar/pkg/settings"
+	"cellar/pkg/settings/datastore"
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
@@ -31,7 +32,7 @@ func RandomId(tb testing.TB) string {
 	return hex.EncodeToString(bytes)
 }
 
-func GetRedisClient(cfg settings.IRedisConfiguration) *redis.Client {
+func GetRedisClient(cfg datastore.IRedisConfiguration) *redis.Client {
 	return redis.NewClient(&redis.Options{
 		Addr:     fmt.Sprintf("%s:%d", cfg.Host(), cfg.Port()),
 		Password: cfg.Password(),
@@ -74,7 +75,7 @@ func CreateSecretV2(t *testing.T, cfg settings.IConfiguration, contentType model
 	} else {
 		fileFormData["file"] = content
 	}
-	createResp := PostFormData(t, fmt.Sprintf(cfg.App().ClientAddress() + "/v2/secrets"), formData, fileFormData)
+	createResp := PostFormData(t, fmt.Sprintf(cfg.App().ClientAddress()+"/v2/secrets"), formData, fileFormData)
 	defer func() {
 		Ok(t, createResp.Body.Close())
 	}()
@@ -95,7 +96,6 @@ func EpochFromNow(duration time.Duration) int64 {
 func PostFormData(t *testing.T, uri string, formData map[string]string, fileFormData map[string]string) *http.Response {
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
-
 
 	for key, content := range fileFormData {
 		filename := RandomId(t)

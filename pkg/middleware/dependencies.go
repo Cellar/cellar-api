@@ -15,7 +15,7 @@ func injectDependencies(router *gin.Engine, cfg settings.IConfiguration) {
 	encryptionClient, err := getEncryptionClient(cfg)
 	HandleError("error while initializing vault connection", err)
 
-	dataStore := redis.NewDataStore(cfg.Redis())
+	dataStore := getDatastoreClient(cfg)
 
 	router.Use(func(c *gin.Context) {
 		c.Set(settings.Key, cfg)
@@ -37,4 +37,8 @@ func getEncryptionClient(cfg settings.IConfiguration) (cryptography.Encryption, 
 	}
 
 	return nil, errors.New("at least one cryptography engine is required")
+}
+
+func getDatastoreClient(cfg settings.IConfiguration) datastore.DataStore {
+	return redis.NewDataStore(cfg.Datastore().Redis())
 }

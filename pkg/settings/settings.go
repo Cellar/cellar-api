@@ -2,6 +2,7 @@ package settings
 
 import (
 	"cellar/pkg/settings/cryptography"
+	"cellar/pkg/settings/datastore"
 	"github.com/spf13/viper"
 	"strings"
 )
@@ -10,14 +11,14 @@ var Key string = "CONFIGURATION"
 
 type IConfiguration interface {
 	App() IAppConfiguration
-	Redis() IRedisConfiguration
+	Datastore() datastore.IDatastoreConfiguration
 	Encryption() cryptography.IEncryptionConfiguration
 	Logging() ILoggingConfiguration
 }
 
 type Configuration struct {
 	app        IAppConfiguration
-	redis      IRedisConfiguration
+	datastore  datastore.IDatastoreConfiguration
 	encryption cryptography.IEncryptionConfiguration
 	logging    ILoggingConfiguration
 }
@@ -27,7 +28,7 @@ func NewConfiguration() *Configuration {
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	return &Configuration{
 		app:        NewAppConfiguration(),
-		redis:      NewRedisConfiguration(),
+		datastore:  datastore.NewDatastoreConfiguration(),
 		encryption: cryptography.NewEncryptionConfiguration(),
 		logging:    NewLoggingConfiguration(),
 	}
@@ -37,9 +38,7 @@ func (config Configuration) App() IAppConfiguration {
 	return config.app
 }
 
-func (config Configuration) Redis() IRedisConfiguration {
-	return config.redis
-}
+func (config Configuration) Datastore() datastore.IDatastoreConfiguration { return config.datastore }
 
 func (config Configuration) Encryption() cryptography.IEncryptionConfiguration {
 	return config.encryption

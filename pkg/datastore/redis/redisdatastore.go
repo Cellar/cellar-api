@@ -2,7 +2,7 @@ package redis
 
 import (
 	"cellar/pkg/models"
-	"cellar/pkg/settings"
+	"cellar/pkg/settings/datastore"
 	"fmt"
 	"github.com/go-redis/redis/v7"
 	log "github.com/sirupsen/logrus"
@@ -22,7 +22,7 @@ type (
 
 const redisIdFieldKey = "redis_key"
 
-func NewDataStore(configuration settings.IRedisConfiguration) *DataStore {
+func NewDataStore(configuration datastore.IRedisConfiguration) *DataStore {
 
 	return &DataStore{
 		client: redis.NewClient(&redis.Options{
@@ -34,7 +34,7 @@ func NewDataStore(configuration settings.IRedisConfiguration) *DataStore {
 	}
 }
 
-func initializeLogger(configuration settings.IRedisConfiguration) *log.Entry {
+func initializeLogger(configuration datastore.IRedisConfiguration) *log.Entry {
 	logger := log.WithFields(log.Fields{
 		"context":  "datastore",
 		"instance": "redis",

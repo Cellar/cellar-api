@@ -1,4 +1,4 @@
-package settings
+package datastore
 
 import (
 	"github.com/spf13/viper"
@@ -12,7 +12,7 @@ type IRedisConfiguration interface {
 }
 
 const (
-	redisKey         = "redis."
+	redisKey         = datastoreKey + "redis."
 	redisHostKey     = redisKey + "host"
 	redisPortKey     = redisKey + "port"
 	redisPasswordKey = redisKey + "password"
