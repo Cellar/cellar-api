@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0
+
+- add support for [AWS KMS](https://aws.amazon.com/kms/) as cryptography engine
+- restructure configuration to have sub-level for both datastore and cryptography
+- each cryptography engine has an enabled property that must be set to true for it to be used, but only one can be enabled
+
 ## 2.1.0
 
 - update go to 1.23
