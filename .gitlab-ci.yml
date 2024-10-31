@@ -58,11 +58,14 @@ test-unit:
 .api-test-depends:
   extends: .api
   variables:
+    DATASTORE_REDIS_HOST: "redis"
+    DATASTORE_REDIS_PORT: 6379
     REDIS_HOST: "redis"
     REDIS_PORT: 6379
     VAULT_DEV_ROOT_TOKEN_ID: vault-admin
     VAULT_DEV_LISTEN_ADDRESS: 0.0.0.0:8200
     VAULT_LOCAL_ADDR: http://vault:8200
+    CRYPTOGRAPHY_VAULT_ENABLED: true
     VAULT_ADDRESS: http://vault:8200
     VAULT_ROOT_TOKEN: vault-admin
     VAULT_ENCRYPTION_TOKEN_NAME: cellar-testing
@@ -75,8 +78,8 @@ test-unit:
   before_script:
     - apt-get update && apt-get install -y jq
     - make vault-configure
-    - export VAULT_AUTH_APPROLE_ROLE_ID=$(make vault-role-id)
-    - export VAULT_AUTH_APPROLE_SECRET_ID=$(make vault-secret-id)
+    - export CRYPTOGRAPHY_VAULT_AUTH_APPROLE_ROLE_ID=$(make vault-role-id)
+    - export CRYPTOGRAPHY_VAULT_AUTH_APPROLE_SECRET_ID=$(make vault-secret-id)
 
 test-integration:
   extends: .api-test-depends
