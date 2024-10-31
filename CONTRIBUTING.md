@@ -56,12 +56,9 @@ Naturally, you will need the go compiler.
 
 This project does use go modules, so most of the dependencies can be installed using `go get ./...`.
 However, to generate swagger docs, you will need the `swag` command.
-It can be installed using `go get -u github.com/swaggo/swag/cmd/swag`.
 For more information see the [gin-swagger readme][gin-swagger].
 You will also need the `mockgen` command for generating mocks for unit testing.
-It can be installed using `GO111MODULE=on go get github.com/golang/mock/mockgen@v{VERSION}`
-(replacing {VERSION} with the version of `github.com/golang/mock` found in the [go.mod][go-mod] file.)
-For more information see the [go-mock readme][go-mock].
+For more information see the [uber-go mock readme][go-mock].
 
 This project also makes extensive use of [**GNU Make**][gnu-make].
 Make can generally be installed from your linux distros package manager or on Mac using brew.
@@ -203,7 +200,7 @@ Tagging and releasing will be handled automatically through the [CI/CD pipelines
 [pipelines]: https://gitlab.com/cellar-app/cellar-api/-/pipelines
 
 [gin]:  https://github.com/gin-gonic/gin
-[go-mock]: https://github.com/golang/mock
+[go-mock]: https://github.com/uber-go/mock
 [gin-swagger]: https://github.com/swaggo/gin-swagger
 
 [vault]: https://www.vaultproject.io/

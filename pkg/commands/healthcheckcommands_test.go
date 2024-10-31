@@ -6,7 +6,7 @@ import (
 	"cellar/pkg/models"
 	"cellar/pkg/settings"
 	"cellar/testing/testhelpers"
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 	"strings"
 	"testing"
 )
