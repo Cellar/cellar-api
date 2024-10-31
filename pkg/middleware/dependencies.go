@@ -13,7 +13,7 @@ import (
 
 func injectDependencies(router *gin.Engine, cfg settings.IConfiguration) {
 	encryptionClient, err := getEncryptionClient(cfg)
-	HandleError("error while initializing vault connection", err)
+	HandleError("error while initializing cryptography engine connection", err)
 
 	dataStore := getDatastoreClient(cfg)
 
