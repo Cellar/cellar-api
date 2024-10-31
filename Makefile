@@ -106,6 +106,15 @@ package:
 	$(LOG) "Building cellar binary '${PACKAGE_ID}'"
 	@go build -o ${PACKAGE_ID} -ldflags="-X main.version=${APP_VERSION}" cellar/cmd/cellar
 
+package-lambda:
+	$(LOG) "Building cellar binary for lambda '${PACKAGE_ID}'"
+	@mkdir -p dist
+	@rm -f dist/cellar-api.zip
+	@go build -o dist/bootstrap -ldflags="-X main.version=${APP_VERSION}" cellar/cmd/cellar-lambda
+	@cd dist && \
+	 zip cellar-api.zip bootstrap
+	@rm dist/bootstrap
+
 publish: package
 	$(LOG) "Uploading cellar binary to ${PACKAGE_URL}"
 	@curl \
