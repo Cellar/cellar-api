@@ -7,6 +7,6 @@ var Key = "CRYPTOGRAPHY"
 //go:generate mockgen -destination=../mocks/mock_encryption.go -package=mocks . Encryption
 type Encryption interface {
 	Health() models.Health
-	Encrypt(content []byte) (encryptedContent string, err error)
-	Decrypt(content string) (decryptedContent []byte, err error)
+	Encrypt(plaintext []byte) (ciphertext string, err error)
+	Decrypt(ciphertext string) (plaintext []byte, err error)
 }

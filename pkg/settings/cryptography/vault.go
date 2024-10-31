@@ -1,4 +1,4 @@
-package settings
+package cryptography
 
 import (
 	"cellar/pkg/aws"
@@ -10,7 +10,9 @@ import (
 )
 
 const (
-	vaultKey                 = "vault."
+	vaultKey        = cryptographyKey + "vault."
+	vaultEnabledKey = vaultKey + "enabled"
+
 	vaultAddressKey          = vaultKey + "address"
 	vaultEncryptionTokenName = vaultKey + "encryption_token_name"
 
@@ -34,6 +36,7 @@ const (
 type (
 	VaultConfiguration  struct{}
 	IVaultConfiguration interface {
+		Enabled() bool
 		Address() string
 		EncryptionTokenName() string
 		AuthConfiguration() (IVaultAuthConfiguration, error)
@@ -68,6 +71,25 @@ func NewVaultConfiguration() *VaultConfiguration {
 	return &VaultConfiguration{}
 }
 
+func (vlt VaultConfiguration) Enabled() bool {
+	return viper.GetBool(vaultEnabledKey)
+}
+
+func (vlt VaultConfiguration) Validate() error {
+	if vlt.Address() == "" {
+		return errors.New("vault address not set")
+	}
+	if vlt.EncryptionTokenName() == "" {
+		return errors.New("vault encryption token not set")
+	}
+
+	if _, err := vlt.AuthConfiguration(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (vlt VaultConfiguration) Address() string {
 	return viper.GetString(vaultAddressKey)
 }
@@ -98,7 +120,7 @@ func (vlt VaultConfiguration) AuthConfiguration() (IVaultAuthConfiguration, erro
 		}
 	}
 	if backend == nil {
-		return nil, errors.New("no Vault auth methods configurations were detected")
+		return nil, errors.New("no Vault auth method configurations were detected")
 	}
 
 	if err := backend.Validate(); err != nil {
@@ -114,8 +136,8 @@ func (vlt VaultConfiguration) AuthConfiguration() (IVaultAuthConfiguration, erro
 func NewAppRoleAuth(mountPath string) *AppRoleAuth {
 	return &AppRoleAuth{
 		MountPath: mountPath,
-		RoleId:   viper.GetString(vaultAppRoleRoleIdKey),
-		SecretId: viper.GetString(vaultAppRoleSecretIdKey),
+		RoleId:    viper.GetString(vaultAppRoleRoleIdKey),
+		SecretId:  viper.GetString(vaultAppRoleSecretIdKey),
 	}
 }
 
@@ -150,7 +172,7 @@ func (appRole AppRoleAuth) LoginParameters() (map[string]interface{}, error) {
 func NewAwsIamAuth(mountPath string) *AwsIamAuth {
 	return &AwsIamAuth{
 		MountPath: mountPath,
-		Role: viper.GetString(vaultAwsIamRole),
+		Role:      viper.GetString(vaultAwsIamRole),
 	}
 }
 
@@ -189,7 +211,7 @@ func (awsIam AwsIamAuth) LoginParameters() (map[string]interface{}, error) {
 func NewGcpIamAuth(mountPath string) *GcpIamAuth {
 	return &GcpIamAuth{
 		MountPath: mountPath,
-		Role: viper.GetString(vaultGcpIamRole),
+		Role:      viper.GetString(vaultGcpIamRole),
 	}
 }
 
@@ -225,7 +247,7 @@ func (gcpIam GcpIamAuth) LoginParameters() (map[string]interface{}, error) {
 func NewKubernetesAuth(mountPath string) *KubernetesAuth {
 	return &KubernetesAuth{
 		MountPath: mountPath,
-		Role: viper.GetString(vaultKubernetesRole),
+		Role:      viper.GetString(vaultKubernetesRole),
 	}
 }
 

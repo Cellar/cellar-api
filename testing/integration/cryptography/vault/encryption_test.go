@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package vault
@@ -14,7 +15,7 @@ import (
 
 func TestWhenGettingHealth(t *testing.T) {
 	cfg := settings.NewConfiguration()
-	sut, err := vault.NewEncryptionClient(cfg.Vault())
+	sut, err := vault.NewEncryptionClient(cfg.Encryption().Vault())
 	if err != nil {
 		t.Error(err)
 	}
@@ -25,9 +26,9 @@ func TestWhenGettingHealth(t *testing.T) {
 	t.Run("should return version", testhelpers.NotEqualsF("", actual.Version))
 }
 
-func TestEncryption(t *testing.T) {
+func TestVaultEncryption(t *testing.T) {
 	cfg := settings.NewConfiguration()
-	sut, err := vault.NewEncryptionClient(cfg.Vault())
+	sut, err := vault.NewEncryptionClient(cfg.Encryption().Vault())
 	if err != nil {
 		t.Error(err)
 	}

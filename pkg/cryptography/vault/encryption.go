@@ -2,7 +2,7 @@ package vault
 
 import (
 	"cellar/pkg/models"
-	"cellar/pkg/settings"
+	"cellar/pkg/settings/cryptography"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -14,11 +14,11 @@ import (
 
 type EncryptionClient struct {
 	client        *api.Client
-	configuration settings.IVaultConfiguration
+	configuration cryptography.IVaultConfiguration
 	logger        *log.Entry
 }
 
-func NewEncryptionClient(configuration settings.IVaultConfiguration) (*EncryptionClient, error) {
+func NewEncryptionClient(configuration cryptography.IVaultConfiguration) (*EncryptionClient, error) {
 	logger, err := initializeLogger(configuration)
 	if err != nil {
 		return nil, err
@@ -43,7 +43,7 @@ func NewEncryptionClient(configuration settings.IVaultConfiguration) (*Encryptio
 	}, nil
 }
 
-func initializeLogger(configuration settings.IVaultConfiguration) (*log.Entry, error) {
+func initializeLogger(configuration cryptography.IVaultConfiguration) (*log.Entry, error) {
 	logger := log.WithFields(log.Fields{
 		"context":  "encryption",
 		"instance": "vault",
@@ -84,13 +84,13 @@ func (vault EncryptionClient) Health() models.Health {
 	return *models.NewHealth(name, status, version)
 }
 
-func (vault EncryptionClient) Encrypt(content []byte) (encryptedContent string, err error) {
+func (vault EncryptionClient) Encrypt(plaintext []byte) (ciphertext string, err error) {
 	err = vault.login()
 	if err != nil {
 		return
 	}
 
-	base64Content := base64.StdEncoding.EncodeToString(content)
+	base64Content := base64.StdEncoding.EncodeToString(plaintext)
 
 	vault.logger.Debug("attempting to encrypt content with vault")
 	path := fmt.Sprintf("transit/encrypt/%s", vault.configuration.EncryptionTokenName())
@@ -106,14 +106,14 @@ func (vault EncryptionClient) Encrypt(content []byte) (encryptedContent string, 
 
 	if val, ok := response.Data["ciphertext"]; ok {
 		vault.logger.Debug("content encryption successful")
-		encryptedContent = val.(string)
+		ciphertext = val.(string)
 		return
 	}
 
 	return "", errors.New("unexpected response while encrypting secret")
 }
 
-func (vault EncryptionClient) Decrypt(content string) (decryptedContent []byte, err error) {
+func (vault EncryptionClient) Decrypt(ciphertext string) (plaintext []byte, err error) {
 	err = vault.login()
 	if err != nil {
 		return
@@ -122,7 +122,7 @@ func (vault EncryptionClient) Decrypt(content string) (decryptedContent []byte, 
 	vault.logger.Debug("attempting to decrypt content with vault")
 	path := fmt.Sprintf("transit/decrypt/%s", vault.configuration.EncryptionTokenName())
 	response, err := vault.client.Logical().Write(path, map[string]interface{}{
-		"ciphertext": content,
+		"ciphertext": ciphertext,
 	})
 
 	if err != nil {
