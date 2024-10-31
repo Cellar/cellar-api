@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.1.0
+
+- update go to 1.23
+- update all dependencies
+
 ## 2.0.0
 
 - add support for [Vault AWS IAM authentication](https://www.vaultproject.io/docs/auth/aws.html) in Vault
