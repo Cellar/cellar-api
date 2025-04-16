@@ -13,6 +13,10 @@ func configureAppLogging(cfg settings.IConfiguration) {
 	HandleError("Unable to read log level from configuration", err)
 	log.SetLevel(logLevel)
 
+	logFormat, err := cfg.Logging().Format()
+	HandleError("Unable to read log format for configuration", err)
+	log.SetFormatter(logFormat)
+
 	logLocations, err := cfg.Logging().Locations()
 	HandleError("Unable to determine log location from configuration", err)
 

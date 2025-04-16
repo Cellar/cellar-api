@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -15,11 +16,13 @@ const (
 	loggingLevelKey     = loggingKey + "level"
 	loggingEnableStdOut = loggingKey + "enable_stdout"
 	loggingDirectoryKey = loggingKey + "directory"
+	loggingFormatKey    = loggingKey + "format"
 )
 
 type ILoggingConfiguration interface {
 	Locations() ([]io.Writer, error)
 	Level() (log.Level, error)
+	Format() (format log.Formatter, err error)
 }
 
 type LoggingConfiguration struct{}
@@ -28,6 +31,7 @@ func NewLoggingConfiguration() *LoggingConfiguration {
 	viper.SetDefault(loggingLevelKey, log.InfoLevel)
 	viper.SetDefault(loggingDirectoryKey, "")
 	viper.SetDefault(loggingEnableStdOut, true)
+	viper.SetDefault(loggingFormatKey, "text")
 	return &LoggingConfiguration{}
 }
 
@@ -64,6 +68,20 @@ func openLogFile(directory string) (io.Writer, error) {
 func (lgc LoggingConfiguration) Level() (level log.Level, err error) {
 	levelStr := []byte(viper.GetString(loggingLevelKey))
 	err = level.UnmarshalText(levelStr)
+
+	return
+}
+
+func (lgc LoggingConfiguration) Format() (format log.Formatter, err error) {
+	formatStr := strings.ToLower(viper.GetString(loggingFormatKey))
+	switch formatStr {
+	case "text":
+		format = &log.TextFormatter{}
+	case "json":
+		format = &log.JSONFormatter{}
+	default:
+		err = fmt.Errorf("unknown log format %s", formatStr)
+	}
 
 	return
 }

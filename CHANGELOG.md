@@ -1,5 +1,8 @@
 # Changelog
 
+## 3.1.0
+- add logging setting to allow either text or json formatted logging
+
 ## 3.0.0
 
 - add support for [AWS KMS](https://aws.amazon.com/kms/) as cryptography engine
