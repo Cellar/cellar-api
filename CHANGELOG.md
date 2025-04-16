@@ -1,5 +1,8 @@
 # Changelog
 
+## 3.1.1
+- Fix bug with docker expecting old configuration keys
+
 ## 3.1.0
 - add logging setting to allow either text or json formatted logging
 

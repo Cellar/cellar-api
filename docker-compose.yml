@@ -28,12 +28,13 @@ services:
       - datastore
     environment:
       APP_CLIENT_ADDRESS: 127.0.0.1:8081
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
+      DATASTORE_REDIS_HOST: redis
+      DATASTORE_REDIS_PORT: 6379
       DISABLE_SWAGGER:
       LOGGING_LEVEL: "DEBUG"
-      VAULT_ADDRESS: http://vault:8200
-      VAULT_ENCRYPTION_TOKEN_NAME: cellar-key
+      CRYPTOGRAPHY_VAULT_ENABLED: "true"
+      CRYPTOGRAPHY_VAULT_ADDRESS: http://vault:8200
+      CRYPTOGRAPHY_VAULT_ENCRYPTION_TOKEN_NAME: cellar-key
     env_file:
       - .env
 
