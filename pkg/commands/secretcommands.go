@@ -38,7 +38,9 @@ func CreateSecret(dataStore datastore.DataStore, encryption cryptography.Encrypt
 
 	secret.ID = id
 	secret.AccessCount = 0
-	if secret.AccessLimit < 0 { secret.AccessLimit = 0 }
+	if secret.AccessLimit < 0 {
+		secret.AccessLimit = 0
+	}
 
 	if secret.Duration() < time.Minute*10 {
 		return response, true, errors.New("expiration must be at least 10 minutes in the future")
@@ -94,8 +96,8 @@ func AccessSecret(dataStore datastore.DataStore, encryption cryptography.Encrypt
 	}
 
 	return &models.Secret{
-		ID:      id,
-		Content: content,
+		ID:          id,
+		Content:     content,
 		ContentType: secret.ContentType,
 	}, nil
 }

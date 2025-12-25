@@ -6,7 +6,7 @@ IMAGE_TAG ?= local
 
 APP_VERSION ?= 0.0.0
 
-PID_FILE := /var/run/cellar-api.pid
+PID_FILE := /tmp/cellar-api.pid
 
 PACKAGE_TOKEN ?= ""
 PACKAGE_ARCH ?= unknown
@@ -37,6 +37,18 @@ LOG := @sh -c '\
 
 .PHONY: run build publish
 
+targets:
+	@awk -F'::?[[:space:]]*' '/^[a-zA-Z0-9][^$#\/\t=]*::?([^=]|$$)/ { \
+		gsub(/^[[:space:]]+|[[:space:]]+$$/, "", $$1); \
+		gsub(/^[[:space:]]+|[[:space:]]+$$/, "", $$2); \
+		split($$1,A,/ /); \
+		target=A[1]; \
+		deps=$$2; \
+		printf "%s", target; \
+		if (deps) printf " → %s", deps; \
+		print "" \
+	}' $(MAKEFILE_LIST)
+
 swag-init:
 	$(LOG) "Generating Swagger documentation"
 	@swag i --parseDependency -g main.go -dir pkg/controllers -o docs --ot json,go
@@ -59,6 +71,8 @@ generate-mocks:
 	$(LOG) "Running go generate"
 	@go generate ./...
 
+test: test-unit test-integration test-acceptance
+
 test-unit:
 	$(LOG) "Running unit tests"
 	@go test ./...
@@ -76,6 +90,14 @@ test-acceptance:
 	$(LOG) "Running acceptance tests"
 	@go test -tags=acceptance -race ./testing/acceptance/...
 
+format:
+	$(LOG) "Formatting Go code"
+	@gofmt -w .
+
+lint:
+	$(LOG) "Running linter"
+	@golangci-lint run
+
 run:
 	$(LOG) "Running Cellar"
 	@CRYPTOGRAPHY_VAULT_ENABLED=true \
@@ -83,12 +105,17 @@ run:
 	 CRYPTOGRAPHY_VAULT_AUTH_APPROLE_ROLE_ID=${CRYPTOGRAPHY_VAULT_AUTH_APPROLE_ROLE_ID} \
 	 CRYPTOGRAPHY_VAULT_AUTH_APPROLE_SECRET_ID=${CRYPTOGRAPHY_VAULT_AUTH_APPROLE_SECRET_ID} \
 	 CRYPTOGRAPHY_VAULT_ENCRYPTION_TOKEN_NAME=${CRYPTOGRAPHY_VAULT_ENCRYPTION_TOKEN_NAME} \
-	 go run cellar/cmd/cellar
+	 go run cmd/cellar/main.go
 
 run-daemon:
 	$(LOG) "Starting Cellar"
-	@go build -o cellar-bin cellar/cmd/cellar && chmod +x cellar-bin
-	@./cellar-bin & _pid=$$!; \
+	@go build -o cellar-bin cmd/cellar/main.go && chmod +x cellar-bin
+	@CRYPTOGRAPHY_VAULT_ENABLED=true \
+	 CRYPTOGRAPHY_VAULT_AUTH_MOUNT_PATH=approle \
+	 CRYPTOGRAPHY_VAULT_AUTH_APPROLE_ROLE_ID=${CRYPTOGRAPHY_VAULT_AUTH_APPROLE_ROLE_ID} \
+	 CRYPTOGRAPHY_VAULT_AUTH_APPROLE_SECRET_ID=${CRYPTOGRAPHY_VAULT_AUTH_APPROLE_SECRET_ID} \
+	 CRYPTOGRAPHY_VAULT_ENCRYPTION_TOKEN_NAME=${CRYPTOGRAPHY_VAULT_ENCRYPTION_TOKEN_NAME} \
+	 ./cellar-bin & _pid=$$!; \
 		echo $$_pid > ${PID_FILE} \
 		|| { kill -s TERM $$_pid; echo "Failed to write pid file '${PID_FILE}'"; exit 1; }
 	@sleep 5
@@ -104,13 +131,13 @@ build:
 
 package:
 	$(LOG) "Building cellar binary '${PACKAGE_ID}'"
-	@go build -o ${PACKAGE_ID} -ldflags="-X main.version=${APP_VERSION}" cellar/cmd/cellar
+	@go build -o ${PACKAGE_ID} -ldflags="-X main.version=${APP_VERSION}" cmd/cellar/main.go
 
 package-lambda:
 	$(LOG) "Building cellar binary for lambda '${PACKAGE_ID}'"
 	@mkdir -p dist
 	@rm -f dist/cellar-api.zip
-	@go build -o dist/bootstrap -ldflags="-X main.version=${APP_VERSION}" cellar/cmd/cellar-lambda
+	@go build -o dist/bootstrap -ldflags="-X main.version=${APP_VERSION}" cmd/cellar-lambda/main.go
 	@cd dist && \
 	 zip cellar-api.zip bootstrap
 	@rm dist/bootstrap
@@ -175,14 +202,23 @@ vault-secret-id:
 		${VAULT_LOCAL_ADDR}/v1/auth/approle/role/${VAULT_ROLE_NAME}/secret-id \
 		| jq -r '.data.secret_id'
 
-services: clean-services
+services: clean-services services-api-dependencies services-vault-wait vault-configure services-env
+
+services-api-dependencies:
 	@[ -f ".env" ] && rm -f .env
 	@touch .env
 	$(LOG) "Starting API dependencies"
 	@docker compose pull
 	@docker compose up -d redis vault
-	@sleep 3s
-	@make vault-configure
+
+services-vault-wait:
+	@timeout 10 \
+		sh -c "until [[ $$(docker compose ps --format=json vault | jq '.Status' ) =~ Up ]]; do echo \"waiting for vault\"; sleep 1; done;" || \
+		{ echo "Timed out waiting for Vault to startup"; exit 1; }
+
+services-env:
+	@[ -f ".env" ] && rm -f .env
+	@touch .env
 	@echo "CRYPTOGRAPHY_VAULT_ENABLED=true" >> .env
 	@echo "CRYPTOGRAPHY_VAULT_AUTH_MOUNT_PATH=approle" >> .env
 	@echo "CRYPTOGRAPHY_VAULT_AUTH_APPROLE_ROLE_ID=$$(make -s vault-role-id)" >> .env

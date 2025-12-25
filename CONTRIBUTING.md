@@ -74,38 +74,41 @@ Finally, working on this project relies heavily on [Docker][docker] and [docker-
 ### Getting started
 
 Once you have all the above installed, you are ready to start the dependencies.
-This is done through make by running the `services` target of the [Makefile][makefile]:
-
-```shell
-make services
-```
-
+This is done through make by running `make services`.
 This will startup any dependencies required by the API and bootstrap their configuration.
 It will also output any relevant secrets into a file called `.env` from which the Cellar API will read secrets.
 
 You are now ready to run the API.
-This can either be done from your IDE or using the `run` target of the [Makefile][makefile]:
+This can either be done from your IDE or using make:
 
 ```shell
 make run
 ```
 
-> Note: If you choose to run without `make` you will need to load all values from the .env file into your environment
+> Note: If you choose to run without `make` you will need to load all values from the .env file into your environment.
 
 Now in another terminal or in your IDE you can run the tests:
 
 ```shell
-make test-unit
-make test-integration
-make test-acceptance
+make test           # Run all tests (unit, integration, acceptance)
+make test-unit      # Run only unit tests
+make test-integration  # Run only integration tests
+make test-acceptance   # Run only acceptance tests
 ```
 
-> Note: The unit tests do not require the services to be running,
-> and only the acceptance tests actually require the API to be running.
+> Note: The unit tests do not require the services to be running.
+> The integration tests require Redis and Vault to be running.
+> The acceptance tests require the API to be running.
 
 If all the tests pass, you are ready to begin work!
 You can stop the API anytime by terminating the process,
-and the running dependencies can be stopped with `make clean-services`.
+and the running dependencies can be stopped:
+
+```shell
+make clean-services
+```
+
+> **Tip:** Run `make targets` to see all available make commands.
 
 
 ### Project Structure
@@ -134,6 +137,18 @@ For example, the integration between the Cellar API redis client implemenation a
 **Acceptance tests** verify end to end functionality of the API.
 For example, verifying that a given RESTful endpoint behaves as expected.
 In some cases it may be necessary to use multiple endpoints for a single test.
+
+
+#### Code Quality
+
+Before committing code, make sure to format and lint your changes:
+
+```shell
+make format    # Format code with gofmt
+make lint      # Run golangci-lint
+```
+
+All code changes should pass linting without warnings or errors.
 
 
 #### DataStore and Cryptography Interfaces

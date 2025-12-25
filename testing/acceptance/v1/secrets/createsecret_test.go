@@ -1,3 +1,4 @@
+//go:build acceptance
 // +build acceptance
 
 package secrets
@@ -30,7 +31,7 @@ func TestWhenCreatingASecret(t *testing.T) {
 	body, err := json.Marshal(expected)
 	testhelpers.Ok(t, err)
 
-	resp, err := http.Post(cfg.App().ClientAddress() + "/v1/secrets", "application/json", bytes.NewBuffer(body))
+	resp, err := http.Post(cfg.App().ClientAddress()+"/v1/secrets", "application/json", bytes.NewBuffer(body))
 	testhelpers.OkF(err)
 
 	defer resp.Body.Close()
@@ -65,7 +66,7 @@ func TestWhenCreatingASecretAndExpirationIsTooShort(t *testing.T) {
 	body, err := json.Marshal(expected)
 	testhelpers.Ok(t, err)
 
-	resp, err := http.Post(cfg.App().ClientAddress() + "/v1/secrets", "application/json", bytes.NewBuffer(body))
+	resp, err := http.Post(cfg.App().ClientAddress()+"/v1/secrets", "application/json", bytes.NewBuffer(body))
 	testhelpers.OkF(err)
 
 	defer resp.Body.Close()
@@ -90,7 +91,7 @@ func TestWhenCreatingASecretAndExpirationIsInThePast(t *testing.T) {
 	body, err := json.Marshal(expected)
 	testhelpers.Ok(t, err)
 
-	resp, err := http.Post(cfg.App().ClientAddress() + "/v1/secrets", "application/json", bytes.NewBuffer(body))
+	resp, err := http.Post(cfg.App().ClientAddress()+"/v1/secrets", "application/json", bytes.NewBuffer(body))
 	testhelpers.OkF(err)
 
 	defer resp.Body.Close()
@@ -113,7 +114,7 @@ func TestWhenCreatingASecretWithoutAccessLimit(t *testing.T) {
 	body, err := json.Marshal(expected)
 	testhelpers.Ok(t, err)
 
-	resp, err := http.Post(cfg.App().ClientAddress() + "/v1/secrets", "application/json", bytes.NewBuffer(body))
+	resp, err := http.Post(cfg.App().ClientAddress()+"/v1/secrets", "application/json", bytes.NewBuffer(body))
 	testhelpers.OkF(err)
 
 	defer resp.Body.Close()
@@ -140,7 +141,7 @@ func TestWhenCreatingASecretWithoutDuration(t *testing.T) {
 	body, err := json.Marshal(expected)
 	testhelpers.Ok(t, err)
 
-	resp, err := http.Post(cfg.App().ClientAddress() + "/v1/secrets", "application/json", bytes.NewBuffer(body))
+	resp, err := http.Post(cfg.App().ClientAddress()+"/v1/secrets", "application/json", bytes.NewBuffer(body))
 	testhelpers.OkF(err)
 
 	defer resp.Body.Close()
@@ -157,7 +158,7 @@ func TestWhenCreatingASecretWithoutContent(t *testing.T) {
 	body, err := json.Marshal(expected)
 	testhelpers.Ok(t, err)
 
-	resp, err := http.Post(cfg.App().ClientAddress() + "/v1/secrets", "application/json", bytes.NewBuffer(body))
+	resp, err := http.Post(cfg.App().ClientAddress()+"/v1/secrets", "application/json", bytes.NewBuffer(body))
 	testhelpers.OkF(err)
 
 	defer resp.Body.Close()

@@ -7,6 +7,7 @@ import (
 	"cellar/pkg/cryptography"
 	"cellar/pkg/datastore"
 	"cellar/pkg/models"
+	"cellar/pkg/settings"
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -28,6 +29,7 @@ import (
 // @Failure 500 {object} httputil.HTTPError
 // @Router /v2/secrets [post]
 func CreateSecret(c *gin.Context) {
+	cfg := c.MustGet(settings.Key).(settings.IConfiguration)
 	dataStore := c.MustGet(datastore.Key).(datastore.DataStore)
 	encryption := c.MustGet(cryptography.Key).(cryptography.Encryption)
 
@@ -66,6 +68,12 @@ func CreateSecret(c *gin.Context) {
 		secret.Content = []byte(content)
 		secret.ContentType = models.ContentTypeText
 	} else {
+		maxSizeBytes := int64(cfg.App().MaxFileSizeMB() * 1024 * 1024)
+		if fileHeader.Size > maxSizeBytes {
+			httputil.NewError(c, http.StatusRequestEntityTooLarge, fmt.Errorf("file size %d bytes exceeds maximum allowed size of %d MB", fileHeader.Size, cfg.App().MaxFileSizeMB()))
+			return
+		}
+
 		secret.Content, err = controllers.FileToBytes(fileHeader)
 		if err != nil {
 			httputil.NewError(c, http.StatusBadRequest, err)
@@ -120,7 +128,11 @@ func AccessSecretContent(c *gin.Context) {
 		contentType := "application/octet-stream"
 
 		extraHeaders := map[string]string{
-			"Content-Disposition": fmt.Sprintf(`attachment; filename="cellar-%s"`, secret.ID[:8]),
+			"Content-Disposition":     fmt.Sprintf(`attachment; filename="cellar-%s"`, secret.ID[:8]),
+			"X-Content-Type-Options":  "nosniff",
+			"Content-Security-Policy": "default-src 'none'",
+			"X-Frame-Options":         "DENY",
+			"Cache-Control":           "no-store, no-cache, must-revalidate",
 		}
 
 		c.DataFromReader(http.StatusOK, contentLength, contentType, reader, extraHeaders)

@@ -8,6 +8,7 @@ type IAppConfiguration interface {
 	BindAddress() string
 	ClientAddress() string
 	Version() string
+	MaxFileSizeMB() int
 }
 
 const (
@@ -15,6 +16,7 @@ const (
 	appVersionKey       = appKey + "version"
 	appClientAddressKey = appKey + "client_address"
 	appBindAddressKey   = appKey + "bind_address"
+	appMaxFileSizeMBKey = appKey + "maxFileSizeMB"
 )
 
 var version string
@@ -30,6 +32,7 @@ func NewAppConfiguration() *AppConfiguration {
 	viper.Set(appVersionKey, version)
 	viper.SetDefault(appBindAddressKey, defaultAddress)
 	viper.SetDefault(appClientAddressKey, "http://"+defaultAddress)
+	viper.SetDefault(appMaxFileSizeMBKey, 8)
 	return &AppConfiguration{}
 }
 
@@ -43,4 +46,8 @@ func (app AppConfiguration) ClientAddress() string {
 
 func (app AppConfiguration) Version() string {
 	return viper.GetString(appVersionKey)
+}
+
+func (app AppConfiguration) MaxFileSizeMB() int {
+	return viper.GetInt(appMaxFileSizeMBKey)
 }

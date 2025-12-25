@@ -1,3 +1,4 @@
+//go:build acceptance
 // +build acceptance
 
 package secrets
@@ -20,12 +21,12 @@ func TestWhenCreatingASecretFromContent(t *testing.T) {
 	expectedAccessLimit := 100
 
 	body := map[string]string{
-		"content": "Super Secret Test Content",
-		"access_limit": strconv.Itoa(expectedAccessLimit),
+		"content":          "Super Secret Test Content",
+		"access_limit":     strconv.Itoa(expectedAccessLimit),
 		"expiration_epoch": strconv.FormatInt(expectedExpiration.Unix(), 10),
 	}
 
-	resp := testhelpers.PostFormData(t, cfg.App().ClientAddress() + "/v2/secrets", body, nil)
+	resp := testhelpers.PostFormData(t, cfg.App().ClientAddress()+"/v2/secrets", body, nil)
 
 	t.Run("status is created", testhelpers.EqualsF(http.StatusCreated, resp.StatusCode))
 
@@ -48,12 +49,12 @@ func TestWhenCreatingASecretFromFile(t *testing.T) {
 	expectedAccessLimit := 100
 
 	body := map[string]string{
-		"access_limit": strconv.Itoa(expectedAccessLimit),
+		"access_limit":     strconv.Itoa(expectedAccessLimit),
 		"expiration_epoch": strconv.FormatInt(expectedExpiration.Unix(), 10),
 	}
 
-	fileContent := map[string]string{ "file": "Super Secret Test Content" }
-	resp := testhelpers.PostFormData(t, cfg.App().ClientAddress() + "/v2/secrets", body, fileContent)
+	fileContent := map[string]string{"file": "Super Secret Test Content"}
+	resp := testhelpers.PostFormData(t, cfg.App().ClientAddress()+"/v2/secrets", body, fileContent)
 
 	t.Run("status is created", testhelpers.EqualsF(http.StatusCreated, resp.StatusCode))
 
@@ -75,11 +76,11 @@ func TestWhenCreatingASecretAndExpirationIsTooShort(t *testing.T) {
 	expectedExpiration := time.Now().Add(time.Minute * 9).UTC()
 
 	body := map[string]string{
-		"content": "Super Secret Test Content",
-		"access_limit": "100",
+		"content":          "Super Secret Test Content",
+		"access_limit":     "100",
 		"expiration_epoch": strconv.FormatInt(expectedExpiration.Unix(), 10),
 	}
-	resp := testhelpers.PostFormData(t, cfg.App().ClientAddress() + "/v2/secrets", body, nil)
+	resp := testhelpers.PostFormData(t, cfg.App().ClientAddress()+"/v2/secrets", body, nil)
 
 	t.Run("status is bad request", testhelpers.EqualsF(http.StatusBadRequest, resp.StatusCode))
 }
@@ -90,11 +91,11 @@ func TestWhenCreatingASecretAndExpirationIsInThePast(t *testing.T) {
 	expectedExpiration := time.Now().Add(time.Hour * -24).UTC()
 
 	body := map[string]string{
-		"content": "Super Secret Test Content",
-		"access_limit": "100",
+		"content":          "Super Secret Test Content",
+		"access_limit":     "100",
 		"expiration_epoch": strconv.FormatInt(expectedExpiration.Unix(), 10),
 	}
-	resp := testhelpers.PostFormData(t, cfg.App().ClientAddress() + "/v2/secrets", body, nil)
+	resp := testhelpers.PostFormData(t, cfg.App().ClientAddress()+"/v2/secrets", body, nil)
 
 	t.Run("status is bad request", testhelpers.EqualsF(http.StatusBadRequest, resp.StatusCode))
 }
@@ -105,10 +106,10 @@ func TestWhenCreatingASecretFromContentWithoutAccessLimit(t *testing.T) {
 	expectedExpiration := time.Now().Add(time.Hour).UTC()
 
 	body := map[string]string{
-		"content": "Super Secret Test Content",
+		"content":          "Super Secret Test Content",
 		"expiration_epoch": strconv.FormatInt(expectedExpiration.Unix(), 10),
 	}
-	resp := testhelpers.PostFormData(t, cfg.App().ClientAddress() + "/v2/secrets", body, nil)
+	resp := testhelpers.PostFormData(t, cfg.App().ClientAddress()+"/v2/secrets", body, nil)
 
 	t.Run("status is created", testhelpers.EqualsF(http.StatusCreated, resp.StatusCode))
 
@@ -129,9 +130,9 @@ func TestWhenCreatingASecretFromFileWithoutAccessLimit(t *testing.T) {
 
 	expectedExpiration := time.Now().Add(time.Hour).UTC()
 
-	body := map[string]string{ "expiration_epoch": strconv.FormatInt(expectedExpiration.Unix(), 10) }
-	fileContent := map[string]string{ "file": "Super Secret Test Content" }
-	resp := testhelpers.PostFormData(t, cfg.App().ClientAddress() + "/v2/secrets", body, fileContent)
+	body := map[string]string{"expiration_epoch": strconv.FormatInt(expectedExpiration.Unix(), 10)}
+	fileContent := map[string]string{"file": "Super Secret Test Content"}
+	resp := testhelpers.PostFormData(t, cfg.App().ClientAddress()+"/v2/secrets", body, fileContent)
 
 	t.Run("status is created", testhelpers.EqualsF(http.StatusCreated, resp.StatusCode))
 
@@ -150,10 +151,10 @@ func TestWhenCreatingASecretFromFileWithoutAccessLimit(t *testing.T) {
 func TestWhenCreatingASecretWithoutExpiration(t *testing.T) {
 	cfg := testhelpers.GetConfiguration()
 	body := map[string]string{
-		"content": "Super Secret Test Content",
+		"content":      "Super Secret Test Content",
 		"access_limit": "100",
 	}
-	resp := testhelpers.PostFormData(t, cfg.App().ClientAddress() + "/v2/secrets", body, nil)
+	resp := testhelpers.PostFormData(t, cfg.App().ClientAddress()+"/v2/secrets", body, nil)
 
 	t.Run("status is bad request", testhelpers.EqualsF(http.StatusBadRequest, resp.StatusCode))
 }
@@ -162,10 +163,10 @@ func TestWhenCreatingASecretWithoutContentOrFile(t *testing.T) {
 	cfg := testhelpers.GetConfiguration()
 	body := map[string]string{
 		"access_limit": "100",
-		"duration": strconv.FormatInt(time.Now().Add(time.Hour).UTC().Unix(), 10),
+		"duration":     strconv.FormatInt(time.Now().Add(time.Hour).UTC().Unix(), 10),
 	}
 
-	resp := testhelpers.PostFormData(t, cfg.App().ClientAddress() + "/v2/secrets", body, nil)
+	resp := testhelpers.PostFormData(t, cfg.App().ClientAddress()+"/v2/secrets", body, nil)
 
 	t.Run("status is bad request", testhelpers.EqualsF(http.StatusBadRequest, resp.StatusCode))
 }
@@ -173,13 +174,13 @@ func TestWhenCreatingASecretWithoutContentOrFile(t *testing.T) {
 func TestWhenCreatingASecretWithContentAndFile(t *testing.T) {
 	cfg := testhelpers.GetConfiguration()
 	body := map[string]string{
-		"content": "Super Secret Test Content",
+		"content":      "Super Secret Test Content",
 		"access_limit": "100",
-		"duration": strconv.FormatInt(time.Now().Add(time.Hour).UTC().Unix(), 10),
+		"duration":     strconv.FormatInt(time.Now().Add(time.Hour).UTC().Unix(), 10),
 	}
-	fileContent := map[string]string{ "file": "Super Secret Test Content" }
+	fileContent := map[string]string{"file": "Super Secret Test Content"}
 
-	resp := testhelpers.PostFormData(t, cfg.App().ClientAddress() + "/v2/secrets", body, fileContent)
+	resp := testhelpers.PostFormData(t, cfg.App().ClientAddress()+"/v2/secrets", body, fileContent)
 
 	t.Run("status is bad request", testhelpers.EqualsF(http.StatusBadRequest, resp.StatusCode))
 }
