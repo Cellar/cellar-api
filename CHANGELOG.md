@@ -1,39 +1,77 @@
 # Changelog
 
-## 3.1.1
-- Fix bug with docker expecting old configuration keys
+All notable changes to this project will be documented in this file.
 
-## 3.1.0
-- add logging setting to allow either text or json formatted logging
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## 3.0.0
+## [Unreleased]
 
-- add support for [AWS KMS](https://aws.amazon.com/kms/) as cryptography engine
-- restructure configuration to have sub-level for both datastore and cryptography
-- each cryptography engine has an enabled property that must be set to true for it to be used, but only one can be enabled
+### Added
+- File size limits for v2 file uploads with `APP_MAX_FILE_SIZE_MB` configuration (default: 8 MB)
+- Filename sanitization utility to prevent path traversal attacks
+- Empty file validation (rejects 0-byte files)
+- Gin multipart memory limits that scale with configured file size
+- `targets` command to Makefile to list all available targets
+- `test` command to Makefile to run all test types
+- `format` and `lint` commands to Makefile
 
-## 2.1.0
+### Security
+- Secure download headers for file secrets: X-Content-Type-Options, Content-Security-Policy, X-Frame-Options, Cache-Control
+- File size validation prevents DoS attacks via large uploads
+- Filename sanitization prevents directory traversal and injection attacks
 
-- update go to 1.23
-- update all dependencies
+### Changed
+- Improved Makefile with proper Vault wait logic using polling instead of fixed sleep
+- Updated CONTRIBUTING.md with better testing documentation and code quality guidelines
+- Restructured Makefile `services` target into logical subtargets
 
-## 2.0.0
+## [3.1.1]
 
-- add support for [Vault AWS IAM authentication](https://www.vaultproject.io/docs/auth/aws.html) in Vault
-- add support for [Vault Kubernetes authentication](https://www.vaultproject.io/docs/auth/kubernetes) in Vault
-- add support for [Google Cloud IAM authentication](https://www.vaultproject.io/docs/auth/gcp) in Vault
-- vault AppRole auth is now optional as other auth methods can be specified instead
-- the docker container no longer verifies that any auth configuration is present besides the mount path
-- restructure vault configuration to have sub-level for authentication
-- restructure vault configuration to have sub-levels within authentication for each type of authentication
-- the mount point of the auth backend must now be specified with as `VAULT_AUTH_MOUNT_PATH`
+### Fixed
+- Bug with Docker expecting old configuration keys
 
+## [3.1.0]
 
-## 1.0.1
+### Added
+- Logging setting to allow either text or JSON formatted logging
 
-- add application version to the `/health-check` endpoint
+## [3.0.0]
 
+### Added
+- Support for [AWS KMS](https://aws.amazon.com/kms/) as cryptography engine
+- Enabled property for cryptography engines (only one can be enabled)
 
-## 1.0.0
+### Changed
+- Restructured configuration to have sub-levels for both datastore and cryptography
 
+## [2.1.0]
+
+### Changed
+- Updated Go to version 1.23
+- Updated all dependencies
+
+## [2.0.0]
+
+### Added
+- Support for [Vault AWS IAM authentication](https://www.vaultproject.io/docs/auth/aws.html)
+- Support for [Vault Kubernetes authentication](https://www.vaultproject.io/docs/auth/kubernetes)
+- Support for [Google Cloud IAM authentication](https://www.vaultproject.io/docs/auth/gcp)
+
+### Changed
+- Vault AppRole auth is now optional (other auth methods can be specified)
+- Restructured Vault configuration with sub-levels for authentication
+- Mount point of auth backend must be specified as `VAULT_AUTH_MOUNT_PATH`
+
+### Removed
+- Docker container verification of auth configuration (except mount path)
+
+## [1.0.1]
+
+### Added
+- Application version to the `/health-check` endpoint
+
+## [1.0.0]
+
+### Added
 - Initial open source release
