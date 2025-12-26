@@ -92,11 +92,11 @@ test-acceptance:
 
 format:
 	$(LOG) "Formatting Go code"
-	@gofmt -w .
+	@find . -name '*.go' -not -path '*/.*' -exec gofmt -w {} +
 
 format-check:
 	$(LOG) "Checking Go code formatting"
-	@unformatted=$$(gofmt -l .); \
+	@unformatted=$$(find . -name '*.go' -not -path '*/.*' -exec gofmt -l {} +); \
 	if [ -n "$$unformatted" ]; then \
 		echo "The following files are not formatted:"; \
 		echo "$$unformatted"; \
