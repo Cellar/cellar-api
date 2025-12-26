@@ -110,20 +110,25 @@ run:
 run-daemon:
 	$(LOG) "Starting Cellar"
 	@go build -o cellar-bin cmd/cellar/main.go && chmod +x cellar-bin
-	@CRYPTOGRAPHY_VAULT_ENABLED=true \
-	 CRYPTOGRAPHY_VAULT_AUTH_MOUNT_PATH=approle \
-	 CRYPTOGRAPHY_VAULT_AUTH_APPROLE_ROLE_ID=${CRYPTOGRAPHY_VAULT_AUTH_APPROLE_ROLE_ID} \
-	 CRYPTOGRAPHY_VAULT_AUTH_APPROLE_SECRET_ID=${CRYPTOGRAPHY_VAULT_AUTH_APPROLE_SECRET_ID} \
-	 CRYPTOGRAPHY_VAULT_ENCRYPTION_TOKEN_NAME=${CRYPTOGRAPHY_VAULT_ENCRYPTION_TOKEN_NAME} \
-	 ./cellar-bin & _pid=$$!; \
-		echo $$_pid > ${PID_FILE} \
-		|| { kill -s TERM $$_pid; echo "Failed to write pid file '${PID_FILE}'"; exit 1; }
-	@sleep 5
-	@rm cellar-bin
+	@nohup env \
+		CRYPTOGRAPHY_VAULT_ENABLED=true \
+		CRYPTOGRAPHY_VAULT_AUTH_MOUNT_PATH=approle \
+		CRYPTOGRAPHY_VAULT_AUTH_APPROLE_ROLE_ID=${CRYPTOGRAPHY_VAULT_AUTH_APPROLE_ROLE_ID} \
+		CRYPTOGRAPHY_VAULT_AUTH_APPROLE_SECRET_ID=${CRYPTOGRAPHY_VAULT_AUTH_APPROLE_SECRET_ID} \
+		CRYPTOGRAPHY_VAULT_ENCRYPTION_TOKEN_NAME=${CRYPTOGRAPHY_VAULT_ENCRYPTION_TOKEN_NAME} \
+		./cellar-bin > /tmp/cellar-api.log 2>&1 & echo $$! > ${PID_FILE}
+	@sleep 2
+	@echo "Cellar API started (PID: $$(cat ${PID_FILE}), logs: /tmp/cellar-api.log)"
 
 stop-daemon:
 	$(LOG) "Stopping Cellar"
-	@kill -s TERM $$(cat ${PID_FILE})
+	@if [ -f ${PID_FILE} ]; then \
+		kill -s TERM $$(cat ${PID_FILE}) 2>/dev/null || true; \
+		rm -f ${PID_FILE}; \
+		rm -f cellar-bin; \
+	else \
+		echo "No PID file found at ${PID_FILE}"; \
+	fi
 
 build:
 	$(LOG) "Building all source files"
