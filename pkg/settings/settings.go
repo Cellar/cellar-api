@@ -3,11 +3,12 @@ package settings
 import (
 	"cellar/pkg/settings/cryptography"
 	"cellar/pkg/settings/datastore"
-	"github.com/spf13/viper"
 	"strings"
+
+	"github.com/spf13/viper"
 )
 
-var Key string = "CONFIGURATION"
+var Key = "CONFIGURATION"
 
 type IConfiguration interface {
 	App() IAppConfiguration

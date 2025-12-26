@@ -5,6 +5,7 @@ import (
 	"cellar/pkg/models"
 	"cellar/pkg/settings/cryptography"
 	"context"
+
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 	log "github.com/sirupsen/logrus"
@@ -41,7 +42,7 @@ func initializeLogger(configuration cryptography.IAwsConfiguration) *log.Entry {
 		"instance": "aws",
 	})
 
-	logger.Debug("initializing vault configuration")
+	logger.Debug("initializing aws kms configuration")
 	if configuration.KmsKeyName() == "" {
 		logger.Warn("AWS KMS key name is empty")
 	}

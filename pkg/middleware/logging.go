@@ -3,9 +3,10 @@ package middleware
 import (
 	"cellar/pkg/settings"
 	"fmt"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
-	"time"
 )
 
 func configureAppLogging(cfg settings.IConfiguration) {

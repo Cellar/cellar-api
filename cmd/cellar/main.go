@@ -6,16 +6,17 @@ import (
 	v2 "cellar/pkg/controllers/v2"
 	"cellar/pkg/middleware"
 	"cellar/pkg/settings"
-	"golang.org/x/net/webdav"
 	"net/http"
 	"os"
+
+	"golang.org/x/net/webdav"
 
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
-var version string = "0.0.0"
+var version = "0.0.0"
 
 func main() {
 	router := gin.New()

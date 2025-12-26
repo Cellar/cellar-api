@@ -2,6 +2,7 @@ package cryptography
 
 import (
 	"errors"
+
 	"github.com/spf13/viper"
 )
 

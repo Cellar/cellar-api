@@ -5,6 +5,9 @@ import (
 	"strings"
 )
 
+// SanitizeFilename removes unsafe characters and ensures the filename is valid.
+// Empty filenames or path separators are replaced with "untitled".
+// Filenames longer than 255 characters are truncated while preserving the extension.
 func SanitizeFilename(filename string) string {
 	if filename == "" {
 		return "untitled"

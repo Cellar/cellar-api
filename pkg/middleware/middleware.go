@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"cellar/pkg/settings"
+
 	"github.com/gin-gonic/gin"
 )
 

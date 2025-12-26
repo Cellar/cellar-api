@@ -1,14 +1,17 @@
 package gcp
 
 import (
-	"cloud.google.com/go/compute/metadata"
 	"context"
 	"encoding/json"
 	"fmt"
-	"google.golang.org/api/iam/v1"
 	"time"
+
+	"cloud.google.com/go/compute/metadata"
+	"google.golang.org/api/iam/v1"
 )
 
+// GetGcpIamRequestInfo generates a signed JWT for GCP IAM authentication to Vault.
+// The JWT is signed by the GCP service account and includes the specified role.
 func GetGcpIamRequestInfo(role string) (signedJwt string, err error) {
 	ctx := context.Background()
 	iamClient, err := iam.NewService(ctx)

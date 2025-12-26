@@ -11,23 +11,23 @@ func NewRedisKeySet(id string) *RedisKey {
 }
 
 func (key RedisKey) AccessLimit() string {
-	return key.buildKey("accesslimit")()
+	return key.buildKey("accesslimit")
 }
 
 func (key RedisKey) Access() string {
-	return key.buildKey("access")()
+	return key.buildKey("access")
 }
 
 func (key RedisKey) ContentType() string {
-	return key.buildKey("contenttype")()
+	return key.buildKey("contenttype")
 }
 
 func (key RedisKey) Content() string {
-	return key.buildKey("content")()
+	return key.buildKey("content")
 }
 
 func (key RedisKey) ExpirationEpoch() string {
-	return key.buildKey("expirationepoch")()
+	return key.buildKey("expirationepoch")
 }
 
 func (key RedisKey) AllKeys() []string {
@@ -40,8 +40,6 @@ func (key RedisKey) AllKeys() []string {
 	}
 }
 
-func (key RedisKey) buildKey(tail string) func() string {
-	return func() string {
-		return fmt.Sprintf("secrets:%s:%s", key.id, tail)
-	}
+func (key RedisKey) buildKey(tail string) string {
+	return fmt.Sprintf("secrets:%s:%s", key.id, tail)
 }

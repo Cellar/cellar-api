@@ -5,6 +5,8 @@ import (
 	"cellar/pkg/cryptography"
 	"cellar/pkg/datastore"
 	"cellar/pkg/settings"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -20,5 +22,5 @@ func HealthCheck(c *gin.Context) {
 	encryption := c.MustGet(cryptography.Key).(cryptography.Encryption)
 
 	health := commands.GetHealth(ctx, cfg.App(), dataStore, encryption)
-	c.JSON(200, health)
+	c.JSON(http.StatusOK, health)
 }

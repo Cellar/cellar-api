@@ -7,20 +7,21 @@ import (
 	"cellar/pkg/middleware"
 	"cellar/pkg/settings"
 	"context"
+	"net/http"
+	"os"
+
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/awslabs/aws-lambda-go-api-proxy/gin"
+	ginadapter "github.com/awslabs/aws-lambda-go-api-proxy/gin"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"golang.org/x/net/webdav"
-	"net/http"
-	"os"
 )
 
 var ginLambda *ginadapter.GinLambda
 
-var version string = "0.0.0"
+var version = "0.0.0"
 
 func init() {
 	router := gin.New()
@@ -69,8 +70,8 @@ func DisablingWrapHandler(handler *webdav.Handler, envName string, options ...fu
 	return ginSwagger.WrapHandler(handler, options...)
 }
 
+// Handler proxies API Gateway requests to the Gin application.
 func Handler(ctx context.Context, req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-	// If no name is provided in the HTTP request body, throw an error
 	return ginLambda.ProxyWithContext(ctx, req)
 }
 

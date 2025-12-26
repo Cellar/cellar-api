@@ -9,8 +9,9 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
-	log "github.com/sirupsen/logrus"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 )
 
 func getLogger(secretId string) *log.Entry {

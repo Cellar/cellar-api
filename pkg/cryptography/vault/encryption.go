@@ -8,10 +8,11 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"github.com/hashicorp/vault/api"
-	log "github.com/sirupsen/logrus"
 	"net/http"
 	"time"
+
+	"github.com/hashicorp/vault/api"
+	log "github.com/sirupsen/logrus"
 )
 
 type EncryptionClient struct {
@@ -115,8 +116,11 @@ func (vault EncryptionClient) Encrypt(ctx context.Context, plaintext []byte) (ci
 	}
 
 	if val, ok := response.Data["ciphertext"]; ok {
+		ciphertext, ok := val.(string)
+		if !ok {
+			return "", errors.New("vault returned non-string ciphertext")
+		}
 		vault.logger.Debug("content encryption successful")
-		ciphertext = val.(string)
 		return ciphertext, nil
 	}
 
@@ -146,7 +150,10 @@ func (vault EncryptionClient) Decrypt(ctx context.Context, ciphertext string) (p
 	}
 
 	if val, ok := response.Data["plaintext"]; ok {
-		base64Content := val.(string)
+		base64Content, ok := val.(string)
+		if !ok {
+			return nil, errors.New("vault returned non-string plaintext")
+		}
 		if bytes, err := base64.StdEncoding.DecodeString(base64Content); err != nil {
 			vault.logger.WithError(err).
 				Error("error base64 decoding decrypted content")
