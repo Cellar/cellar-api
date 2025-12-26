@@ -12,6 +12,9 @@ import (
 	"strconv"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestWhenCreatingASecretFromContent(t *testing.T) {
@@ -28,18 +31,31 @@ func TestWhenCreatingASecretFromContent(t *testing.T) {
 
 	resp := testhelpers.PostFormData(t, cfg.App().ClientAddress()+"/v2/secrets", body, nil)
 
-	t.Run("status is created", testhelpers.EqualsF(http.StatusCreated, resp.StatusCode))
+	t.Run("it should return created status", func(t *testing.T) {
+		assert.Equal(t, http.StatusCreated, resp.StatusCode)
+	})
 
 	responseBody, err := ioutil.ReadAll(resp.Body)
-	testhelpers.Ok(t, err)
+	require.NoError(t, err)
 
 	var actual models.SecretMetadataResponseV2
-	testhelpers.Ok(t, json.Unmarshal(responseBody, &actual))
+	require.NoError(t, json.Unmarshal(responseBody, &actual))
 
-	t.Run("id should not be empty", testhelpers.NotEqualsF("", actual.ID))
-	t.Run("access limit should set", testhelpers.EqualsF(expectedAccessLimit, actual.AccessLimit))
-	t.Run("expiration should be set", testhelpers.EqualsF(expectedExpiration.Format("2006-01-02 15:04:05 UTC"), actual.Expiration.Format()))
-	t.Run("content type should be text", testhelpers.EqualsF("text", string(actual.ContentType)))
+	t.Run("it should have non-empty id", func(t *testing.T) {
+		assert.NotEqual(t, "", actual.ID)
+	})
+
+	t.Run("it should set access limit", func(t *testing.T) {
+		assert.Equal(t, expectedAccessLimit, actual.AccessLimit)
+	})
+
+	t.Run("it should set expiration", func(t *testing.T) {
+		assert.Equal(t, expectedExpiration.Format("2006-01-02 15:04:05 UTC"), actual.Expiration.Format())
+	})
+
+	t.Run("it should have text content type", func(t *testing.T) {
+		assert.Equal(t, "text", string(actual.ContentType))
+	})
 }
 
 func TestWhenCreatingASecretFromFile(t *testing.T) {
@@ -56,18 +72,31 @@ func TestWhenCreatingASecretFromFile(t *testing.T) {
 	fileContent := map[string]string{"file": "Super Secret Test Content"}
 	resp := testhelpers.PostFormData(t, cfg.App().ClientAddress()+"/v2/secrets", body, fileContent)
 
-	t.Run("status is created", testhelpers.EqualsF(http.StatusCreated, resp.StatusCode))
+	t.Run("it should return created status", func(t *testing.T) {
+		assert.Equal(t, http.StatusCreated, resp.StatusCode)
+	})
 
 	responseBody, err := ioutil.ReadAll(resp.Body)
-	testhelpers.Ok(t, err)
+	require.NoError(t, err)
 
 	var actual models.SecretMetadataResponseV2
-	testhelpers.Ok(t, json.Unmarshal(responseBody, &actual))
+	require.NoError(t, json.Unmarshal(responseBody, &actual))
 
-	t.Run("id should not be empty", testhelpers.NotEqualsF("", actual.ID))
-	t.Run("access limit should set", testhelpers.EqualsF(expectedAccessLimit, actual.AccessLimit))
-	t.Run("expiration should be set", testhelpers.EqualsF(expectedExpiration.Format("2006-01-02 15:04:05 UTC"), actual.Expiration.Format()))
-	t.Run("content type should be file", testhelpers.EqualsF("file", string(actual.ContentType)))
+	t.Run("it should have non-empty id", func(t *testing.T) {
+		assert.NotEqual(t, "", actual.ID)
+	})
+
+	t.Run("it should set access limit", func(t *testing.T) {
+		assert.Equal(t, expectedAccessLimit, actual.AccessLimit)
+	})
+
+	t.Run("it should set expiration", func(t *testing.T) {
+		assert.Equal(t, expectedExpiration.Format("2006-01-02 15:04:05 UTC"), actual.Expiration.Format())
+	})
+
+	t.Run("it should have file content type", func(t *testing.T) {
+		assert.Equal(t, "file", string(actual.ContentType))
+	})
 }
 
 func TestWhenCreatingASecretAndExpirationIsTooShort(t *testing.T) {
@@ -82,7 +111,9 @@ func TestWhenCreatingASecretAndExpirationIsTooShort(t *testing.T) {
 	}
 	resp := testhelpers.PostFormData(t, cfg.App().ClientAddress()+"/v2/secrets", body, nil)
 
-	t.Run("status is bad request", testhelpers.EqualsF(http.StatusBadRequest, resp.StatusCode))
+	t.Run("it should return bad request status", func(t *testing.T) {
+		assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+	})
 }
 
 func TestWhenCreatingASecretAndExpirationIsInThePast(t *testing.T) {
@@ -97,7 +128,9 @@ func TestWhenCreatingASecretAndExpirationIsInThePast(t *testing.T) {
 	}
 	resp := testhelpers.PostFormData(t, cfg.App().ClientAddress()+"/v2/secrets", body, nil)
 
-	t.Run("status is bad request", testhelpers.EqualsF(http.StatusBadRequest, resp.StatusCode))
+	t.Run("it should return bad request status", func(t *testing.T) {
+		assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+	})
 }
 
 func TestWhenCreatingASecretFromContentWithoutAccessLimit(t *testing.T) {
@@ -111,18 +144,31 @@ func TestWhenCreatingASecretFromContentWithoutAccessLimit(t *testing.T) {
 	}
 	resp := testhelpers.PostFormData(t, cfg.App().ClientAddress()+"/v2/secrets", body, nil)
 
-	t.Run("status is created", testhelpers.EqualsF(http.StatusCreated, resp.StatusCode))
+	t.Run("it should return created status", func(t *testing.T) {
+		assert.Equal(t, http.StatusCreated, resp.StatusCode)
+	})
 
 	responseBody, err := ioutil.ReadAll(resp.Body)
-	testhelpers.Ok(t, err)
+	require.NoError(t, err)
 
 	var actual models.SecretMetadataResponseV2
-	testhelpers.Ok(t, json.Unmarshal(responseBody, &actual))
+	require.NoError(t, json.Unmarshal(responseBody, &actual))
 
-	t.Run("id should not be empty", testhelpers.NotEqualsF("", actual.ID))
-	t.Run("access limit should set to 0", testhelpers.EqualsF(0, actual.AccessLimit))
-	t.Run("expiration should be set", testhelpers.EqualsF(expectedExpiration.Format("2006-01-02 15:04:05 UTC"), actual.Expiration.Format()))
-	t.Run("content type should be text", testhelpers.EqualsF("text", string(actual.ContentType)))
+	t.Run("it should have non-empty id", func(t *testing.T) {
+		assert.NotEqual(t, "", actual.ID)
+	})
+
+	t.Run("it should set access limit to 0", func(t *testing.T) {
+		assert.Equal(t, 0, actual.AccessLimit)
+	})
+
+	t.Run("it should set expiration", func(t *testing.T) {
+		assert.Equal(t, expectedExpiration.Format("2006-01-02 15:04:05 UTC"), actual.Expiration.Format())
+	})
+
+	t.Run("it should have text content type", func(t *testing.T) {
+		assert.Equal(t, "text", string(actual.ContentType))
+	})
 }
 
 func TestWhenCreatingASecretFromFileWithoutAccessLimit(t *testing.T) {
@@ -134,18 +180,31 @@ func TestWhenCreatingASecretFromFileWithoutAccessLimit(t *testing.T) {
 	fileContent := map[string]string{"file": "Super Secret Test Content"}
 	resp := testhelpers.PostFormData(t, cfg.App().ClientAddress()+"/v2/secrets", body, fileContent)
 
-	t.Run("status is created", testhelpers.EqualsF(http.StatusCreated, resp.StatusCode))
+	t.Run("it should return created status", func(t *testing.T) {
+		assert.Equal(t, http.StatusCreated, resp.StatusCode)
+	})
 
 	responseBody, err := ioutil.ReadAll(resp.Body)
-	testhelpers.Ok(t, err)
+	require.NoError(t, err)
 
 	var actual models.SecretMetadataResponseV2
-	testhelpers.Ok(t, json.Unmarshal(responseBody, &actual))
+	require.NoError(t, json.Unmarshal(responseBody, &actual))
 
-	t.Run("id should not be empty", testhelpers.NotEqualsF("", actual.ID))
-	t.Run("access limit should set to 0", testhelpers.EqualsF(0, actual.AccessLimit))
-	t.Run("expiration should be set", testhelpers.EqualsF(expectedExpiration.Format("2006-01-02 15:04:05 UTC"), actual.Expiration.Format()))
-	t.Run("content type should be file", testhelpers.EqualsF("file", string(actual.ContentType)))
+	t.Run("it should have non-empty id", func(t *testing.T) {
+		assert.NotEqual(t, "", actual.ID)
+	})
+
+	t.Run("it should set access limit to 0", func(t *testing.T) {
+		assert.Equal(t, 0, actual.AccessLimit)
+	})
+
+	t.Run("it should set expiration", func(t *testing.T) {
+		assert.Equal(t, expectedExpiration.Format("2006-01-02 15:04:05 UTC"), actual.Expiration.Format())
+	})
+
+	t.Run("it should have file content type", func(t *testing.T) {
+		assert.Equal(t, "file", string(actual.ContentType))
+	})
 }
 
 func TestWhenCreatingASecretWithoutExpiration(t *testing.T) {
@@ -156,7 +215,9 @@ func TestWhenCreatingASecretWithoutExpiration(t *testing.T) {
 	}
 	resp := testhelpers.PostFormData(t, cfg.App().ClientAddress()+"/v2/secrets", body, nil)
 
-	t.Run("status is bad request", testhelpers.EqualsF(http.StatusBadRequest, resp.StatusCode))
+	t.Run("it should return bad request status", func(t *testing.T) {
+		assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+	})
 }
 
 func TestWhenCreatingASecretWithoutContentOrFile(t *testing.T) {
@@ -168,7 +229,9 @@ func TestWhenCreatingASecretWithoutContentOrFile(t *testing.T) {
 
 	resp := testhelpers.PostFormData(t, cfg.App().ClientAddress()+"/v2/secrets", body, nil)
 
-	t.Run("status is bad request", testhelpers.EqualsF(http.StatusBadRequest, resp.StatusCode))
+	t.Run("it should return bad request status", func(t *testing.T) {
+		assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+	})
 }
 
 func TestWhenCreatingASecretWithContentAndFile(t *testing.T) {
@@ -182,5 +245,7 @@ func TestWhenCreatingASecretWithContentAndFile(t *testing.T) {
 
 	resp := testhelpers.PostFormData(t, cfg.App().ClientAddress()+"/v2/secrets", body, fileContent)
 
-	t.Run("status is bad request", testhelpers.EqualsF(http.StatusBadRequest, resp.StatusCode))
+	t.Run("it should return bad request status", func(t *testing.T) {
+		assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+	})
 }

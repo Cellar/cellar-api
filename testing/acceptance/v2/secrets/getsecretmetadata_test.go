@@ -11,6 +11,9 @@ import (
 	"io/ioutil"
 	"net/http"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestWhenGettingContentSecret(t *testing.T) {
@@ -20,23 +23,39 @@ func TestWhenGettingContentSecret(t *testing.T) {
 
 	path := fmt.Sprintf("%s/v2/secrets/%s", cfg.App().ClientAddress(), secret.ID)
 	resp, err := http.Get(path)
-	testhelpers.OkF(err)
+	require.NoError(t, err)
 
-	t.Run("status should be ok", testhelpers.EqualsF(http.StatusOK, resp.StatusCode))
+	t.Run("it should return ok status", func(t *testing.T) {
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
+	})
 
 	defer resp.Body.Close()
 
 	responseBody, err := ioutil.ReadAll(resp.Body)
-	testhelpers.Ok(t, err)
+	require.NoError(t, err)
 
 	var actual models.SecretMetadataResponseV2
-	testhelpers.Ok(t, json.Unmarshal(responseBody, &actual))
+	require.NoError(t, json.Unmarshal(responseBody, &actual))
 
-	t.Run("id should match", testhelpers.EqualsF(secret.ID, actual.ID))
-	t.Run("access count should match", testhelpers.EqualsF(secret.AccessCount, actual.AccessCount))
-	t.Run("access limit count should match", testhelpers.EqualsF(secret.AccessLimit, actual.AccessLimit))
-	t.Run("expiration should match", testhelpers.EqualsF(secret.Expiration.Format(), actual.Expiration.Format()))
-	t.Run("content type should be text", testhelpers.EqualsF("text", string(actual.ContentType)))
+	t.Run("it should return matching id", func(t *testing.T) {
+		assert.Equal(t, secret.ID, actual.ID)
+	})
+
+	t.Run("it should return matching access count", func(t *testing.T) {
+		assert.Equal(t, secret.AccessCount, actual.AccessCount)
+	})
+
+	t.Run("it should return matching access limit", func(t *testing.T) {
+		assert.Equal(t, secret.AccessLimit, actual.AccessLimit)
+	})
+
+	t.Run("it should return matching expiration", func(t *testing.T) {
+		assert.Equal(t, secret.Expiration.Format(), actual.Expiration.Format())
+	})
+
+	t.Run("it should have text content type", func(t *testing.T) {
+		assert.Equal(t, "text", string(actual.ContentType))
+	})
 }
 
 func TestWhenGettingFileSecret(t *testing.T) {
@@ -46,30 +65,48 @@ func TestWhenGettingFileSecret(t *testing.T) {
 
 	path := fmt.Sprintf("%s/v2/secrets/%s", cfg.App().ClientAddress(), secret.ID)
 	resp, err := http.Get(path)
-	testhelpers.OkF(err)
+	require.NoError(t, err)
 
-	t.Run("status should be ok", testhelpers.EqualsF(http.StatusOK, resp.StatusCode))
+	t.Run("it should return ok status", func(t *testing.T) {
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
+	})
 
 	defer resp.Body.Close()
 
 	responseBody, err := ioutil.ReadAll(resp.Body)
-	testhelpers.Ok(t, err)
+	require.NoError(t, err)
 
 	var actual models.SecretMetadataResponseV2
-	testhelpers.Ok(t, json.Unmarshal(responseBody, &actual))
+	require.NoError(t, json.Unmarshal(responseBody, &actual))
 
-	t.Run("id should match", testhelpers.EqualsF(secret.ID, actual.ID))
-	t.Run("access count should match", testhelpers.EqualsF(secret.AccessCount, actual.AccessCount))
-	t.Run("access limit count should match", testhelpers.EqualsF(secret.AccessLimit, actual.AccessLimit))
-	t.Run("expiration should match", testhelpers.EqualsF(secret.Expiration.Format(), actual.Expiration.Format()))
-	t.Run("content type should be file", testhelpers.EqualsF("file", string(actual.ContentType)))
+	t.Run("it should return matching id", func(t *testing.T) {
+		assert.Equal(t, secret.ID, actual.ID)
+	})
+
+	t.Run("it should return matching access count", func(t *testing.T) {
+		assert.Equal(t, secret.AccessCount, actual.AccessCount)
+	})
+
+	t.Run("it should return matching access limit", func(t *testing.T) {
+		assert.Equal(t, secret.AccessLimit, actual.AccessLimit)
+	})
+
+	t.Run("it should return matching expiration", func(t *testing.T) {
+		assert.Equal(t, secret.Expiration.Format(), actual.Expiration.Format())
+	})
+
+	t.Run("it should have file content type", func(t *testing.T) {
+		assert.Equal(t, "file", string(actual.ContentType))
+	})
 }
 
 func TestWhenGettingSecretThatDoesntExist(t *testing.T) {
 	cfg := testhelpers.GetConfiguration()
 	path := fmt.Sprintf("%s/v2/secrets/%s", cfg.App().ClientAddress(), testhelpers.RandomId(t))
 	resp, err := http.Get(path)
-	testhelpers.OkF(err)
+	require.NoError(t, err)
 
-	t.Run("status should be not found", testhelpers.EqualsF(http.StatusNotFound, resp.StatusCode))
+	t.Run("it should return not found status", func(t *testing.T) {
+		assert.Equal(t, http.StatusNotFound, resp.StatusCode)
+	})
 }

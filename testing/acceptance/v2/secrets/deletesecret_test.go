@@ -9,6 +9,9 @@ import (
 	"fmt"
 	"net/http"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestWhenDeletingASecret(t *testing.T) {
@@ -20,15 +23,17 @@ func TestWhenDeletingASecret(t *testing.T) {
 	path := fmt.Sprintf("%s/v2/secrets/%s", cfg.App().ClientAddress(), secret.ID)
 	req, err := http.NewRequest(http.MethodDelete, path, nil)
 	resp, err := client.Do(req)
-	testhelpers.OkF(err)
+	require.NoError(t, err)
 
-	t.Run("status should be no content", testhelpers.EqualsF(http.StatusNoContent, resp.StatusCode))
+	t.Run("it should return no content status", func(t *testing.T) {
+		assert.Equal(t, http.StatusNoContent, resp.StatusCode)
+	})
 
-	t.Run("secret should be deleted", func(t *testing.T) {
+	t.Run("it should delete the secret", func(t *testing.T) {
 		resp, err := http.Get(path)
-		testhelpers.Ok(t, err)
+		require.NoError(t, err)
 
-		testhelpers.Equals(t, http.StatusNotFound, resp.StatusCode)
+		assert.Equal(t, http.StatusNotFound, resp.StatusCode)
 	})
 }
 
@@ -37,10 +42,12 @@ func TestWhenDeletingSecretThatDoesntExist(t *testing.T) {
 	client := &http.Client{}
 	path := fmt.Sprintf("%s/v2/secrets/%s", cfg.App().ClientAddress(), testhelpers.RandomId(t))
 	req, err := http.NewRequest(http.MethodDelete, path, nil)
-	testhelpers.OkF(err)
+	require.NoError(t, err)
 
 	resp, err := client.Do(req)
-	testhelpers.OkF(err)
+	require.NoError(t, err)
 
-	t.Run("status should be not found", testhelpers.EqualsF(http.StatusNotFound, resp.StatusCode))
+	t.Run("it should return not found status", func(t *testing.T) {
+		assert.Equal(t, http.StatusNotFound, resp.StatusCode)
+	})
 }

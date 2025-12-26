@@ -11,34 +11,63 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestHealthCheck(t *testing.T) {
 	cfg := testhelpers.GetConfiguration()
 	resp, err := http.Get(cfg.App().ClientAddress() + "/health-check")
-	testhelpers.OkF(err)
+	require.NoError(t, err)
 
 	defer func() {
-		testhelpers.Ok(t, resp.Body.Close())
+		require.NoError(t, resp.Body.Close())
 	}()
 
-	t.Run("status is ok", testhelpers.EqualsF(200, resp.StatusCode))
+	t.Run("it should return ok status", func(t *testing.T) {
+		assert.Equal(t, 200, resp.StatusCode)
+	})
 
 	responseBody, err := ioutil.ReadAll(resp.Body)
-	testhelpers.Ok(t, err)
+	require.NoError(t, err)
 
 	var health models.HealthResponse
-	testhelpers.Ok(t, json.Unmarshal(responseBody, &health))
+	require.NoError(t, json.Unmarshal(responseBody, &health))
 
-	t.Run("status should be Healthy", testhelpers.EqualsF("healthy", strings.ToLower(health.Status)))
-	t.Run("should return host", testhelpers.NotEqualsF("", health.Host))
-	t.Run("should return non empty version", testhelpers.NotEqualsF("", health.Version))
+	t.Run("it should return healthy status", func(t *testing.T) {
+		assert.Equal(t, "healthy", strings.ToLower(health.Status))
+	})
 
-	t.Run("should return datastore name", testhelpers.EqualsF("redis", strings.ToLower(health.Datastore.Name)))
-	t.Run("should return datastore healthy status", testhelpers.EqualsF("healthy", strings.ToLower(health.Datastore.Status)))
-	t.Run("should return datastore version", testhelpers.NotEqualsF("", health.Datastore.Version))
+	t.Run("it should return non-empty host", func(t *testing.T) {
+		assert.NotEqual(t, "", health.Host)
+	})
 
-	t.Run("should return encryption name", testhelpers.EqualsF("vault", strings.ToLower(health.Encryption.Name)))
-	t.Run("should return encryption healthy status", testhelpers.EqualsF("healthy", strings.ToLower(health.Encryption.Status)))
-	t.Run("should return encryption version", testhelpers.NotEqualsF("", health.Encryption.Version))
+	t.Run("it should return non-empty version", func(t *testing.T) {
+		assert.NotEqual(t, "", health.Version)
+	})
+
+	t.Run("it should return redis datastore name", func(t *testing.T) {
+		assert.Equal(t, "redis", strings.ToLower(health.Datastore.Name))
+	})
+
+	t.Run("it should return healthy datastore status", func(t *testing.T) {
+		assert.Equal(t, "healthy", strings.ToLower(health.Datastore.Status))
+	})
+
+	t.Run("it should return non-empty datastore version", func(t *testing.T) {
+		assert.NotEqual(t, "", health.Datastore.Version)
+	})
+
+	t.Run("it should return vault encryption name", func(t *testing.T) {
+		assert.Equal(t, "vault", strings.ToLower(health.Encryption.Name))
+	})
+
+	t.Run("it should return healthy encryption status", func(t *testing.T) {
+		assert.Equal(t, "healthy", strings.ToLower(health.Encryption.Status))
+	})
+
+	t.Run("it should return non-empty encryption version", func(t *testing.T) {
+		assert.NotEqual(t, "", health.Encryption.Version)
+	})
 }
