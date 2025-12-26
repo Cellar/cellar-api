@@ -2,9 +2,10 @@ package redis_test
 
 import (
 	"cellar/pkg/datastore/redis"
-	"cellar/testing/testhelpers"
 	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 var id = "1234567890"
@@ -25,35 +26,28 @@ var keys = struct {
 }
 
 func TestRedisKey_Access(t *testing.T) {
-	testhelpers.Equals(t, keys.access, sut.Access())
+	assert.Equal(t, keys.access, sut.Access())
 }
 
 func TestRedisKey_ContentType(t *testing.T) {
-	testhelpers.Equals(t, keys.contentType, sut.ContentType())
+	assert.Equal(t, keys.contentType, sut.ContentType())
 }
 
 func TestRedisKey_Content(t *testing.T) {
-	testhelpers.Equals(t, keys.content, sut.Content())
+	assert.Equal(t, keys.content, sut.Content())
 }
 
 func TestRedisKey_AccessLimit(t *testing.T) {
-	testhelpers.Equals(t, keys.accessLimit, sut.AccessLimit())
+	assert.Equal(t, keys.accessLimit, sut.AccessLimit())
 }
 
 func TestRedisKey_ExpirationEpoch(t *testing.T) {
-	testhelpers.Equals(t, keys.expirationEpoch, sut.ExpirationEpoch())
+	assert.Equal(t, keys.expirationEpoch, sut.ExpirationEpoch())
 }
 
 func TestRedisKey_AllKeys(t *testing.T) {
+	allKeys := sut.AllKeys()
 	for _, expected := range []string{keys.contentType, keys.content, keys.access, keys.accessLimit, keys.expirationEpoch} {
-		found := false
-		for _, actual := range sut.AllKeys() {
-			if actual == expected {
-				found = true
-			}
-		}
-		if !found {
-			t.Fatalf("unable to find expected key '%s' in all keys", expected)
-		}
+		assert.Contains(t, allKeys, expected)
 	}
 }

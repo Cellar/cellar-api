@@ -9,7 +9,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/redis/go-redis/v9"
 	"io"
 	"io/ioutil"
 	"mime/multipart"
@@ -17,6 +16,9 @@ import (
 	"strconv"
 	"testing"
 	"time"
+
+	"github.com/redis/go-redis/v9"
+	"github.com/stretchr/testify/require"
 )
 
 func GetConfiguration() settings.IConfiguration {
@@ -27,7 +29,7 @@ func GetConfiguration() settings.IConfiguration {
 func RandomId(tb testing.TB) string {
 	bytes := make([]byte, 25)
 	_, err := rand.Read(bytes)
-	Ok(tb, err)
+	require.NoError(tb, err)
 
 	return hex.EncodeToString(bytes)
 }
@@ -47,19 +49,19 @@ func CreateSecretV1(t *testing.T, cfg settings.IConfiguration, content string, a
 	}
 
 	body, err := json.Marshal(secret)
-	Ok(t, err)
+	require.NoError(t, err)
 
 	createResp, err := http.Post(cfg.App().ClientAddress()+"/v1/secrets", "application/json", bytes.NewBuffer(body))
-	OkF(err)
+	require.NoError(t, err)
 	defer func() {
-		Ok(t, createResp.Body.Close())
+		require.NoError(t, createResp.Body.Close())
 	}()
 
 	responseBody, err := ioutil.ReadAll(createResp.Body)
-	Ok(t, err)
+	require.NoError(t, err)
 
 	var createdSecret models.SecretMetadataResponse
-	Ok(t, json.Unmarshal(responseBody, &createdSecret))
+	require.NoError(t, json.Unmarshal(responseBody, &createdSecret))
 
 	return createdSecret
 }
@@ -77,14 +79,14 @@ func CreateSecretV2(t *testing.T, cfg settings.IConfiguration, contentType model
 	}
 	createResp := PostFormData(t, cfg.App().ClientAddress()+"/v2/secrets", formData, fileFormData)
 	defer func() {
-		Ok(t, createResp.Body.Close())
+		require.NoError(t, createResp.Body.Close())
 	}()
 
 	responseBody, err := ioutil.ReadAll(createResp.Body)
-	Ok(t, err)
+	require.NoError(t, err)
 
 	var createdSecret models.SecretMetadataResponseV2
-	Ok(t, json.Unmarshal(responseBody, &createdSecret))
+	require.NoError(t, json.Unmarshal(responseBody, &createdSecret))
 
 	return createdSecret
 }
@@ -101,27 +103,27 @@ func PostFormData(t *testing.T, uri string, formData map[string]string, fileForm
 		filename := RandomId(t)
 		fileContents := bytes.NewBufferString(content)
 		part, err := writer.CreateFormFile(key, filename)
-		Ok(t, err)
+		require.NoError(t, err)
 
 		_, err = io.Copy(part, fileContents)
-		Ok(t, err)
+		require.NoError(t, err)
 	}
 
 	for key, val := range formData {
-		Ok(t, writer.WriteField(key, val))
+		require.NoError(t, writer.WriteField(key, val))
 	}
 
 	err := writer.Close()
-	Ok(t, err)
+	require.NoError(t, err)
 
 	request, err := http.NewRequest("POST", uri, body)
-	Ok(t, err)
+	require.NoError(t, err)
 
 	request.Header.Set("Content-Type", writer.FormDataContentType())
 
 	client := &http.Client{}
 	resp, err := client.Do(request)
-	Ok(t, err)
+	require.NoError(t, err)
 
 	return resp
 }
