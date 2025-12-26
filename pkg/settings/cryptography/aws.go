@@ -10,7 +10,7 @@ const (
 	awsKey        = cryptographyKey + "aws."
 	awsEnabledKey = awsKey + "enabled"
 
-	awsRegionKey     = awsKey + "region"
+	awsRegionKey   = awsKey + "region"
 	awsKmsKeyIdKey = awsKey + "kms_key_id"
 )
 
