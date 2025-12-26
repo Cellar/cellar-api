@@ -1,12 +1,11 @@
 package aws
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/json"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/sts"
-	"io/ioutil"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/sts"
 )
 
 type IamRequestInfo struct {
@@ -17,40 +16,34 @@ type IamRequestInfo struct {
 }
 
 func GetAwsIamRequestInfo(role string) (info IamRequestInfo, err error) {
-	stsSession, err := session.NewSession(&aws.Config{})
+	ctx := context.TODO()
+
+	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
 		return info, err
 	}
 
-	var params *sts.GetCallerIdentityInput
-	svc := sts.New(stsSession)
-	stsRequest, _ := svc.GetCallerIdentityRequest(params)
+	svc := sts.NewFromConfig(cfg)
+	presignClient := sts.NewPresignClient(svc)
 
-	value, err := stsSession.Config.Credentials.Get()
+	// Presign the GetCallerIdentity request for Vault AWS IAM auth
+	presignedReq, err := presignClient.PresignGetCallerIdentity(ctx,
+		&sts.GetCallerIdentityInput{},
+	)
 	if err != nil {
 		return info, err
 	}
 
-	stsRequest.HTTPRequest.Method = "POST"
-	stsRequest.HTTPRequest.Header.Add("User-Agent", role)
-	stsRequest.HTTPRequest.Header.Add("X-Amz-Security-Token", value.SecretAccessKey)
-	stsRequest.HTTPRequest.Header.Add("Content-Type", "application/x-www-form-urlencoded; charset=utf-8")
-	if err = stsRequest.Sign(); err != nil {
-		return
+	// Marshal headers to JSON
+	headersJson, err := json.Marshal(presignedReq.SignedHeader)
+	if err != nil {
+		return info, err
 	}
 
-	headersJson, err := json.Marshal(stsRequest.HTTPRequest.Header)
-	if err != nil {
-		return info, err
-	}
-	requestBody, err := ioutil.ReadAll(stsRequest.HTTPRequest.Body)
-	if err != nil {
-		return info, err
-	}
 	return IamRequestInfo{
-		Method:  "POST",
-		Url:     base64.StdEncoding.EncodeToString([]byte(stsRequest.HTTPRequest.URL.String())),
+		Method:  presignedReq.Method,
+		Url:     base64.StdEncoding.EncodeToString([]byte(presignedReq.URL)),
 		Headers: base64.StdEncoding.EncodeToString(headersJson),
-		Body:    base64.StdEncoding.EncodeToString(requestBody),
+		Body:    "",
 	}, nil
 }

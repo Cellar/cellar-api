@@ -3,15 +3,14 @@ package aws
 import (
 	"cellar/pkg/models"
 	"cellar/pkg/settings/cryptography"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/kms"
+	"context"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/kms"
 	log "github.com/sirupsen/logrus"
 )
 
 type EncryptionClient struct {
-	session       *session.Session
-	kmsClient     *kms.KMS
+	kmsClient     *kms.Client
 	configuration cryptography.IAwsConfiguration
 	logger        *log.Entry
 }
@@ -19,17 +18,16 @@ type EncryptionClient struct {
 func NewEncryptionClient(configuration cryptography.IAwsConfiguration) (*EncryptionClient, error) {
 	logger := initializeLogger(configuration)
 
-	sess, err := session.NewSession(&aws.Config{
-		Region: aws.String(configuration.Region()),
-	})
+	cfg, err := config.LoadDefaultConfig(context.TODO(),
+		config.WithRegion(configuration.Region()),
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	kmsClient := kms.New(sess)
+	kmsClient := kms.NewFromConfig(cfg)
 
 	return &EncryptionClient{
-		session:       sess,
 		kmsClient:     kmsClient,
 		configuration: configuration,
 		logger:        logger,
@@ -53,9 +51,15 @@ func initializeLogger(configuration cryptography.IAwsConfiguration) *log.Entry {
 func (ec EncryptionClient) Health() models.Health {
 	name := "AWS KMS"
 	status := models.HealthStatus(models.Unhealthy)
-	version := ec.kmsClient.APIVersion
+	version := "2014-11-01" // KMS API version
 
-	if version != "" {
+	// Test connection with a simple operation
+	keyId := ec.configuration.KmsKeyName()
+	_, err := ec.kmsClient.DescribeKey(context.TODO(), &kms.DescribeKeyInput{
+		KeyId: &keyId,
+	})
+
+	if err == nil {
 		status = models.Healthy
 	}
 
@@ -64,8 +68,9 @@ func (ec EncryptionClient) Health() models.Health {
 
 func (ec EncryptionClient) Encrypt(plaintext []byte) (ciphertext string, err error) {
 	ec.logger.Debug("attempting to encrypt content")
-	result, err := ec.kmsClient.Encrypt(&kms.EncryptInput{
-		KeyId:     aws.String(ec.configuration.KmsKeyName()),
+	keyId := ec.configuration.KmsKeyName()
+	result, err := ec.kmsClient.Encrypt(context.TODO(), &kms.EncryptInput{
+		KeyId:     &keyId,
 		Plaintext: plaintext,
 	})
 
@@ -83,7 +88,7 @@ func (ec EncryptionClient) Encrypt(plaintext []byte) (ciphertext string, err err
 
 func (ec EncryptionClient) Decrypt(ciphertext string) (plaintext []byte, err error) {
 	ec.logger.Debug("attempting to decrypt content")
-	result, err := ec.kmsClient.Decrypt(&kms.DecryptInput{
+	result, err := ec.kmsClient.Decrypt(context.TODO(), &kms.DecryptInput{
 		CiphertextBlob: []byte(ciphertext),
 	})
 
