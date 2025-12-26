@@ -95,6 +95,19 @@ func TestCreateSecret(t *testing.T) {
 				}
 			})
 		})
+
+		t.Run("and file is empty", func(t *testing.T) {
+			setupRouter()
+			emptyContent := []byte{}
+
+			t.Run("it should return 400 Bad Request", func(t *testing.T) {
+				req := createMultipartRequest(emptyContent, "test.txt")
+				w := httptest.NewRecorder()
+				router.ServeHTTP(w, req)
+
+				Equals(t, http.StatusBadRequest, w.Code)
+			})
+		})
 	})
 }
 

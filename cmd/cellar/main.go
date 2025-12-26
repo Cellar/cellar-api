@@ -21,9 +21,22 @@ func main() {
 	router := gin.New()
 	settings.SetAppVersion(version)
 	cfg := settings.NewConfiguration()
+	setMultipartMemoryLimit(router, cfg)
 	middleware.Setup(router, cfg)
 	addRoutes(router)
 	middleware.HandleError("error while starting the server", router.Run(cfg.App().BindAddress()))
+}
+
+func setMultipartMemoryLimit(router *gin.Engine, cfg settings.IConfiguration) {
+	const ginDefaultMultipartMemory = 32 * 1024 * 1024
+	const multipartBuffer = 2 * 1024 * 1024
+
+	configuredLimit := int64(cfg.App().MaxFileSizeMB()*1024*1024) + multipartBuffer
+	if configuredLimit > ginDefaultMultipartMemory {
+		router.MaxMultipartMemory = configuredLimit
+	} else {
+		router.MaxMultipartMemory = ginDefaultMultipartMemory
+	}
 }
 
 func addRoutes(router *gin.Engine) {

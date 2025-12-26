@@ -68,6 +68,11 @@ func CreateSecret(c *gin.Context) {
 		secret.Content = []byte(content)
 		secret.ContentType = models.ContentTypeText
 	} else {
+		if fileHeader.Size == 0 {
+			httputil.NewError(c, http.StatusBadRequest, errors.New("file cannot be empty"))
+			return
+		}
+
 		maxSizeBytes := int64(cfg.App().MaxFileSizeMB() * 1024 * 1024)
 		if fileHeader.Size > maxSizeBytes {
 			httputil.NewError(c, http.StatusRequestEntityTooLarge, fmt.Errorf("file size %d bytes exceeds maximum allowed size of %d MB", fileHeader.Size, cfg.App().MaxFileSizeMB()))
