@@ -43,8 +43,8 @@ func initializeLogger(configuration cryptography.IAwsConfiguration) *log.Entry {
 	})
 
 	logger.Debug("initializing aws kms configuration")
-	if configuration.KmsKeyName() == "" {
-		logger.Warn("AWS KMS key name is empty")
+	if configuration.KmsKeyId() == "" {
+		logger.Warn("AWS KMS key ID is empty")
 	}
 
 	return logger
@@ -61,7 +61,7 @@ func (ec EncryptionClient) Health(ctx context.Context) models.Health {
 	}
 
 	// Test connection with a simple operation
-	keyId := ec.configuration.KmsKeyName()
+	keyId := ec.configuration.KmsKeyId()
 	_, err := ec.kmsClient.DescribeKey(ctx, &kms.DescribeKeyInput{
 		KeyId: &keyId,
 	})
@@ -80,7 +80,7 @@ func (ec EncryptionClient) Encrypt(ctx context.Context, plaintext []byte) (ciphe
 	}
 
 	ec.logger.Debug("attempting to encrypt content")
-	keyId := ec.configuration.KmsKeyName()
+	keyId := ec.configuration.KmsKeyId()
 	result, err := ec.kmsClient.Encrypt(ctx, &kms.EncryptInput{
 		KeyId:     &keyId,
 		Plaintext: plaintext,

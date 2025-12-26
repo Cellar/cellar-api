@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.2.2]
+
+### Fixed
+- Fixed AWS KMS configuration variable from `CRYPTOGRAPHY_AWS_KMS_KEY_NAME` to `CRYPTOGRAPHY_AWS_KMS_KEY_ID` (correct AWS terminology)
+- Fixed `APP_MAX_FILE_SIZE_MB` configuration variable to use snake_case (`APP_MAX_FILE_SIZE_MB` → reads `app.max_file_size_mb`)
+- Added missing Docker secrets support (`_FILE` suffix) for Vault AWS IAM auth in docker-entrypoint.sh
+- Added missing Docker secrets support (`_FILE` suffix) for Vault GCP IAM auth in docker-entrypoint.sh
+- Added missing Docker secrets support (`_FILE` suffix) for Vault Kubernetes auth in docker-entrypoint.sh
+- Added missing Docker secrets support (`_FILE` suffix) for AWS KMS region and key ID in docker-entrypoint.sh
+
+**Note:** These are bug fixes for configuration variables that should have used correct naming from the start.
+If you were using the incorrect variable names, update your configuration:
+- `CRYPTOGRAPHY_AWS_KMS_KEY_NAME` → `CRYPTOGRAPHY_AWS_KMS_KEY_ID`
+- Environment variable naming is now consistent (all use snake_case with underscores)
+
 ## [3.2.1]
 
 ### Fixed
@@ -128,3 +143,15 @@ Pre-built binaries and Docker images work as drop-in replacements.
 
 ### Added
 - Initial open source release
+
+[Unreleased]: https://gitlab.com/cellar-app/cellar-api/-/compare/v3.2.2...main
+[3.2.2]: https://gitlab.com/cellar-app/cellar-api/-/compare/v3.2.1...v3.2.2
+[3.2.1]: https://gitlab.com/cellar-app/cellar-api/-/compare/v3.2.0...v3.2.1
+[3.2.0]: https://gitlab.com/cellar-app/cellar-api/-/compare/v3.1.1...v3.2.0
+[3.1.1]: https://gitlab.com/cellar-app/cellar-api/-/compare/v3.1.0...v3.1.1
+[3.1.0]: https://gitlab.com/cellar-app/cellar-api/-/compare/v3.0.0...v3.1.0
+[3.0.0]: https://gitlab.com/cellar-app/cellar-api/-/compare/v2.1.0...v3.0.0
+[2.1.0]: https://gitlab.com/cellar-app/cellar-api/-/compare/v2.0.0...v2.1.0
+[2.0.0]: https://gitlab.com/cellar-app/cellar-api/-/compare/v1.0.1...v2.0.0
+[1.0.1]: https://gitlab.com/cellar-app/cellar-api/-/compare/v1.0.0...v1.0.1
+[1.0.0]: https://gitlab.com/cellar-app/cellar-api/-/tags/v1.0.0

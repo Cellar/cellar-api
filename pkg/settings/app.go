@@ -16,7 +16,7 @@ const (
 	appVersionKey       = appKey + "version"
 	appClientAddressKey = appKey + "client_address"
 	appBindAddressKey   = appKey + "bind_address"
-	appMaxFileSizeMBKey = appKey + "maxFileSizeMB"
+	appMaxFileSizeMBKey = appKey + "max_file_size_mb"
 )
 
 var version string
