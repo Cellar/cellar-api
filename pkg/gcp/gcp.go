@@ -19,7 +19,7 @@ func GetGcpIamRequestInfo(role string) (signedJwt string, err error) {
 		return "", err
 	}
 
-	serviceAccountEmail, err := metadata.Email("")
+	serviceAccountEmail, err := metadata.EmailWithContext(ctx, "")
 	if err != nil {
 		return "", err
 	}

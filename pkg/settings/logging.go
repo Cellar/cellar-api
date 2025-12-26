@@ -55,7 +55,7 @@ func (lgc *LoggingConfiguration) Locations() (locations []io.Writer, err error) 
 
 func openLogFile(directory string) (io.Writer, error) {
 	if _, err := os.Stat(directory); os.IsNotExist(err) {
-		err = os.MkdirAll(directory, 644)
+		err = os.MkdirAll(directory, 0644)
 		if err != nil {
 			return nil, err
 		}

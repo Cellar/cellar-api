@@ -7,6 +7,9 @@ import (
 )
 
 func configureSwagger(configuration settings.IConfiguration) {
-	docs.SwaggerInfo.Host = strings.TrimLeft(configuration.App().ClientAddress(), "http://")
+	host := configuration.App().ClientAddress()
+	host = strings.TrimPrefix(host, "http://")
+	host = strings.TrimPrefix(host, "https://")
+	docs.SwaggerInfo.Host = host
 	docs.SwaggerInfo.BasePath = "/"
 }

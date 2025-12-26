@@ -29,7 +29,7 @@ func (t *FormattedTime) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	*t = FormattedTime(*&tm)
+	*t = FormattedTime(tm)
 
 	return nil
 }
