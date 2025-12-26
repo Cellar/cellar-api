@@ -7,18 +7,15 @@ import (
 	"cellar/pkg/mocks"
 	"cellar/pkg/models"
 	"cellar/pkg/settings"
-	"cellar/testing/testhelpers"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"go.uber.org/mock/gomock"
-
 	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
 )
-
-var Equals = testhelpers.Equals
 
 func TestCreateSecret(t *testing.T) {
 	gin.SetMode(gin.TestMode)
@@ -35,9 +32,9 @@ func TestCreateSecret(t *testing.T) {
 			writer := multipart.NewWriter(body)
 
 			part, _ := writer.CreateFormFile("file", filename)
-			part.Write(fileContent)
-			writer.WriteField("expiration_epoch", "9999999999")
-			writer.Close()
+			_, _ = part.Write(fileContent)
+			_ = writer.WriteField("expiration_epoch", "9999999999")
+			_ = writer.Close()
 
 			req, _ := http.NewRequest("POST", "/v2/secrets", body)
 			req.Header.Set("Content-Type", writer.FormDataContentType())
@@ -72,9 +69,7 @@ func TestCreateSecret(t *testing.T) {
 				w := httptest.NewRecorder()
 				router.ServeHTTP(w, req)
 
-				if w.Code != http.StatusRequestEntityTooLarge {
-					t.Errorf("expected status %d (413 Payload Too Large), got %d", http.StatusRequestEntityTooLarge, w.Code)
-				}
+				assert.Equal(t, http.StatusRequestEntityTooLarge, w.Code)
 			})
 		})
 
@@ -90,9 +85,7 @@ func TestCreateSecret(t *testing.T) {
 				w := httptest.NewRecorder()
 				router.ServeHTTP(w, req)
 
-				if w.Code == http.StatusRequestEntityTooLarge {
-					t.Errorf("expected status not to be %d (413 Payload Too Large), got %d", http.StatusRequestEntityTooLarge, w.Code)
-				}
+				assert.NotEqual(t, http.StatusRequestEntityTooLarge, w.Code)
 			})
 		})
 
@@ -105,7 +98,7 @@ func TestCreateSecret(t *testing.T) {
 				w := httptest.NewRecorder()
 				router.ServeHTTP(w, req)
 
-				Equals(t, http.StatusBadRequest, w.Code)
+				assert.Equal(t, http.StatusBadRequest, w.Code)
 			})
 		})
 	})
@@ -145,19 +138,19 @@ func TestAccessSecretContent(t *testing.T) {
 		router.ServeHTTP(w, req)
 
 		t.Run("it should include X-Content-Type-Options nosniff header", func(t *testing.T) {
-			Equals(t, "nosniff", w.Header().Get("X-Content-Type-Options"))
+			assert.Equal(t, "nosniff", w.Header().Get("X-Content-Type-Options"))
 		})
 
 		t.Run("it should include Content-Security-Policy default-src none header", func(t *testing.T) {
-			Equals(t, "default-src 'none'", w.Header().Get("Content-Security-Policy"))
+			assert.Equal(t, "default-src 'none'", w.Header().Get("Content-Security-Policy"))
 		})
 
 		t.Run("it should include X-Frame-Options DENY header", func(t *testing.T) {
-			Equals(t, "DENY", w.Header().Get("X-Frame-Options"))
+			assert.Equal(t, "DENY", w.Header().Get("X-Frame-Options"))
 		})
 
 		t.Run("it should include Cache-Control no-store header", func(t *testing.T) {
-			Equals(t, "no-store, no-cache, must-revalidate", w.Header().Get("Cache-Control"))
+			assert.Equal(t, "no-store, no-cache, must-revalidate", w.Header().Get("Cache-Control"))
 		})
 	})
 }

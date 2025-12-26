@@ -7,9 +7,12 @@ import (
 	"cellar/pkg/models"
 	"cellar/testing/testhelpers"
 	"context"
-	"go.uber.org/mock/gomock"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
 
 func TestWhenCreatingASecret(t *testing.T) {
@@ -50,7 +53,7 @@ func TestWhenCreatingASecret(t *testing.T) {
 				}
 
 				response, _, err := commands.CreateSecret(context.Background(), dataStore, encryption, expectedSecret)
-				testhelpers.Ok(t, err)
+				require.NoError(t, err)
 
 				return
 			}
@@ -61,15 +64,29 @@ func TestWhenCreatingASecret(t *testing.T) {
 			t.Run("should return", func(t *testing.T) {
 				response := sut(-1, -1)
 
-				t.Run("ID", testhelpers.AssertF(len(response.ID) == 64, "expected ID length of 64 got: %d", len(response.ID)))
-				t.Run("access count of zero", testhelpers.EqualsF(0, response.AccessCount))
-				t.Run("access limit", testhelpers.EqualsF(expectedSecret.AccessLimit, response.AccessLimit))
-				t.Run("content type", testhelpers.EqualsF(models.ContentType(expectedSecret.ContentType), response.ContentType))
-				t.Run("expiration", testhelpers.EqualsF(expectedExpiration.Format("2006-01-02 15:04:05 UTC"), response.Expiration.Format()))
+				t.Run("it should have ID of length 64", func(t *testing.T) {
+					assert.Equal(t, 64, len(response.ID))
+				})
+
+				t.Run("it should have access count of zero", func(t *testing.T) {
+					assert.Equal(t, 0, response.AccessCount)
+				})
+
+				t.Run("it should have expected access limit", func(t *testing.T) {
+					assert.Equal(t, expectedSecret.AccessLimit, response.AccessLimit)
+				})
+
+				t.Run("it should have expected content type", func(t *testing.T) {
+					assert.Equal(t, models.ContentType(expectedSecret.ContentType), response.ContentType)
+				})
+
+				t.Run("it should have expected expiration", func(t *testing.T) {
+					assert.Equal(t, expectedExpiration.Format("2006-01-02 15:04:05 UTC"), response.Expiration.Format())
+				})
 			})
 
 			t.Run("when context is cancelled", func(t *testing.T) {
-				t.Run("should return context error", func(t *testing.T) {
+				t.Run("it should return context error", func(t *testing.T) {
 					ctx, cancel := context.WithCancel(context.Background())
 					cancel()
 
@@ -79,7 +96,7 @@ func TestWhenCreatingASecret(t *testing.T) {
 
 					_, _, err := commands.CreateSecret(ctx, dataStore, encryption, expectedSecret)
 
-					testhelpers.Assert(t, pkgerrors.IsContextError(err), "expected context error")
+					assert.True(t, pkgerrors.IsContextError(err), "expected context error")
 				})
 			})
 		}
@@ -132,8 +149,14 @@ func TestWhenCreatingASecretWithTooShortExpiration(t *testing.T) {
 	t.Run("should not call to database", func(t *testing.T) { _, _ = sut(0) })
 	t.Run("should return", func(t *testing.T) {
 		isValidationError, err := sut(-1)
-		t.Run("should return validation error", testhelpers.EqualsF(true, isValidationError))
-		t.Run("should return an error", testhelpers.AssertF(err != nil, "error should not be nil"))
+
+		t.Run("it should return validation error", func(t *testing.T) {
+			assert.True(t, isValidationError)
+		})
+
+		t.Run("it should return an error", func(t *testing.T) {
+			assert.Error(t, err)
+		})
 	})
 }
 
@@ -180,22 +203,28 @@ func TestWhenAccessingASecret(t *testing.T) {
 				}
 
 				response, err := commands.AccessSecret(context.Background(), dataStore, encryption, secret.ID)
-				testhelpers.Ok(t, err)
+				require.NoError(t, err)
 
 				return
 			}
 
 			t.Run("should return", func(t *testing.T) {
 				response := sut(-1, -1, -1)
-				t.Run("should return ID", testhelpers.EqualsF(secret.ID, response.ID))
-				t.Run("should return correct content", testhelpers.EqualsF(secret.Content, response.Content))
+
+				t.Run("it should return ID", func(t *testing.T) {
+					assert.Equal(t, secret.ID, response.ID)
+				})
+
+				t.Run("it should return correct content", func(t *testing.T) {
+					assert.Equal(t, secret.Content, response.Content)
+				})
 			})
 			t.Run("should decrypt content", func(t *testing.T) { sut(-1, 1, -1) })
 			t.Run("should access from database", func(t *testing.T) { sut(1, -1, -1) })
 			t.Run("should increase access", func(t *testing.T) { sut(-1, -1, 1) })
 
 			t.Run("when context is cancelled", func(t *testing.T) {
-				t.Run("should return context error", func(t *testing.T) {
+				t.Run("it should return context error", func(t *testing.T) {
 					ctx, cancel := context.WithCancel(context.Background())
 					cancel()
 
@@ -205,7 +234,7 @@ func TestWhenAccessingASecret(t *testing.T) {
 
 					_, err := commands.AccessSecret(ctx, dataStore, encryption, secret.ID)
 
-					testhelpers.Assert(t, pkgerrors.IsContextError(err), "expected context error")
+					assert.True(t, pkgerrors.IsContextError(err), "expected context error")
 				})
 			})
 		}
@@ -248,8 +277,13 @@ func TestWhenAccessingASecretThatDoesNotExist(t *testing.T) {
 	t.Run("should return", func(t *testing.T) {
 		response, err := sut(-1, -1, -1)
 
-		t.Run("should not return error", testhelpers.OkF(err))
-		t.Run("should return nil", testhelpers.IsNilF(response))
+		t.Run("it should not return error", func(t *testing.T) {
+			assert.NoError(t, err)
+		})
+
+		t.Run("it should return nil", func(t *testing.T) {
+			assert.Nil(t, response)
+		})
 	})
 
 	t.Run("should not attempt to decrypt content", func(t *testing.T) { _, _ = sut(0, -1, -1) })
@@ -304,14 +338,26 @@ func TestWhenGettingSecretMetadata(t *testing.T) {
 
 	t.Run("should return", func(t *testing.T) {
 		response := sut(-1, -1)
-		t.Run("ID", testhelpers.EqualsF(secret.ID, response.ID))
-		t.Run("access count", testhelpers.EqualsF(1, response.AccessCount))
-		t.Run("access limit", testhelpers.EqualsF(secret.AccessLimit, response.AccessLimit))
-		t.Run("Duration", testhelpers.EqualsF(secret.Expiration().Format(), response.Expiration.Format()))
+
+		t.Run("it should return ID", func(t *testing.T) {
+			assert.Equal(t, secret.ID, response.ID)
+		})
+
+		t.Run("it should return access count", func(t *testing.T) {
+			assert.Equal(t, 1, response.AccessCount)
+		})
+
+		t.Run("it should return access limit", func(t *testing.T) {
+			assert.Equal(t, secret.AccessLimit, response.AccessLimit)
+		})
+
+		t.Run("it should return expiration", func(t *testing.T) {
+			assert.Equal(t, secret.Expiration().Format(), response.Expiration.Format())
+		})
 	})
 
 	t.Run("when context is cancelled", func(t *testing.T) {
-		t.Run("should return nil", func(t *testing.T) {
+		t.Run("it should return nil", func(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			cancel()
 
@@ -320,7 +366,7 @@ func TestWhenGettingSecretMetadata(t *testing.T) {
 
 			response := commands.GetSecretMetadata(ctx, dataStore, secret.ID)
 
-			testhelpers.IsNil(t, response)
+			assert.Nil(t, response)
 		})
 	})
 
@@ -350,9 +396,9 @@ func TestWhenGettingSecretMetadataForSecretThatDoesNotExist(t *testing.T) {
 		return commands.GetSecretMetadata(context.Background(), dataStore, testhelpers.RandomId(t))
 	}
 
-	t.Run("should return nil", func(t *testing.T) {
+	t.Run("it should return nil", func(t *testing.T) {
 		response := sut(-1, -1)
-		testhelpers.IsNil(t, response)
+		assert.Nil(t, response)
 	})
 	t.Run("should attempt to read from database", func(t *testing.T) { sut(1, -1) })
 	t.Run("should not attempt to update access", func(t *testing.T) { sut(-1, 0) })
@@ -381,13 +427,19 @@ func TestWhenDeletingASecret(t *testing.T) {
 
 	t.Run("should return", func(t *testing.T) {
 		response, err := sut(-1)
-		t.Run("nil error", testhelpers.OkF(err))
-		t.Run("true", testhelpers.EqualsF(true, response))
+
+		t.Run("it should not return error", func(t *testing.T) {
+			assert.NoError(t, err)
+		})
+
+		t.Run("it should return true", func(t *testing.T) {
+			assert.True(t, response)
+		})
 	})
 	t.Run("should delete from database", func(t *testing.T) { _, _ = sut(1) })
 
 	t.Run("when context is cancelled", func(t *testing.T) {
-		t.Run("should return context error", func(t *testing.T) {
+		t.Run("it should return context error", func(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			cancel()
 
@@ -400,7 +452,7 @@ func TestWhenDeletingASecret(t *testing.T) {
 
 			_, err := commands.DeleteSecret(ctx, dataStore, secret.ID)
 
-			testhelpers.Assert(t, pkgerrors.IsContextError(err), "expected context error")
+			assert.True(t, pkgerrors.IsContextError(err), "expected context error")
 		})
 	})
 }
@@ -426,8 +478,14 @@ func TestWhenDeletingASecretThatDoesNotExist(t *testing.T) {
 
 	t.Run("should return", func(t *testing.T) {
 		response, err := sut(-1)
-		t.Run("nil error", testhelpers.OkF(err))
-		t.Run("false", testhelpers.EqualsF(false, response))
+
+		t.Run("it should not return error", func(t *testing.T) {
+			assert.NoError(t, err)
+		})
+
+		t.Run("it should return false", func(t *testing.T) {
+			assert.False(t, response)
+		})
 	})
 	t.Run("should delete from database", func(t *testing.T) { _, _ = sut(1) })
 }

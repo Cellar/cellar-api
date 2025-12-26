@@ -2,55 +2,90 @@ package models_test
 
 import (
 	"cellar/pkg/models"
-	"cellar/testing/testhelpers"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
-func NewHealthResponseTest(t *testing.T, dataStoreStatus, encryptionStatus, expectedStatus models.HealthStatus) {
-	host := "host"
-	appVersion := "1.0.0"
-	dataStoreHealth := *models.NewHealth(
-		"dataStore",
-		dataStoreStatus,
-		"1.1.1",
-	)
-	encryptionHealth := *models.NewHealth(
-		"encryption",
-		encryptionStatus,
-		"2.2.2",
-	)
-	expected := models.HealthResponse{
-		Host:       host,
-		Version:    appVersion,
-		Status:     expectedStatus.String(),
-		Datastore:  dataStoreHealth,
-		Encryption: encryptionHealth,
-	}
-	actual := *models.NewHealthResponse(
-		host,
-		appVersion,
-		dataStoreHealth,
-		encryptionHealth,
-	)
-	testhelpers.Equals(t, expected, actual)
-}
+func TestWhenCreatingHealthResponse(t *testing.T) {
+	t.Run("when all components are healthy", func(t *testing.T) {
+		host := "host"
+		appVersion := "1.0.0"
+		dataStoreHealth := *models.NewHealth("dataStore", models.Healthy, "1.1.1")
+		encryptionHealth := *models.NewHealth("encryption", models.Healthy, "2.2.2")
 
-func TestAssessHealth_WhenAllHealthy(t *testing.T) {
-	NewHealthResponseTest(t, models.Healthy, models.Healthy, models.Healthy)
-}
+		actual := *models.NewHealthResponse(host, appVersion, dataStoreHealth, encryptionHealth)
 
-func TestAssessHealth_WhenAllUnhealthy(t *testing.T) {
-	NewHealthResponseTest(t, models.Unhealthy, models.Unhealthy, models.Unhealthy)
-}
+		t.Run("it should set host", func(t *testing.T) {
+			assert.Equal(t, host, actual.Host)
+		})
 
-func TestAssessHealth_WhenAllDegraded(t *testing.T) {
-	NewHealthResponseTest(t, models.Degraded, models.Degraded, models.Degraded)
-}
+		t.Run("it should set version", func(t *testing.T) {
+			assert.Equal(t, appVersion, actual.Version)
+		})
 
-func TestAssessHealth_WhenOneUnhealthy(t *testing.T) {
-	NewHealthResponseTest(t, models.Healthy, models.Unhealthy, models.Degraded)
-}
+		t.Run("it should set overall status to healthy", func(t *testing.T) {
+			assert.Equal(t, "Healthy", actual.Status)
+		})
 
-func TestAssessHealth_WhenOneDegraded(t *testing.T) {
-	NewHealthResponseTest(t, models.Healthy, models.Degraded, models.Degraded)
+		t.Run("it should set datastore health", func(t *testing.T) {
+			assert.Equal(t, dataStoreHealth, actual.Datastore)
+		})
+
+		t.Run("it should set encryption health", func(t *testing.T) {
+			assert.Equal(t, encryptionHealth, actual.Encryption)
+		})
+	})
+
+	t.Run("when all components are unhealthy", func(t *testing.T) {
+		host := "host"
+		appVersion := "1.0.0"
+		dataStoreHealth := *models.NewHealth("dataStore", models.Unhealthy, "1.1.1")
+		encryptionHealth := *models.NewHealth("encryption", models.Unhealthy, "2.2.2")
+
+		actual := *models.NewHealthResponse(host, appVersion, dataStoreHealth, encryptionHealth)
+
+		t.Run("it should set overall status to unhealthy", func(t *testing.T) {
+			assert.Equal(t, "Unhealthy", actual.Status)
+		})
+	})
+
+	t.Run("when all components are degraded", func(t *testing.T) {
+		host := "host"
+		appVersion := "1.0.0"
+		dataStoreHealth := *models.NewHealth("dataStore", models.Degraded, "1.1.1")
+		encryptionHealth := *models.NewHealth("encryption", models.Degraded, "2.2.2")
+
+		actual := *models.NewHealthResponse(host, appVersion, dataStoreHealth, encryptionHealth)
+
+		t.Run("it should set overall status to degraded", func(t *testing.T) {
+			assert.Equal(t, "Degraded", actual.Status)
+		})
+	})
+
+	t.Run("when one component is unhealthy", func(t *testing.T) {
+		host := "host"
+		appVersion := "1.0.0"
+		dataStoreHealth := *models.NewHealth("dataStore", models.Healthy, "1.1.1")
+		encryptionHealth := *models.NewHealth("encryption", models.Unhealthy, "2.2.2")
+
+		actual := *models.NewHealthResponse(host, appVersion, dataStoreHealth, encryptionHealth)
+
+		t.Run("it should set overall status to degraded", func(t *testing.T) {
+			assert.Equal(t, "Degraded", actual.Status)
+		})
+	})
+
+	t.Run("when one component is degraded", func(t *testing.T) {
+		host := "host"
+		appVersion := "1.0.0"
+		dataStoreHealth := *models.NewHealth("dataStore", models.Healthy, "1.1.1")
+		encryptionHealth := *models.NewHealth("encryption", models.Degraded, "2.2.2")
+
+		actual := *models.NewHealthResponse(host, appVersion, dataStoreHealth, encryptionHealth)
+
+		t.Run("it should set overall status to degraded", func(t *testing.T) {
+			assert.Equal(t, "Degraded", actual.Status)
+		})
+	})
 }

@@ -12,6 +12,9 @@ import (
 	"net/http"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestWhenCreatingASecret(t *testing.T) {
@@ -29,24 +32,34 @@ func TestWhenCreatingASecret(t *testing.T) {
 		ExpirationEpoch: expectedExpiration.Unix(),
 	}
 	body, err := json.Marshal(expected)
-	testhelpers.Ok(t, err)
+	require.NoError(t, err)
 
 	resp, err := http.Post(cfg.App().ClientAddress()+"/v1/secrets", "application/json", bytes.NewBuffer(body))
-	testhelpers.OkF(err)
+	require.NoError(t, err)
 
 	defer resp.Body.Close()
 
-	t.Run("status is created", testhelpers.EqualsF(http.StatusCreated, resp.StatusCode))
+	t.Run("it should return status created", func(t *testing.T) {
+		assert.Equal(t, http.StatusCreated, resp.StatusCode)
+	})
 
 	responseBody, err := ioutil.ReadAll(resp.Body)
-	testhelpers.Ok(t, err)
+	require.NoError(t, err)
 
 	var actual models.SecretMetadataResponse
-	testhelpers.Ok(t, json.Unmarshal(responseBody, &actual))
+	require.NoError(t, json.Unmarshal(responseBody, &actual))
 
-	t.Run("id should not be empty", testhelpers.NotEqualsF("", actual.ID))
-	t.Run("access limit should set", testhelpers.EqualsF(expected.AccessLimit, actual.AccessLimit))
-	t.Run("expiration should be set", testhelpers.EqualsF(expectedExpiration.Format("2006-01-02 15:04:05 UTC"), actual.Expiration.Format()))
+	t.Run("it should have non-empty id", func(t *testing.T) {
+		assert.NotEqual(t, "", actual.ID)
+	})
+
+	t.Run("it should have expected access limit", func(t *testing.T) {
+		assert.Equal(t, expected.AccessLimit, actual.AccessLimit)
+	})
+
+	t.Run("it should have expected expiration", func(t *testing.T) {
+		assert.Equal(t, expectedExpiration.Format("2006-01-02 15:04:05 UTC"), actual.Expiration.Format())
+	})
 }
 
 func TestWhenCreatingASecretAndExpirationIsTooShort(t *testing.T) {
@@ -64,14 +77,16 @@ func TestWhenCreatingASecretAndExpirationIsTooShort(t *testing.T) {
 		ExpirationEpoch: expectedExpiration.Unix(),
 	}
 	body, err := json.Marshal(expected)
-	testhelpers.Ok(t, err)
+	require.NoError(t, err)
 
 	resp, err := http.Post(cfg.App().ClientAddress()+"/v1/secrets", "application/json", bytes.NewBuffer(body))
-	testhelpers.OkF(err)
+	require.NoError(t, err)
 
 	defer resp.Body.Close()
 
-	t.Run("status is bad request", testhelpers.EqualsF(http.StatusBadRequest, resp.StatusCode))
+	t.Run("it should return status bad request", func(t *testing.T) {
+		assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+	})
 }
 
 func TestWhenCreatingASecretAndExpirationIsInThePast(t *testing.T) {
@@ -89,14 +104,16 @@ func TestWhenCreatingASecretAndExpirationIsInThePast(t *testing.T) {
 		ExpirationEpoch: expectedExpiration.Unix(),
 	}
 	body, err := json.Marshal(expected)
-	testhelpers.Ok(t, err)
+	require.NoError(t, err)
 
 	resp, err := http.Post(cfg.App().ClientAddress()+"/v1/secrets", "application/json", bytes.NewBuffer(body))
-	testhelpers.OkF(err)
+	require.NoError(t, err)
 
 	defer resp.Body.Close()
 
-	t.Run("status is bad request", testhelpers.EqualsF(http.StatusBadRequest, resp.StatusCode))
+	t.Run("it should return status bad request", func(t *testing.T) {
+		assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+	})
 }
 
 func TestWhenCreatingASecretWithoutAccessLimit(t *testing.T) {
@@ -112,24 +129,34 @@ func TestWhenCreatingASecretWithoutAccessLimit(t *testing.T) {
 		ExpirationEpoch: expectedExpiration.Unix(),
 	}
 	body, err := json.Marshal(expected)
-	testhelpers.Ok(t, err)
+	require.NoError(t, err)
 
 	resp, err := http.Post(cfg.App().ClientAddress()+"/v1/secrets", "application/json", bytes.NewBuffer(body))
-	testhelpers.OkF(err)
+	require.NoError(t, err)
 
 	defer resp.Body.Close()
 
-	t.Run("status is created", testhelpers.EqualsF(http.StatusCreated, resp.StatusCode))
+	t.Run("it should return status created", func(t *testing.T) {
+		assert.Equal(t, http.StatusCreated, resp.StatusCode)
+	})
 
 	responseBody, err := ioutil.ReadAll(resp.Body)
-	testhelpers.Ok(t, err)
+	require.NoError(t, err)
 
 	var actual models.SecretMetadataResponse
-	testhelpers.Ok(t, json.Unmarshal(responseBody, &actual))
+	require.NoError(t, json.Unmarshal(responseBody, &actual))
 
-	t.Run("id should not be empty", testhelpers.NotEqualsF("", actual.ID))
-	t.Run("access limit should set to 0", testhelpers.EqualsF(0, actual.AccessLimit))
-	t.Run("expiration should be set", testhelpers.EqualsF(expectedExpiration.Format("2006-01-02 15:04:05 UTC"), actual.Expiration.Format()))
+	t.Run("it should have non-empty id", func(t *testing.T) {
+		assert.NotEqual(t, "", actual.ID)
+	})
+
+	t.Run("it should have access limit set to 0", func(t *testing.T) {
+		assert.Equal(t, 0, actual.AccessLimit)
+	})
+
+	t.Run("it should have expected expiration", func(t *testing.T) {
+		assert.Equal(t, expectedExpiration.Format("2006-01-02 15:04:05 UTC"), actual.Expiration.Format())
+	})
 }
 
 func TestWhenCreatingASecretWithoutDuration(t *testing.T) {
@@ -139,14 +166,16 @@ func TestWhenCreatingASecretWithoutDuration(t *testing.T) {
 		"access_limit": 100,
 	}
 	body, err := json.Marshal(expected)
-	testhelpers.Ok(t, err)
+	require.NoError(t, err)
 
 	resp, err := http.Post(cfg.App().ClientAddress()+"/v1/secrets", "application/json", bytes.NewBuffer(body))
-	testhelpers.OkF(err)
+	require.NoError(t, err)
 
 	defer resp.Body.Close()
 
-	t.Run("status is bad request", testhelpers.EqualsF(http.StatusBadRequest, resp.StatusCode))
+	t.Run("it should return status bad request", func(t *testing.T) {
+		assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+	})
 }
 
 func TestWhenCreatingASecretWithoutContent(t *testing.T) {
@@ -156,12 +185,14 @@ func TestWhenCreatingASecretWithoutContent(t *testing.T) {
 		"duration":     60,
 	}
 	body, err := json.Marshal(expected)
-	testhelpers.Ok(t, err)
+	require.NoError(t, err)
 
 	resp, err := http.Post(cfg.App().ClientAddress()+"/v1/secrets", "application/json", bytes.NewBuffer(body))
-	testhelpers.OkF(err)
+	require.NoError(t, err)
 
 	defer resp.Body.Close()
 
-	t.Run("status is bad request", testhelpers.EqualsF(http.StatusBadRequest, resp.StatusCode))
+	t.Run("it should return status bad request", func(t *testing.T) {
+		assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+	})
 }

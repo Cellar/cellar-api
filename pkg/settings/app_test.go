@@ -1,8 +1,10 @@
 package settings
 
 import (
-	"github.com/spf13/viper"
 	"testing"
+
+	"github.com/spf13/viper"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestAppConfiguration(t *testing.T) {
@@ -12,11 +14,7 @@ func TestAppConfiguration(t *testing.T) {
 
 		t.Run("it should return default value of 8 MB", func(t *testing.T) {
 			result := app.MaxFileSizeMB()
-			expected := 8
-
-			if result != expected {
-				t.Errorf("expected MaxFileSizeMB to be %d, got %d", expected, result)
-			}
+			assert.Equal(t, 8, result)
 		})
 	})
 
@@ -27,11 +25,7 @@ func TestAppConfiguration(t *testing.T) {
 
 		t.Run("it should return the configured value", func(t *testing.T) {
 			result := app.MaxFileSizeMB()
-			expected := 16
-
-			if result != expected {
-				t.Errorf("expected MaxFileSizeMB to be %d, got %d", expected, result)
-			}
+			assert.Equal(t, 16, result)
 		})
 	})
 }
