@@ -10,7 +10,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"mime/multipart"
 	"net/http"
 	"strconv"
@@ -57,7 +56,7 @@ func CreateSecretV1(t *testing.T, cfg settings.IConfiguration, content string, a
 		require.NoError(t, createResp.Body.Close())
 	}()
 
-	responseBody, err := ioutil.ReadAll(createResp.Body)
+	responseBody, err := io.ReadAll(createResp.Body)
 	require.NoError(t, err)
 
 	var createdSecret models.SecretMetadataResponse
@@ -82,7 +81,7 @@ func CreateSecretV2(t *testing.T, cfg settings.IConfiguration, contentType model
 		require.NoError(t, createResp.Body.Close())
 	}()
 
-	responseBody, err := ioutil.ReadAll(createResp.Body)
+	responseBody, err := io.ReadAll(createResp.Body)
 	require.NoError(t, err)
 
 	var createdSecret models.SecretMetadataResponseV2

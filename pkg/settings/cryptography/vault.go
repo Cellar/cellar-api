@@ -6,8 +6,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
+
 	"github.com/spf13/viper"
-	"io/ioutil"
 )
 
 const (
@@ -268,7 +269,7 @@ func (k8s KubernetesAuth) LoginPath() string {
 }
 
 func (k8s KubernetesAuth) LoginParameters() (map[string]interface{}, error) {
-	jwtBytes, err := ioutil.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/token")
+	jwtBytes, err := os.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/token")
 	if err != nil {
 		return nil, err
 	}

@@ -7,7 +7,7 @@ import (
 	"cellar/pkg/models"
 	"cellar/testing/testhelpers"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strconv"
 	"testing"
@@ -35,7 +35,7 @@ func TestWhenCreatingASecretFromContent(t *testing.T) {
 		assert.Equal(t, http.StatusCreated, resp.StatusCode)
 	})
 
-	responseBody, err := ioutil.ReadAll(resp.Body)
+	responseBody, err := io.ReadAll(resp.Body)
 	require.NoError(t, err)
 
 	var actual models.SecretMetadataResponseV2
@@ -76,7 +76,7 @@ func TestWhenCreatingASecretFromFile(t *testing.T) {
 		assert.Equal(t, http.StatusCreated, resp.StatusCode)
 	})
 
-	responseBody, err := ioutil.ReadAll(resp.Body)
+	responseBody, err := io.ReadAll(resp.Body)
 	require.NoError(t, err)
 
 	var actual models.SecretMetadataResponseV2
@@ -148,7 +148,7 @@ func TestWhenCreatingASecretFromContentWithoutAccessLimit(t *testing.T) {
 		assert.Equal(t, http.StatusCreated, resp.StatusCode)
 	})
 
-	responseBody, err := ioutil.ReadAll(resp.Body)
+	responseBody, err := io.ReadAll(resp.Body)
 	require.NoError(t, err)
 
 	var actual models.SecretMetadataResponseV2
@@ -184,7 +184,7 @@ func TestWhenCreatingASecretFromFileWithoutAccessLimit(t *testing.T) {
 		assert.Equal(t, http.StatusCreated, resp.StatusCode)
 	})
 
-	responseBody, err := ioutil.ReadAll(resp.Body)
+	responseBody, err := io.ReadAll(resp.Body)
 	require.NoError(t, err)
 
 	var actual models.SecretMetadataResponseV2

@@ -8,7 +8,7 @@ import (
 	"cellar/testing/testhelpers"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"testing"
 
@@ -31,7 +31,7 @@ func TestWhenAccessingSecretContent(t *testing.T) {
 
 	defer resp.Body.Close()
 
-	responseBody, err := ioutil.ReadAll(resp.Body)
+	responseBody, err := io.ReadAll(resp.Body)
 	require.NoError(t, err)
 
 	var actual models.SecretContentResponse
@@ -61,7 +61,7 @@ func TestWhenAccessingSecretFile(t *testing.T) {
 
 	defer resp.Body.Close()
 
-	responseBody, err := ioutil.ReadAll(resp.Body)
+	responseBody, err := io.ReadAll(resp.Body)
 	require.NoError(t, err)
 
 	t.Run("it should return matching file content", func(t *testing.T) {
@@ -105,7 +105,7 @@ func TestWhenAccessingSecretWithAccessLimitOfOne(t *testing.T) {
 
 	defer response1.Body.Close()
 
-	responseBody, err := ioutil.ReadAll(response1.Body)
+	responseBody, err := io.ReadAll(response1.Body)
 	require.NoError(t, err)
 
 	var actual models.SecretContentResponse

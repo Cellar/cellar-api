@@ -8,7 +8,7 @@ import (
 	"cellar/pkg/models"
 	"cellar/testing/testhelpers"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"testing"
 	"time"
@@ -43,7 +43,7 @@ func TestWhenCreatingASecret(t *testing.T) {
 		assert.Equal(t, http.StatusCreated, resp.StatusCode)
 	})
 
-	responseBody, err := ioutil.ReadAll(resp.Body)
+	responseBody, err := io.ReadAll(resp.Body)
 	require.NoError(t, err)
 
 	var actual models.SecretMetadataResponse
@@ -140,7 +140,7 @@ func TestWhenCreatingASecretWithoutAccessLimit(t *testing.T) {
 		assert.Equal(t, http.StatusCreated, resp.StatusCode)
 	})
 
-	responseBody, err := ioutil.ReadAll(resp.Body)
+	responseBody, err := io.ReadAll(resp.Body)
 	require.NoError(t, err)
 
 	var actual models.SecretMetadataResponse

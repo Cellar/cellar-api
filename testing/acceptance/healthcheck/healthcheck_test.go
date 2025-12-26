@@ -7,7 +7,7 @@ import (
 	"cellar/pkg/models"
 	"cellar/testing/testhelpers"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 	"testing"
@@ -29,7 +29,7 @@ func TestHealthCheck(t *testing.T) {
 		assert.Equal(t, 200, resp.StatusCode)
 	})
 
-	responseBody, err := ioutil.ReadAll(resp.Body)
+	responseBody, err := io.ReadAll(resp.Body)
 	require.NoError(t, err)
 
 	var health models.HealthResponse
