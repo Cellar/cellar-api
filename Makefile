@@ -158,7 +158,7 @@ package-lambda:
 	 zip cellar-api.zip bootstrap
 	@rm dist/bootstrap
 
-publish: package
+publish:
 	$(LOG) "Uploading cellar binary to ${PACKAGE_URL}"
 	@curl \
 		--header "JOB-TOKEN: ${PACKAGE_TOKEN}" \
@@ -181,8 +181,18 @@ docker-run:
 	$(LOG) "Running docker image '${IMAGE_NAME}:${IMAGE_TAG}"
 	@docker run ${IMAGE_NAME}:${IMAGE_TAG}
 
-docker-publish: docker-build
+docker-push:
 	$(LOG) "Pushing docker image '${IMAGE_NAME}:${IMAGE_TAG}"
+	@docker push ${IMAGE_NAME}:${IMAGE_TAG}
+
+docker-publish: docker-build docker-push
+
+docker-retag:
+	$(LOG) "Pulling source image '${IMAGE_NAME}:${SOURCE_TAG}'"
+	@docker pull ${IMAGE_NAME}:${SOURCE_TAG}
+	$(LOG) "Retagging as '${IMAGE_NAME}:${IMAGE_TAG}'"
+	@docker tag ${IMAGE_NAME}:${SOURCE_TAG} ${IMAGE_NAME}:${IMAGE_TAG}
+	$(LOG) "Pushing retagged image '${IMAGE_NAME}:${IMAGE_TAG}'"
 	@docker push ${IMAGE_NAME}:${IMAGE_TAG}
 
 vault-configure: vault-enable-transit vault-enable-auth

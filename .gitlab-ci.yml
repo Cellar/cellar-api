@@ -15,11 +15,12 @@ variables:
   cache:
     key:
       files:
-        - cellar/go.mod
-        - cellar/go.sum
-      prefix: ${CI_PIPELINE_IID}
+        - go.mod
+        - go.sum
     paths:
-      - /go
+      - .go/pkg/mod
+  before_script:
+    - export GOPATH=$CI_PROJECT_DIR/.go
   tags:
     - gitlab-org-docker
 
@@ -41,7 +42,11 @@ build-binary:
   extends: .api
   stage: build
   script:
-    - make build
+    - make package APP_VERSION=${APP_VERSION} PACKAGE_ARCH=linux-amd64 PACKAGE_NAME=${APP_NAME}
+  artifacts:
+    name: ${APP_NAME}-${APP_VERSION}
+    paths:
+      - ${APP_NAME}-${APP_VERSION}-linux-amd64
 
 format-check:
   extends: .api
@@ -53,6 +58,7 @@ lint:
   extends: .api
   stage: build
   before_script:
+    - export GOPATH=$CI_PROJECT_DIR/.go
     - curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin
   script:
     - make lint
@@ -61,7 +67,8 @@ build-docker:
   extends: .docker
   stage: build
   script:
-    - make docker-build APP_VERSION=${APP_VERSION} IMAGE_NAME=${IMAGE_NAME} IMAGE_TAG=${APP_VERSION}
+    - make docker-build APP_VERSION=${APP_VERSION} IMAGE_NAME=${IMAGE_NAME} IMAGE_TAG=pipeline-${CI_PIPELINE_IID}
+    - make docker-push IMAGE_NAME=${IMAGE_NAME} IMAGE_TAG=pipeline-${CI_PIPELINE_IID}
 
 test-unit:
   extends: .api
@@ -93,6 +100,7 @@ test-unit:
     - name: hashicorp/vault:1.21
       alias: vault
   before_script:
+    - export GOPATH=$CI_PROJECT_DIR/.go
     - apt-get update && apt-get install -y jq
     - make vault-configure
     - export CRYPTOGRAPHY_VAULT_AUTH_APPROLE_ROLE_ID=$(make vault-role-id)
@@ -132,6 +140,9 @@ pages:
 publish-binary:
   extends: .api
   stage: publish
+  needs:
+    - job: build-binary
+      artifacts: true
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       when: manual
@@ -143,19 +154,21 @@ publish-binary:
       PACKAGE_REGISTRY_URL=${PACKAGE_REGISTRY_URL}
       PACKAGE_TOKEN=${CI_JOB_TOKEN}
   artifacts:
-    name: cellar-api-${APP_VERSION}
+    name: ${APP_NAME}-${APP_VERSION}
     paths:
-      - cellar-api
+      - ${APP_NAME}-${APP_VERSION}-linux-amd64
 
 publish-docker:
   extends: .docker
   stage: publish
+  needs:
+    - job: build-docker
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       when: manual
   script:
-    - make docker-publish APP_VERSION=${APP_VERSION} IMAGE_NAME=${IMAGE_NAME} IMAGE_TAG=${APP_VERSION}
-    - make docker-publish APP_VERSION=${APP_VERSION} IMAGE_NAME=${IMAGE_NAME} IMAGE_TAG=latest
+    - make docker-retag IMAGE_NAME=${IMAGE_NAME} SOURCE_TAG=pipeline-${CI_PIPELINE_IID} IMAGE_TAG=${APP_VERSION}
+    - make docker-retag IMAGE_NAME=${IMAGE_NAME} SOURCE_TAG=pipeline-${CI_PIPELINE_IID} IMAGE_TAG=latest
 
 release:
   stage: release
