@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.2.1]
+
+### Fixed
+- Critical: Added type assertion checks in Vault encryption to prevent runtime panics
+- Fixed incorrect log message in AWS KMS encryption (said "vault" instead of "aws kms")
+- Fixed stale comment in Lambda handler function
+
+### Changed
+- Migrated test suite to use testify/assert and testify/require exclusively
+- Removed custom test assertion helpers in favor of testify standard patterns
+- Replaced deprecated io/ioutil package with modern io and os equivalents (Go 1.16+)
+- Organized imports following Go conventions (stdlib, external, internal) across all files
+- Simplified RedisKey.buildKey() to remove unnecessary closure pattern
+- Removed redundant type specifications from variable declarations
+
+### Added
+- Godoc comments for exported functions: FileToBytes, HandleError, SanitizeFilename, GetGcpIamRequestInfo
+- HTTP status constant usage (http.StatusOK) instead of magic number 200
+
+**Note:** This is a patch release with code quality improvements and critical bug fixes.
+No breaking changes to HTTP API or configuration.
+All changes improve code safety, maintainability, and follow modern Go best practices.
+
 ## [3.2.0]
 
 ### Added
