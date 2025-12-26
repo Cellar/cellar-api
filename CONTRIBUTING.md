@@ -52,7 +52,7 @@ Before working on the Cellar API, make sure you are familiar with the [purpose o
 ### Local Developer Dependencies
 
 The Cellar API is a RESTful API written in [Go][golang] using the [Gin Web Framework][gin].
-Naturally, you will need the go compiler.
+**Requires Go 1.21 or later** (currently developed with Go 1.25.5).
 
 This project does use go modules, so most of the dependencies can be installed using `go get ./...`.
 However, to generate swagger docs, you will need the `swag` command.

@@ -6,7 +6,7 @@ stages:
 
 variables:
   APP_NAME: cellar-api
-  APP_VERSION: 3.1.1
+  APP_VERSION: 3.2.0
   IMAGE_NAME: ${CI_REGISTRY_IMAGE}
   PACKAGE_REGISTRY_URL: ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic
 

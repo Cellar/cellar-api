@@ -7,6 +7,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Cellar API is a RESTful API for secure secret sharing, written in Go using the Gin web framework.
 The API supports two versions (v1 and v2) and can be deployed as a standalone binary, Docker container, or AWS Lambda function.
 
+## Requirements
+
+**Go Version:** Go 1.25+ required (currently using Go 1.25.5)
+- Minimum Go 1.21+ due to Gin v1.11.0 requirement
+- Uses Go modules for dependency management
+
+**Key Dependencies:**
+- Gin Web Framework v1.11.0+ (requires Go 1.21+)
+- AWS SDK for Go v2 (migrated from deprecated v1)
+- Viper v1.21.0+ for configuration
+- HashiCorp Vault API v1.22.0+
+
+**AWS SDK Migration:**
+- This project uses **aws-sdk-go-v2**, not the deprecated aws-sdk-go v1
+- All AWS operations require `context.Context` parameter
+- Configuration uses `config.LoadDefaultConfig()` pattern
+- Affected packages: `pkg/cryptography/aws`, `pkg/aws`
+
 ## Development Commands
 
 ### Local Development Setup
