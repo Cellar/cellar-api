@@ -59,6 +59,7 @@ However, to generate swagger docs, you will need the `swag` command.
 For more information see the [gin-swagger readme][gin-swagger].
 You will also need the `mockgen` command for generating mocks for unit testing.
 For more information see the [uber-go mock readme][go-mock].
+For linting, you will need [golangci-lint][golangci-lint] installed.
 
 This project also makes extensive use of [**GNU Make**][gnu-make].
 Make can generally be installed from your linux distros package manager or on Mac using brew.
@@ -378,6 +379,7 @@ Users get **one full endpoint version cycle** as a migration window.
 [gin]:  https://github.com/gin-gonic/gin
 [go-mock]: https://github.com/uber-go/mock
 [gin-swagger]: https://github.com/swaggo/gin-swagger
+[golangci-lint]: https://golangci-lint.run/
 
 [vault]: https://www.vaultproject.io/
 [redis]: https://redis.io/

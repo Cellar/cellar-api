@@ -43,6 +43,20 @@ build-binary:
   script:
     - make build
 
+format-check:
+  extends: .api
+  stage: build
+  script:
+    - make format-check
+
+lint:
+  extends: .api
+  stage: build
+  before_script:
+    - curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin
+  script:
+    - make lint
+
 build-docker:
   extends: .docker
   stage: build
