@@ -20,7 +20,7 @@ func TestAppConfiguration(t *testing.T) {
 
 	t.Run("when MaxFileSizeMB is set via environment", func(t *testing.T) {
 		viper.Reset()
-		viper.Set("app.maxFileSizeMB", 16)
+		viper.Set("app.max_file_size_mb", 16)
 		app := NewAppConfiguration()
 
 		t.Run("it should return the configured value", func(t *testing.T) {
