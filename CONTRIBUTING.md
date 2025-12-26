@@ -183,10 +183,171 @@ make swag init
 
 ### Versioning
 
-This project uses [semantic versioning][semver].
-To update the version, change the `APP_VERSION` variable in [`.gitlab-ci.yml`][gitlab-ci].
-Then make sure add a list of changes to the [CHANGELOG.md][changelog].
-Tagging and releasing will be handled automatically through the [CI/CD pipelines][pipelines] in GitLab.
+Cellar uses two separate versioning schemes that serve different purposes:
+
+#### 1. Application Versioning (Semantic Versioning)
+
+This project uses [semantic versioning][semver] for application releases.
+The version number indicates user-facing changes and deployment impacts.
+
+**Version Format:** `MAJOR.MINOR.PATCH` (e.g., 3.2.0)
+
+**MAJOR version** increments when:
+- HTTP API contracts break (adding new endpoint version, removing old endpoint version)
+- Configuration format requires migration
+- Deployment process changes fundamentally
+- Minimum Go version increases by major version
+
+**MINOR version** increments when:
+- New features are added to existing endpoints
+- Existing functionality is enhanced
+- Dependencies are upgraded (minor/patch versions)
+- Internal improvements are made
+- New optional configuration is added
+
+**PATCH version** increments when:
+- Bugs are fixed in existing functionality
+- Security vulnerabilities are patched
+- Documentation is updated
+
+**How to update application version:**
+1. Update `APP_VERSION` in `.gitlab-ci.yml`
+2. Document changes in `CHANGELOG.md` under appropriate version
+3. Create merge request
+4. Tagging and releasing happen automatically through [CI/CD pipelines][pipelines]
+
+#### 2. API Endpoint Versioning
+
+Cellar has versioned HTTP endpoints (`/api/v1/`, `/api/v2/`) that represent distinct API contracts.
+
+**Rolling Window Policy:** Cellar maintains **current + previous** endpoint versions (n and n-1).
+
+**Current state:**
+- **v2** (current): File upload support, enhanced metadata, request cancellation
+- **v1** (previous): JSON-only secrets, simple metadata, legacy support
+
+**When v3 is created:**
+- **v3** becomes current version
+- **v2** becomes previous version
+- **v1** is removed entirely (code, tests, documentation)
+- Users have one full endpoint version cycle to migrate from v1 → v2
+
+#### When to Add New Endpoint Version
+
+**Only when making breaking changes** to the current endpoint's HTTP contract.
+
+Examples of breaking changes requiring new version:
+- Changing required fields in requests/responses
+- Modifying field types (string → object, int → string)
+- Removing fields that clients depend on
+- Changing HTTP status codes for existing behaviors
+- Changing authentication/authorization mechanisms
+
+Examples that do NOT require new version:
+- Adding new optional fields (backward compatible)
+- Adding new features while maintaining existing behavior
+- Internal implementation changes (encryption, storage)
+- Bug fixes that restore documented behavior
+- Performance improvements
+
+**Decision tree for changes:**
+
+```
+Is the HTTP contract changing?
+├─ No → Add to v2 (current), maybe backport to v1 (minor/patch bump)
+└─ Yes → Is it backward compatible?
+    ├─ Yes → Add to v2 as optional feature (minor bump)
+    └─ No → Must break contract?
+        ├─ No → Redesign to be backward compatible
+        └─ Yes → Create v3, remove v1 (MAJOR bump)
+```
+
+#### Process for Adding New Endpoint Version
+
+If you must create v3 (happens rarely, years apart):
+
+**1. Planning Phase**
+- Document why v2 contract must break
+- Design v3 contract with long-term stability in mind
+- Create migration guide from v2 → v3
+- Announce deprecation timeline for v1 in advance (if possible)
+
+**2. Implementation Phase**
+- Create new controller package: `pkg/controllers/v3/`
+- Implement new handlers with improved contract
+- Keep v2 functional (now becomes "previous")
+- Remove all v1 code:
+  - Delete `pkg/controllers/v1/`
+  - Delete `testing/acceptance/v1/`
+  - Remove v1 routes from main
+  - Remove v1 from Swagger docs
+- Update Swagger to show v2 and v3
+- Add acceptance tests in `testing/acceptance/v3/`
+
+**3. Documentation Phase**
+- Update `CHANGELOG.md` as MAJOR version (e.g., 3.x → 4.0.0)
+- Document v1 removal
+- Document v2 → v3 migration path
+- Update README and API documentation
+- Update CLAUDE.md with new current/previous versions
+
+**4. Release Phase**
+- MAJOR version bump (removes v1, adds v3)
+- Clear release notes about removed v1 support
+- Migration examples for v2 → v3
+
+#### Example Changelog Entry for v3
+
+```markdown
+## [4.0.0] - BREAKING CHANGES
+
+### Added
+- API v3 endpoints with [describe improvements]
+
+### Changed (BREAKING)
+- Removed API v1 endpoints (deprecated since version X.X.X)
+- v2 endpoints remain fully supported (now previous version)
+- v3 endpoints are now current version
+
+### Migration
+- Users on v1: Migrate to v2 first, then v3
+- Users on v2: See v2 → v3 migration guide
+```
+
+#### Endpoint Lifecycle Example
+
+```
+Cellar 2.0.0: Adds v2, maintains v1 (current: v2, previous: v1)
+Cellar 3.0.0: Maintains v2 and v1 (current: v2, previous: v1)
+Cellar 3.1.0: Maintains v2 and v1 (current: v2, previous: v1)
+Cellar 3.2.0: Maintains v2 and v1 (current: v2, previous: v1)
+Cellar 4.0.0: Adds v3, removes v1 (current: v3, previous: v2)
+Cellar 4.1.0: Maintains v3 and v2 (current: v3, previous: v2)
+Cellar 5.0.0: Adds v4, removes v2 (current: v4, previous: v3)
+```
+
+Users get **one full endpoint version cycle** as a migration window.
+
+#### Current Development Guidelines
+
+**For v2 (current):**
+- Add new features here
+- This is the primary development target
+- Use proper request context and cancellation
+- Return HTTP 408 for context errors
+
+**For v1 (previous):**
+- Only backport critical security fixes
+- Only backport fixes for showstopper bugs
+- Use background context for backward compatibility
+- Do not add new features
+- Will be removed when v3 is created
+
+**Before creating v3:**
+- Ensure v2 has been stable for significant time (months/years)
+- Ensure there's strong justification for breaking v2 contract
+- Ensure v3 contract is designed for long-term stability
+- Document comprehensive migration path from v2 → v3
 
 
 ### Final Thoughts

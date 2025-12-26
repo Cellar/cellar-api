@@ -1,6 +1,7 @@
 package aws
 
 import (
+	pkgerrors "cellar/pkg/errors"
 	"context"
 	"encoding/base64"
 	"encoding/json"
@@ -15,8 +16,10 @@ type IamRequestInfo struct {
 	Headers string
 }
 
-func GetAwsIamRequestInfo(role string) (info IamRequestInfo, err error) {
-	ctx := context.TODO()
+func GetAwsIamRequestInfo(ctx context.Context, role string) (info IamRequestInfo, err error) {
+	if err := pkgerrors.CheckContext(ctx); err != nil {
+		return IamRequestInfo{}, err
+	}
 
 	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {

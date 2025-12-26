@@ -258,7 +258,19 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Bad Request - validation error",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "408": {
+                        "description": "Request Timeout - operation cancelled",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "413": {
+                        "description": "Payload Too Large - file exceeds size limit",
                         "schema": {
                             "$ref": "#/definitions/httputil.HTTPError"
                         }
@@ -306,6 +318,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/httputil.HTTPError"
                         }
                     },
+                    "408": {
+                        "description": "Request Timeout - operation cancelled",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
@@ -340,6 +358,12 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "408": {
+                        "description": "Request Timeout - operation cancelled",
                         "schema": {
                             "$ref": "#/definitions/httputil.HTTPError"
                         }
@@ -384,6 +408,12 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "408": {
+                        "description": "Request Timeout - operation cancelled",
                         "schema": {
                             "$ref": "#/definitions/httputil.HTTPError"
                         }

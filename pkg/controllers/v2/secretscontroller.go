@@ -6,6 +6,7 @@ import (
 	"cellar/pkg/controllers"
 	"cellar/pkg/cryptography"
 	"cellar/pkg/datastore"
+	pkgerrors "cellar/pkg/errors"
 	"cellar/pkg/models"
 	"cellar/pkg/settings"
 	"errors"
@@ -25,10 +26,13 @@ import (
 // @Param expiration_epoch formData int true "Expiration of the secret in Unix Epoch Time"
 // @Param file formData file false "Secret content as a file"
 // @Success 201 {object} models.SecretMetadataResponseV2
-// @Failure 400 {object} httputil.HTTPError
+// @Failure 400 {object} httputil.HTTPError "Bad Request - validation error"
+// @Failure 408 {object} httputil.HTTPError "Request Timeout - operation cancelled"
+// @Failure 413 {object} httputil.HTTPError "Payload Too Large - file exceeds size limit"
 // @Failure 500 {object} httputil.HTTPError
 // @Router /v2/secrets [post]
 func CreateSecret(c *gin.Context) {
+	ctx := c.Request.Context()
 	cfg := c.MustGet(settings.Key).(settings.IConfiguration)
 	dataStore := c.MustGet(datastore.Key).(datastore.DataStore)
 	encryption := c.MustGet(cryptography.Key).(cryptography.Encryption)
@@ -87,7 +91,11 @@ func CreateSecret(c *gin.Context) {
 		secret.ContentType = models.ContentTypeFile
 	}
 
-	if metadata, isValidationError, err := commands.CreateSecret(dataStore, encryption, secret); err != nil {
+	if metadata, isValidationError, err := commands.CreateSecret(ctx, dataStore, encryption, secret); err != nil {
+		if pkgerrors.IsContextError(err) {
+			httputil.NewError(c, http.StatusRequestTimeout, err)
+			return
+		}
 		if isValidationError {
 			httputil.NewError(c, http.StatusBadRequest, err)
 		} else {
@@ -114,15 +122,21 @@ func CreateSecret(c *gin.Context) {
 // @Param id path string true "Secret ID"
 // @Success 200 {object} models.SecretContentResponse
 // @Failure 404 {object} httputil.HTTPError
+// @Failure 408 {object} httputil.HTTPError "Request Timeout - operation cancelled"
 // @Failure 500 {object} httputil.HTTPError
 // @Router /v2/secrets/{id}/access [post]
 func AccessSecretContent(c *gin.Context) {
+	ctx := c.Request.Context()
 	dataStore := c.MustGet(datastore.Key).(datastore.DataStore)
 	encryption := c.MustGet(cryptography.Key).(cryptography.Encryption)
 
 	id := c.Param("id")
 
-	if secret, err := commands.AccessSecret(dataStore, encryption, id); err != nil {
+	if secret, err := commands.AccessSecret(ctx, dataStore, encryption, id); err != nil {
+		if pkgerrors.IsContextError(err) {
+			httputil.NewError(c, http.StatusRequestTimeout, err)
+			return
+		}
 		httputil.NewError(c, http.StatusInternalServerError, err)
 		return
 	} else if secret == nil {
@@ -156,14 +170,16 @@ func AccessSecretContent(c *gin.Context) {
 // @Param id path string true "Secret ID"
 // @Success 200 {object} models.SecretMetadataResponseV2
 // @Failure 404 {object} httputil.HTTPError
+// @Failure 408 {object} httputil.HTTPError "Request Timeout - operation cancelled"
 // @Failure 500 {object} httputil.HTTPError
 // @Router /v2/secrets/{id} [get]
 func GetSecretMetadata(c *gin.Context) {
+	ctx := c.Request.Context()
 	dataStore := c.MustGet(datastore.Key).(datastore.DataStore)
 
 	id := c.Param("id")
 
-	if secretMetadata := commands.GetSecretMetadata(dataStore, id); secretMetadata == nil {
+	if secretMetadata := commands.GetSecretMetadata(ctx, dataStore, id); secretMetadata == nil {
 		c.Status(http.StatusNotFound)
 	} else {
 		c.JSON(http.StatusOK, models.SecretMetadataResponseV2{
@@ -183,14 +199,20 @@ func GetSecretMetadata(c *gin.Context) {
 // @Param id path string true "Secret ID"
 // @Success 204 ""
 // @Failure 404 {object} httputil.HTTPError
+// @Failure 408 {object} httputil.HTTPError "Request Timeout - operation cancelled"
 // @Failure 500 {object} httputil.HTTPError
 // @Router /v2/secrets/{id} [delete]
 func DeleteSecret(c *gin.Context) {
+	ctx := c.Request.Context()
 	dataStore := c.MustGet(datastore.Key).(datastore.DataStore)
 
 	id := c.Param("id")
 
-	if deleted, err := commands.DeleteSecret(dataStore, id); err != nil {
+	if deleted, err := commands.DeleteSecret(ctx, dataStore, id); err != nil {
+		if pkgerrors.IsContextError(err) {
+			httputil.NewError(c, http.StatusRequestTimeout, err)
+			return
+		}
 		httputil.NewError(c, http.StatusInternalServerError, err)
 		return
 	} else if !deleted {

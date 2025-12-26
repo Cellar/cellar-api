@@ -9,7 +9,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/go-redis/redis/v7"
+	"github.com/redis/go-redis/v9"
 	"io"
 	"io/ioutil"
 	"mime/multipart"

@@ -288,7 +288,27 @@
             }
           },
           "400": {
-            "description": "Bad Request",
+            "description": "Bad Request - validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/httputil.HTTPError"
+                }
+              }
+            }
+          },
+          "408": {
+            "description": "Request Timeout - operation cancelled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/httputil.HTTPError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Payload Too Large - file exceeds size limit",
             "content": {
               "application/json": {
                 "schema": {
@@ -348,6 +368,16 @@
               }
             }
           },
+          "408": {
+            "description": "Request Timeout - operation cancelled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/httputil.HTTPError"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Internal Server Error",
             "content": {
@@ -383,6 +413,16 @@
           },
           "404": {
             "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/httputil.HTTPError"
+                }
+              }
+            }
+          },
+          "408": {
+            "description": "Request Timeout - operation cancelled",
             "content": {
               "application/json": {
                 "schema": {
@@ -439,6 +479,21 @@
           },
           "404": {
             "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/httputil.HTTPError"
+                }
+              },
+              "application/octet-stream": {
+                "schema": {
+                  "$ref": "#/components/schemas/httputil.HTTPError"
+                }
+              }
+            }
+          },
+          "408": {
+            "description": "Request Timeout - operation cancelled",
             "content": {
               "application/json": {
                 "schema": {

@@ -1,6 +1,7 @@
 package aws
 
 import (
+	pkgerrors "cellar/pkg/errors"
 	"cellar/pkg/models"
 	"cellar/pkg/settings/cryptography"
 	"context"
@@ -15,10 +16,10 @@ type EncryptionClient struct {
 	logger        *log.Entry
 }
 
-func NewEncryptionClient(configuration cryptography.IAwsConfiguration) (*EncryptionClient, error) {
+func NewEncryptionClient(ctx context.Context, configuration cryptography.IAwsConfiguration) (*EncryptionClient, error) {
 	logger := initializeLogger(configuration)
 
-	cfg, err := config.LoadDefaultConfig(context.TODO(),
+	cfg, err := config.LoadDefaultConfig(ctx,
 		config.WithRegion(configuration.Region()),
 	)
 	if err != nil {
@@ -48,14 +49,19 @@ func initializeLogger(configuration cryptography.IAwsConfiguration) *log.Entry {
 	return logger
 }
 
-func (ec EncryptionClient) Health() models.Health {
+func (ec EncryptionClient) Health(ctx context.Context) models.Health {
 	name := "AWS KMS"
 	status := models.HealthStatus(models.Unhealthy)
 	version := "2014-11-01" // KMS API version
 
+	// Check context before operation
+	if err := pkgerrors.CheckContext(ctx); err != nil {
+		return *models.NewHealth(name, status, version)
+	}
+
 	// Test connection with a simple operation
 	keyId := ec.configuration.KmsKeyName()
-	_, err := ec.kmsClient.DescribeKey(context.TODO(), &kms.DescribeKeyInput{
+	_, err := ec.kmsClient.DescribeKey(ctx, &kms.DescribeKeyInput{
 		KeyId: &keyId,
 	})
 
@@ -66,10 +72,15 @@ func (ec EncryptionClient) Health() models.Health {
 	return *models.NewHealth(name, status, version)
 }
 
-func (ec EncryptionClient) Encrypt(plaintext []byte) (ciphertext string, err error) {
+func (ec EncryptionClient) Encrypt(ctx context.Context, plaintext []byte) (ciphertext string, err error) {
+	// Check context before expensive operation
+	if err := pkgerrors.CheckContext(ctx); err != nil {
+		return "", err
+	}
+
 	ec.logger.Debug("attempting to encrypt content")
 	keyId := ec.configuration.KmsKeyName()
-	result, err := ec.kmsClient.Encrypt(context.TODO(), &kms.EncryptInput{
+	result, err := ec.kmsClient.Encrypt(ctx, &kms.EncryptInput{
 		KeyId:     &keyId,
 		Plaintext: plaintext,
 	})
@@ -78,27 +89,32 @@ func (ec EncryptionClient) Encrypt(plaintext []byte) (ciphertext string, err err
 		ec.logger.WithError(err).
 			Error("error encrypting content")
 
-		return
+		return "", err
 	}
 
 	ciphertext = string(result.CiphertextBlob)
 
-	return
+	return ciphertext, nil
 }
 
-func (ec EncryptionClient) Decrypt(ciphertext string) (plaintext []byte, err error) {
+func (ec EncryptionClient) Decrypt(ctx context.Context, ciphertext string) (plaintext []byte, err error) {
+	// Check context before expensive operation
+	if err := pkgerrors.CheckContext(ctx); err != nil {
+		return nil, err
+	}
+
 	ec.logger.Debug("attempting to decrypt content")
-	result, err := ec.kmsClient.Decrypt(context.TODO(), &kms.DecryptInput{
+	result, err := ec.kmsClient.Decrypt(ctx, &kms.DecryptInput{
 		CiphertextBlob: []byte(ciphertext),
 	})
 
 	if err != nil {
 		ec.logger.WithError(err).
 			Error("error decrypting content")
-		return
+		return nil, err
 	}
 
 	plaintext = result.Plaintext
 
-	return
+	return plaintext, nil
 }

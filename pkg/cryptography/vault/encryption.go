@@ -1,8 +1,10 @@
 package vault
 
 import (
+	pkgerrors "cellar/pkg/errors"
 	"cellar/pkg/models"
 	"cellar/pkg/settings/cryptography"
+	"context"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -18,7 +20,7 @@ type EncryptionClient struct {
 	logger        *log.Entry
 }
 
-func NewEncryptionClient(configuration cryptography.IVaultConfiguration) (*EncryptionClient, error) {
+func NewEncryptionClient(ctx context.Context, configuration cryptography.IVaultConfiguration) (*EncryptionClient, error) {
 	logger, err := initializeLogger(configuration)
 	if err != nil {
 		return nil, err
@@ -63,12 +65,16 @@ func initializeLogger(configuration cryptography.IVaultConfiguration) (*log.Entr
 	return logger, nil
 }
 
-func (vault EncryptionClient) Health() models.Health {
+func (vault EncryptionClient) Health(ctx context.Context) models.Health {
 	name := "Vault"
 	status := models.HealthStatus(models.Unhealthy)
 	version := "Unknown"
 
-	err := vault.login()
+	if err := pkgerrors.CheckContext(ctx); err != nil {
+		return *models.NewHealth(name, status, version)
+	}
+
+	err := vault.login(ctx)
 	if err == nil {
 		res, err := vault.client.Sys().Health()
 		if err == nil {
@@ -84,10 +90,14 @@ func (vault EncryptionClient) Health() models.Health {
 	return *models.NewHealth(name, status, version)
 }
 
-func (vault EncryptionClient) Encrypt(plaintext []byte) (ciphertext string, err error) {
-	err = vault.login()
+func (vault EncryptionClient) Encrypt(ctx context.Context, plaintext []byte) (ciphertext string, err error) {
+	if err := pkgerrors.CheckContext(ctx); err != nil {
+		return "", err
+	}
+
+	err = vault.login(ctx)
 	if err != nil {
-		return
+		return "", err
 	}
 
 	base64Content := base64.StdEncoding.EncodeToString(plaintext)
@@ -101,22 +111,26 @@ func (vault EncryptionClient) Encrypt(plaintext []byte) (ciphertext string, err 
 	if err != nil {
 		vault.logger.WithError(err).
 			Error("error encrypting content with vault")
-		return
+		return "", err
 	}
 
 	if val, ok := response.Data["ciphertext"]; ok {
 		vault.logger.Debug("content encryption successful")
 		ciphertext = val.(string)
-		return
+		return ciphertext, nil
 	}
 
 	return "", errors.New("unexpected response while encrypting secret")
 }
 
-func (vault EncryptionClient) Decrypt(ciphertext string) (plaintext []byte, err error) {
-	err = vault.login()
+func (vault EncryptionClient) Decrypt(ctx context.Context, ciphertext string) (plaintext []byte, err error) {
+	if err := pkgerrors.CheckContext(ctx); err != nil {
+		return nil, err
+	}
+
+	err = vault.login(ctx)
 	if err != nil {
-		return
+		return nil, err
 	}
 
 	vault.logger.Debug("attempting to decrypt content with vault")
@@ -128,7 +142,7 @@ func (vault EncryptionClient) Decrypt(ciphertext string) (plaintext []byte, err 
 	if err != nil {
 		vault.logger.WithError(err).
 			Error("error decrypting content with vault")
-		return
+		return nil, err
 	}
 
 	if val, ok := response.Data["plaintext"]; ok {

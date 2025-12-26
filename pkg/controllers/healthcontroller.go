@@ -14,10 +14,11 @@ import (
 // @Success 200 {object} models.HealthResponse
 // @Router /health-check [get]
 func HealthCheck(c *gin.Context) {
+	ctx := c.Request.Context()
 	cfg := c.MustGet(settings.Key).(settings.IConfiguration)
 	dataStore := c.MustGet(datastore.Key).(datastore.DataStore)
 	encryption := c.MustGet(cryptography.Key).(cryptography.Encryption)
 
-	health := commands.GetHealth(cfg.App(), dataStore, encryption)
+	health := commands.GetHealth(ctx, cfg.App(), dataStore, encryption)
 	c.JSON(200, health)
 }

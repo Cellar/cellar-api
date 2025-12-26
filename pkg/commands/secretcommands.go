@@ -3,7 +3,9 @@ package commands
 import (
 	"cellar/pkg/cryptography"
 	"cellar/pkg/datastore"
+	pkgerrors "cellar/pkg/errors"
 	"cellar/pkg/models"
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
@@ -18,7 +20,14 @@ func getLogger(secretId string) *log.Entry {
 	})
 }
 
-func CreateSecret(dataStore datastore.DataStore, encryption cryptography.Encryption, secret models.Secret) (response *models.SecretMetadata, isValidationError bool, err error) {
+// CreateSecret encrypts and stores a new secret with the given parameters.
+// Returns the secret metadata, a validation error flag, and any error encountered.
+// The context can be used to cancel the operation before completion.
+func CreateSecret(ctx context.Context, dataStore datastore.DataStore, encryption cryptography.Encryption, secret models.Secret) (response *models.SecretMetadata, isValidationError bool, err error) {
+	if err = pkgerrors.CheckContext(ctx); err != nil {
+		return
+	}
+
 	isValidationError = false
 
 	id, err := randomId()
@@ -29,7 +38,7 @@ func CreateSecret(dataStore datastore.DataStore, encryption cryptography.Encrypt
 	logger := getLogger(id)
 	logger.Info("Encrypting new secret content")
 
-	secret.CipherText, err = encryption.Encrypt(secret.Content)
+	secret.CipherText, err = encryption.Encrypt(ctx, secret.Content)
 	if err != nil {
 		logger.WithError(err).
 			Error("Error encrypting new secret content")
@@ -51,7 +60,7 @@ func CreateSecret(dataStore datastore.DataStore, encryption cryptography.Encrypt
 		"secretExpiration":  secret.Expiration().Format(),
 	})
 	logger.Info("Writing new secret to datastore")
-	err = dataStore.WriteSecret(secret)
+	err = dataStore.WriteSecret(ctx, secret)
 	if err != nil {
 		logger.WithError(err).Error("Error writing new secret to datastore")
 		return
@@ -61,14 +70,21 @@ func CreateSecret(dataStore datastore.DataStore, encryption cryptography.Encrypt
 	return
 }
 
-func AccessSecret(dataStore datastore.DataStore, encryption cryptography.Encryption, id string) (*models.Secret, error) {
+// AccessSecret retrieves and decrypts a secret by ID, incrementing its access count.
+// If the access limit is reached, the secret is automatically deleted.
+// Returns the decrypted secret or nil if not found.
+// The context can be used to cancel the operation before completion.
+func AccessSecret(ctx context.Context, dataStore datastore.DataStore, encryption cryptography.Encryption, id string) (*models.Secret, error) {
+	if err := pkgerrors.CheckContext(ctx); err != nil {
+		return nil, err
+	}
 
-	secret := dataStore.ReadSecret(id)
+	secret := dataStore.ReadSecret(ctx, id)
 	if secret == nil {
 		return nil, nil
 	}
 
-	accessCount, err := dataStore.IncreaseAccessCount(id)
+	accessCount, err := dataStore.IncreaseAccessCount(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -83,14 +99,14 @@ func AccessSecret(dataStore datastore.DataStore, encryption cryptography.Encrypt
 
 	if secret.AccessLimit > 0 && accessCount >= int64(secret.AccessLimit) {
 		logger.Info("Deleting secret with access limit reached")
-		if _, err = dataStore.DeleteSecret(id); err != nil {
+		if _, err = dataStore.DeleteSecret(ctx, id); err != nil {
 			logger.WithError(err).
 				Error("Error while deleting secret")
 			return nil, err
 		}
 	}
 
-	content, err := encryption.Decrypt(secret.CipherText)
+	content, err := encryption.Decrypt(ctx, secret.CipherText)
 	if err != nil {
 		return nil, err
 	}
@@ -102,11 +118,18 @@ func AccessSecret(dataStore datastore.DataStore, encryption cryptography.Encrypt
 	}, nil
 }
 
-func GetSecretMetadata(dataStore datastore.DataStore, id string) *models.SecretMetadata {
+// GetSecretMetadata retrieves metadata for a secret without decrypting its content.
+// Returns the metadata or nil if the secret is not found.
+// The context can be used to cancel the operation before completion.
+func GetSecretMetadata(ctx context.Context, dataStore datastore.DataStore, id string) *models.SecretMetadata {
+	if err := pkgerrors.CheckContext(ctx); err != nil {
+		return nil
+	}
+
 	logger := getLogger(id)
 	logger.Info("Querying for secret metadata")
 
-	secret := dataStore.ReadSecret(id)
+	secret := dataStore.ReadSecret(ctx, id)
 	if secret == nil {
 		return nil
 	}
@@ -114,9 +137,16 @@ func GetSecretMetadata(dataStore datastore.DataStore, id string) *models.SecretM
 	return secret.Metadata()
 }
 
-func DeleteSecret(dataStore datastore.DataStore, id string) (bool, error) {
+// DeleteSecret removes a secret from the datastore by ID.
+// Returns true if the secret was found and deleted, false if not found.
+// The context can be used to cancel the operation before completion.
+func DeleteSecret(ctx context.Context, dataStore datastore.DataStore, id string) (bool, error) {
+	if err := pkgerrors.CheckContext(ctx); err != nil {
+		return false, err
+	}
+
 	getLogger(id).Info("Deleting secret if it exists")
-	return dataStore.DeleteSecret(id)
+	return dataStore.DeleteSecret(ctx, id)
 }
 
 func randomId() (string, error) {

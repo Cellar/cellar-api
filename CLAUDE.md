@@ -202,19 +202,73 @@ Key interfaces allow pluggable implementations:
 
 ### API Versioning
 
-Two independent API versions with different characteristics:
+Cellar uses two separate versioning schemes:
 
-**v1** (`pkg/controllers/v1`):
+1. **Application Version** (e.g., 3.2.0) - Tracks product releases using Semantic Versioning
+2. **Endpoint Version** (e.g., /api/v1/, /api/v2/) - Tracks HTTP API contract changes
+
+#### Endpoint Version Policy
+
+**Rolling window:** Cellar maintains **current + previous** endpoint versions (n and n-1).
+- Currently: v2 (current) and v1 (previous)
+- If v3 is created: v3 and v2 maintained, v1 removed
+- Users get one major version cycle to migrate before old endpoints are removed
+
+#### Current Endpoint Versions
+
+**v1** (`pkg/controllers/v1`) - Previous version:
 - JSON-based secret content
 - Simpler metadata structure
+- Uses background context for backward compatibility
 - Endpoints: POST `/api/v1/secret`, GET `/api/v1/secret/:id`, DELETE `/api/v1/secret/:id`
 
-**v2** (`pkg/controllers/v2`):
+**v2** (`pkg/controllers/v2`) - Current version:
 - Multipart form data with file upload support
 - Enhanced metadata including `content_type`
+- Proper request context with cancellation support (returns HTTP 408 on timeout)
 - Endpoints: POST `/api/v2/secret`, GET `/api/v2/secret/:id`, DELETE `/api/v2/secret/:id`
 
-When adding features, consider whether they should be v2-only or backported to v1.
+#### Versioning Philosophy for Self-Hosted Applications
+
+**Key Principle:** Endpoint versions represent HTTP API contracts, not product releases.
+
+Since Cellar is self-hosted (not SaaS), users control which version they deploy:
+- Users wanting v1 → deploy application versions that include v1 (up to when v3 is released)
+- Users wanting v2 → deploy any current application version
+- Migration window provided: one full endpoint version cycle (v1 available until v3 ships)
+
+**When to increment endpoint version (e.g., v2 → v3):**
+- ❌ **DON'T** for new features (add to current version)
+- ❌ **DON'T** for bug fixes (patch current version)
+- ❌ **DON'T** for internal implementation changes
+- ✅ **DO** when breaking HTTP contract (request/response format changes incompatibly)
+- ✅ **DO** when removing required fields or changing field types
+- ✅ **DO** when changing endpoint behavior in backward-incompatible ways
+
+**Creating v3 would mean:**
+- Remove all v1 code (`pkg/controllers/v1/`, tests, docs)
+- Maintain v2 as "previous version"
+- v3 becomes "current version"
+- Document v1 → v2 and v2 → v3 migration paths
+- Application version gets MAJOR bump (e.g., 3.x → 4.0.0)
+
+**When to increment application version:**
+- **MAJOR (x.0.0):** Breaking changes (HTTP API, config, deployment) - includes endpoint version removal
+- **MINOR (x.y.0):** New features, enhancements, dependency upgrades
+- **PATCH (x.y.z):** Bug fixes, security patches
+
+**Real-world examples with rolling windows:**
+- GitLab: Maintains API v4, removed v3 when v5+ isn't needed (8+ years on v4)
+- Kubernetes: Maintains stable versions with deprecation warnings, removes after migration period
+- Stripe: Maintains current + ~2 years of previous versions, then removes oldest
+
+**Current state:**
+- Cellar 3.x with v1/v2 endpoints ✅
+- v1 and v2 represent stable feature sets
+- Don't add v3 unless v2's HTTP contract must break
+- When v3 is needed, remove v1 code in same release
+
+When adding features, prefer adding to v2 (current). Only backport to v1 if critical for users on migration path.
 
 ## Configuration
 

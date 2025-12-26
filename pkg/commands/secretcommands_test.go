@@ -2,9 +2,11 @@ package commands_test
 
 import (
 	"cellar/pkg/commands"
+	pkgerrors "cellar/pkg/errors"
 	"cellar/pkg/mocks"
 	"cellar/pkg/models"
 	"cellar/testing/testhelpers"
+	"context"
 	"go.uber.org/mock/gomock"
 	"testing"
 	"time"
@@ -29,7 +31,7 @@ func TestWhenCreatingASecret(t *testing.T) {
 
 				encryption := mocks.NewMockEncryption(ctrl)
 				encryptCall := encryption.EXPECT().
-					Encrypt(expectedSecret.Content).
+					Encrypt(gomock.Any(), expectedSecret.Content).
 					Return(encryptedData, nil).
 					AnyTimes()
 
@@ -39,7 +41,7 @@ func TestWhenCreatingASecret(t *testing.T) {
 
 				dataStore := mocks.NewMockDataStore(ctrl)
 				writeSecretCall := dataStore.EXPECT().
-					WriteSecret(gomock.Any()).
+					WriteSecret(gomock.Any(), gomock.Any()).
 					Return(nil).
 					AnyTimes()
 
@@ -47,7 +49,7 @@ func TestWhenCreatingASecret(t *testing.T) {
 					writeSecretCall.Times(writeSecretCallTimes)
 				}
 
-				response, _, err := commands.CreateSecret(dataStore, encryption, expectedSecret)
+				response, _, err := commands.CreateSecret(context.Background(), dataStore, encryption, expectedSecret)
 				testhelpers.Ok(t, err)
 
 				return
@@ -64,6 +66,21 @@ func TestWhenCreatingASecret(t *testing.T) {
 				t.Run("access limit", testhelpers.EqualsF(expectedSecret.AccessLimit, response.AccessLimit))
 				t.Run("content type", testhelpers.EqualsF(models.ContentType(expectedSecret.ContentType), response.ContentType))
 				t.Run("expiration", testhelpers.EqualsF(expectedExpiration.Format("2006-01-02 15:04:05 UTC"), response.Expiration.Format()))
+			})
+
+			t.Run("when context is cancelled", func(t *testing.T) {
+				t.Run("should return context error", func(t *testing.T) {
+					ctx, cancel := context.WithCancel(context.Background())
+					cancel()
+
+					ctrl := gomock.NewController(t)
+					encryption := mocks.NewMockEncryption(ctrl)
+					dataStore := mocks.NewMockDataStore(ctrl)
+
+					_, _, err := commands.CreateSecret(ctx, dataStore, encryption, expectedSecret)
+
+					testhelpers.Assert(t, pkgerrors.IsContextError(err), "expected context error")
+				})
 			})
 		}
 	}
@@ -93,13 +110,13 @@ func TestWhenCreatingASecretWithTooShortExpiration(t *testing.T) {
 
 		encryption := mocks.NewMockEncryption(ctrl)
 		encryption.EXPECT().
-			Encrypt(gomock.Any()).
+			Encrypt(gomock.Any(), gomock.Any()).
 			Return(encryptedData, nil).
 			AnyTimes()
 
 		dataStore := mocks.NewMockDataStore(ctrl)
 		writeSecretCall := dataStore.EXPECT().
-			WriteSecret(gomock.Any()).
+			WriteSecret(gomock.Any(), gomock.Any()).
 			Return(nil).
 			AnyTimes()
 
@@ -107,12 +124,12 @@ func TestWhenCreatingASecretWithTooShortExpiration(t *testing.T) {
 			writeSecretCall.Times(writeSecretCallTimes)
 		}
 
-		_, isValidationError, err = commands.CreateSecret(dataStore, encryption, secretRequest)
+		_, isValidationError, err = commands.CreateSecret(context.Background(), dataStore, encryption, secretRequest)
 
 		return
 	}
 
-	t.Run("should not call to database", func(t *testing.T) { sut(0) })
+	t.Run("should not call to database", func(t *testing.T) { _, _ = sut(0) })
 	t.Run("should return", func(t *testing.T) {
 		isValidationError, err := sut(-1)
 		t.Run("should return validation error", testhelpers.EqualsF(true, isValidationError))
@@ -138,7 +155,7 @@ func TestWhenAccessingASecret(t *testing.T) {
 
 				encryption := mocks.NewMockEncryption(ctrl)
 				decryptCall := encryption.EXPECT().
-					Decrypt(secret.CipherText).
+					Decrypt(gomock.Any(), secret.CipherText).
 					Return(secret.Content, nil).
 					AnyTimes()
 				if decryptCallTimes >= 0 {
@@ -147,7 +164,7 @@ func TestWhenAccessingASecret(t *testing.T) {
 
 				dataStore := mocks.NewMockDataStore(ctrl)
 				readSecretCall := dataStore.EXPECT().
-					ReadSecret(secret.ID).
+					ReadSecret(gomock.Any(), secret.ID).
 					Return(&secret).
 					AnyTimes()
 				if readSecretCallTimes >= 0 {
@@ -155,14 +172,14 @@ func TestWhenAccessingASecret(t *testing.T) {
 				}
 
 				increaseAccessCountCall := dataStore.EXPECT().
-					IncreaseAccessCount(secret.ID).
+					IncreaseAccessCount(gomock.Any(), secret.ID).
 					Return(int64(1), nil).
 					AnyTimes()
 				if increaseAccessCountCallTimes >= 0 {
 					increaseAccessCountCall.Times(increaseAccessCountCallTimes)
 				}
 
-				response, err := commands.AccessSecret(dataStore, encryption, secret.ID)
+				response, err := commands.AccessSecret(context.Background(), dataStore, encryption, secret.ID)
 				testhelpers.Ok(t, err)
 
 				return
@@ -176,6 +193,21 @@ func TestWhenAccessingASecret(t *testing.T) {
 			t.Run("should decrypt content", func(t *testing.T) { sut(-1, 1, -1) })
 			t.Run("should access from database", func(t *testing.T) { sut(1, -1, -1) })
 			t.Run("should increase access", func(t *testing.T) { sut(-1, -1, 1) })
+
+			t.Run("when context is cancelled", func(t *testing.T) {
+				t.Run("should return context error", func(t *testing.T) {
+					ctx, cancel := context.WithCancel(context.Background())
+					cancel()
+
+					ctrl := gomock.NewController(t)
+					encryption := mocks.NewMockEncryption(ctrl)
+					dataStore := mocks.NewMockDataStore(ctrl)
+
+					_, err := commands.AccessSecret(ctx, dataStore, encryption, secret.ID)
+
+					testhelpers.Assert(t, pkgerrors.IsContextError(err), "expected context error")
+				})
+			})
 		}
 	}
 
@@ -190,7 +222,7 @@ func TestWhenAccessingASecretThatDoesNotExist(t *testing.T) {
 
 		encryption := mocks.NewMockEncryption(ctrl)
 		decryptCall := encryption.EXPECT().
-			Decrypt(gomock.Any()).
+			Decrypt(gomock.Any(), gomock.Any()).
 			AnyTimes()
 		if decryptCallTimes >= 0 {
 			decryptCall.Times(decryptCallTimes)
@@ -198,19 +230,19 @@ func TestWhenAccessingASecretThatDoesNotExist(t *testing.T) {
 
 		dataStore := mocks.NewMockDataStore(ctrl)
 		readSecretCall := dataStore.EXPECT().
-			ReadSecret(gomock.Any()).
+			ReadSecret(gomock.Any(), gomock.Any()).
 			Return(nil).
 			AnyTimes()
 		if readSecretCallTimes >= 0 {
 			readSecretCall.Times(readSecretCallTimes)
 		}
 		increaseAccessCountCall := dataStore.EXPECT().
-			IncreaseAccessCount(gomock.Any()).
+			IncreaseAccessCount(gomock.Any(), gomock.Any()).
 			AnyTimes()
 		if increaseAccessCountCallTimes >= 0 {
 			increaseAccessCountCall.Times(increaseAccessCountCallTimes)
 		}
-		return commands.AccessSecret(dataStore, encryption, testhelpers.RandomId(t))
+		return commands.AccessSecret(context.Background(), dataStore, encryption, testhelpers.RandomId(t))
 	}
 
 	t.Run("should return", func(t *testing.T) {
@@ -220,9 +252,9 @@ func TestWhenAccessingASecretThatDoesNotExist(t *testing.T) {
 		t.Run("should return nil", testhelpers.IsNilF(response))
 	})
 
-	t.Run("should not attempt to decrypt content", func(t *testing.T) { sut(0, -1, -1) })
-	t.Run("should attempt access from datastore", func(t *testing.T) { sut(-1, 1, -1) })
-	t.Run("should not attempt to update access", func(t *testing.T) { sut(-1, -1, 0) })
+	t.Run("should not attempt to decrypt content", func(t *testing.T) { _, _ = sut(0, -1, -1) })
+	t.Run("should attempt access from datastore", func(t *testing.T) { _, _ = sut(-1, 1, -1) })
+	t.Run("should not attempt to update access", func(t *testing.T) { _, _ = sut(-1, -1, 0) })
 }
 
 func TestWhenGettingSecretMetadata(t *testing.T) {
@@ -241,7 +273,7 @@ func TestWhenGettingSecretMetadata(t *testing.T) {
 
 		dataStore := mocks.NewMockDataStore(ctrl)
 		readSecretCall := dataStore.EXPECT().
-			ReadSecret(secret.ID).
+			ReadSecret(gomock.Any(), secret.ID).
 			Return(&secret).
 			AnyTimes()
 
@@ -250,7 +282,7 @@ func TestWhenGettingSecretMetadata(t *testing.T) {
 		}
 
 		increaseAccessCountCall := dataStore.EXPECT().
-			IncreaseAccessCount(gomock.Any()).
+			IncreaseAccessCount(gomock.Any(), gomock.Any()).
 			Return(int64(1), nil).
 			AnyTimes()
 
@@ -258,7 +290,7 @@ func TestWhenGettingSecretMetadata(t *testing.T) {
 			increaseAccessCountCall.Times(increaseAccessCountCallTimes)
 		}
 
-		response = commands.GetSecretMetadata(dataStore, secret.ID)
+		response = commands.GetSecretMetadata(context.Background(), dataStore, secret.ID)
 
 		return
 	}
@@ -278,6 +310,20 @@ func TestWhenGettingSecretMetadata(t *testing.T) {
 		t.Run("Duration", testhelpers.EqualsF(secret.Expiration().Format(), response.Expiration.Format()))
 	})
 
+	t.Run("when context is cancelled", func(t *testing.T) {
+		t.Run("should return nil", func(t *testing.T) {
+			ctx, cancel := context.WithCancel(context.Background())
+			cancel()
+
+			ctrl := gomock.NewController(t)
+			dataStore := mocks.NewMockDataStore(ctrl)
+
+			response := commands.GetSecretMetadata(ctx, dataStore, secret.ID)
+
+			testhelpers.IsNil(t, response)
+		})
+	})
+
 }
 
 func TestWhenGettingSecretMetadataForSecretThatDoesNotExist(t *testing.T) {
@@ -287,7 +333,7 @@ func TestWhenGettingSecretMetadataForSecretThatDoesNotExist(t *testing.T) {
 
 		dataStore := mocks.NewMockDataStore(ctrl)
 		readSecretCall := dataStore.EXPECT().
-			ReadSecret(gomock.Any()).
+			ReadSecret(gomock.Any(), gomock.Any()).
 			Return(nil).
 			AnyTimes()
 		if readSecretCallTimes >= 0 {
@@ -295,13 +341,13 @@ func TestWhenGettingSecretMetadataForSecretThatDoesNotExist(t *testing.T) {
 		}
 
 		increaseAccessCountCall := dataStore.EXPECT().
-			IncreaseAccessCount(gomock.Any()).
+			IncreaseAccessCount(gomock.Any(), gomock.Any()).
 			AnyTimes()
 		if increaseAccessCountCallTimes >= 0 {
 			increaseAccessCountCall.Times(increaseAccessCountCallTimes)
 		}
 
-		return commands.GetSecretMetadata(dataStore, testhelpers.RandomId(t))
+		return commands.GetSecretMetadata(context.Background(), dataStore, testhelpers.RandomId(t))
 	}
 
 	t.Run("should return nil", func(t *testing.T) {
@@ -323,14 +369,14 @@ func TestWhenDeletingASecret(t *testing.T) {
 
 		dataStore := mocks.NewMockDataStore(ctrl)
 		deleteSecretCall := dataStore.EXPECT().
-			DeleteSecret(secret.ID).
+			DeleteSecret(gomock.Any(), secret.ID).
 			Return(true, nil).
 			AnyTimes()
 		if deleteSecretCallTimes >= 0 {
 			deleteSecretCall.Times(deleteSecretCallTimes)
 		}
 
-		return commands.DeleteSecret(dataStore, secret.ID)
+		return commands.DeleteSecret(context.Background(), dataStore, secret.ID)
 	}
 
 	t.Run("should return", func(t *testing.T) {
@@ -338,7 +384,25 @@ func TestWhenDeletingASecret(t *testing.T) {
 		t.Run("nil error", testhelpers.OkF(err))
 		t.Run("true", testhelpers.EqualsF(true, response))
 	})
-	t.Run("should delete from database", func(t *testing.T) { sut(1) })
+	t.Run("should delete from database", func(t *testing.T) { _, _ = sut(1) })
+
+	t.Run("when context is cancelled", func(t *testing.T) {
+		t.Run("should return context error", func(t *testing.T) {
+			ctx, cancel := context.WithCancel(context.Background())
+			cancel()
+
+			ctrl := gomock.NewController(t)
+			dataStore := mocks.NewMockDataStore(ctrl)
+
+			secret := &models.Secret{
+				ID: testhelpers.RandomId(t),
+			}
+
+			_, err := commands.DeleteSecret(ctx, dataStore, secret.ID)
+
+			testhelpers.Assert(t, pkgerrors.IsContextError(err), "expected context error")
+		})
+	})
 }
 
 func TestWhenDeletingASecretThatDoesNotExist(t *testing.T) {
@@ -348,7 +412,7 @@ func TestWhenDeletingASecretThatDoesNotExist(t *testing.T) {
 
 		dataStore := mocks.NewMockDataStore(ctrl)
 		deleteSecretCall := dataStore.EXPECT().
-			DeleteSecret(gomock.Any()).
+			DeleteSecret(gomock.Any(), gomock.Any()).
 			Return(false, nil).
 			AnyTimes()
 		if deleteSecretCallTimes >= 0 {
@@ -357,7 +421,7 @@ func TestWhenDeletingASecretThatDoesNotExist(t *testing.T) {
 
 		id := testhelpers.RandomId(t)
 
-		return commands.DeleteSecret(dataStore, id)
+		return commands.DeleteSecret(context.Background(), dataStore, id)
 	}
 
 	t.Run("should return", func(t *testing.T) {
@@ -365,5 +429,5 @@ func TestWhenDeletingASecretThatDoesNotExist(t *testing.T) {
 		t.Run("nil error", testhelpers.OkF(err))
 		t.Run("false", testhelpers.EqualsF(false, response))
 	})
-	t.Run("should delete from database", func(t *testing.T) { sut(1) })
+	t.Run("should delete from database", func(t *testing.T) { _, _ = sut(1) })
 }

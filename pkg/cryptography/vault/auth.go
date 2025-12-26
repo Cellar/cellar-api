@@ -1,6 +1,15 @@
 package vault
 
-func (vault EncryptionClient) login() error {
+import (
+	pkgerrors "cellar/pkg/errors"
+	"context"
+)
+
+func (vault EncryptionClient) login(ctx context.Context) error {
+	if err := pkgerrors.CheckContext(ctx); err != nil {
+		return err
+	}
+
 	vault.logger.Debug("attempting to find and renew existing tokens")
 	token, err := vault.client.Auth().Token().RenewSelf(60)
 	if err == nil && token != nil {

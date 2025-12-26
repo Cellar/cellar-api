@@ -11,6 +11,7 @@ package mocks
 
 import (
 	models "cellar/pkg/models"
+	context "context"
 	reflect "reflect"
 
 	gomock "go.uber.org/mock/gomock"
@@ -41,73 +42,73 @@ func (m *MockDataStore) EXPECT() *MockDataStoreMockRecorder {
 }
 
 // DeleteSecret mocks base method.
-func (m *MockDataStore) DeleteSecret(id string) (bool, error) {
+func (m *MockDataStore) DeleteSecret(ctx context.Context, id string) (bool, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteSecret", id)
+	ret := m.ctrl.Call(m, "DeleteSecret", ctx, id)
 	ret0, _ := ret[0].(bool)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // DeleteSecret indicates an expected call of DeleteSecret.
-func (mr *MockDataStoreMockRecorder) DeleteSecret(id any) *gomock.Call {
+func (mr *MockDataStoreMockRecorder) DeleteSecret(ctx, id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSecret", reflect.TypeOf((*MockDataStore)(nil).DeleteSecret), id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSecret", reflect.TypeOf((*MockDataStore)(nil).DeleteSecret), ctx, id)
 }
 
 // Health mocks base method.
-func (m *MockDataStore) Health() models.Health {
+func (m *MockDataStore) Health(ctx context.Context) models.Health {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Health")
+	ret := m.ctrl.Call(m, "Health", ctx)
 	ret0, _ := ret[0].(models.Health)
 	return ret0
 }
 
 // Health indicates an expected call of Health.
-func (mr *MockDataStoreMockRecorder) Health() *gomock.Call {
+func (mr *MockDataStoreMockRecorder) Health(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Health", reflect.TypeOf((*MockDataStore)(nil).Health))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Health", reflect.TypeOf((*MockDataStore)(nil).Health), ctx)
 }
 
 // IncreaseAccessCount mocks base method.
-func (m *MockDataStore) IncreaseAccessCount(id string) (int64, error) {
+func (m *MockDataStore) IncreaseAccessCount(ctx context.Context, id string) (int64, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "IncreaseAccessCount", id)
+	ret := m.ctrl.Call(m, "IncreaseAccessCount", ctx, id)
 	ret0, _ := ret[0].(int64)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // IncreaseAccessCount indicates an expected call of IncreaseAccessCount.
-func (mr *MockDataStoreMockRecorder) IncreaseAccessCount(id any) *gomock.Call {
+func (mr *MockDataStoreMockRecorder) IncreaseAccessCount(ctx, id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IncreaseAccessCount", reflect.TypeOf((*MockDataStore)(nil).IncreaseAccessCount), id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IncreaseAccessCount", reflect.TypeOf((*MockDataStore)(nil).IncreaseAccessCount), ctx, id)
 }
 
 // ReadSecret mocks base method.
-func (m *MockDataStore) ReadSecret(id string) *models.Secret {
+func (m *MockDataStore) ReadSecret(ctx context.Context, id string) *models.Secret {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ReadSecret", id)
+	ret := m.ctrl.Call(m, "ReadSecret", ctx, id)
 	ret0, _ := ret[0].(*models.Secret)
 	return ret0
 }
 
 // ReadSecret indicates an expected call of ReadSecret.
-func (mr *MockDataStoreMockRecorder) ReadSecret(id any) *gomock.Call {
+func (mr *MockDataStoreMockRecorder) ReadSecret(ctx, id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReadSecret", reflect.TypeOf((*MockDataStore)(nil).ReadSecret), id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReadSecret", reflect.TypeOf((*MockDataStore)(nil).ReadSecret), ctx, id)
 }
 
 // WriteSecret mocks base method.
-func (m *MockDataStore) WriteSecret(secret models.Secret) error {
+func (m *MockDataStore) WriteSecret(ctx context.Context, secret models.Secret) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "WriteSecret", secret)
+	ret := m.ctrl.Call(m, "WriteSecret", ctx, secret)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // WriteSecret indicates an expected call of WriteSecret.
-func (mr *MockDataStoreMockRecorder) WriteSecret(secret any) *gomock.Call {
+func (mr *MockDataStoreMockRecorder) WriteSecret(ctx, secret any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WriteSecret", reflect.TypeOf((*MockDataStore)(nil).WriteSecret), secret)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WriteSecret", reflect.TypeOf((*MockDataStore)(nil).WriteSecret), ctx, secret)
 }

@@ -6,6 +6,7 @@ import (
 	"cellar/pkg/models"
 	"cellar/pkg/settings"
 	"cellar/testing/testhelpers"
+	"context"
 	"go.uber.org/mock/gomock"
 	"strings"
 	"testing"
@@ -22,7 +23,7 @@ func TestGetHealth(t *testing.T) {
 		"1.0.0",
 	)
 	encryption.EXPECT().
-		Health().
+		Health(gomock.Any()).
 		Return(encryptionHealth)
 
 	dataStore := mocks.NewMockDataStore(ctrl)
@@ -32,10 +33,10 @@ func TestGetHealth(t *testing.T) {
 		"0.1.0",
 	)
 	dataStore.EXPECT().
-		Health().
+		Health(gomock.Any()).
 		Return(dataStoreHealth)
 
-	health := commands.GetHealth(cfg.App(), dataStore, encryption)
+	health := commands.GetHealth(context.Background(), cfg.App(), dataStore, encryption)
 
 	t.Run("status should be Healthy", testhelpers.EqualsF("healthy", strings.ToLower(health.Status)))
 	t.Run("should return host", testhelpers.NotEqualsF("", health.Host))

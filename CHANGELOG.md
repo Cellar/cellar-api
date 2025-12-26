@@ -17,6 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `targets` command to Makefile to list all available targets
 - `test` command to Makefile to run all test types
 - `format` and `lint` commands to Makefile
+- Custom context error handling package (pkg/errors) for proper request cancellation support
+- Explicit context cancellation checks at the start of all command functions
+- Comprehensive context cancellation tests for all command layer functions
 
 ### Security
 - Secure download headers for file secrets: X-Content-Type-Options, Content-Security-Policy, X-Frame-Options, Cache-Control
@@ -34,14 +37,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved Makefile with proper Vault wait logic using polling instead of fixed sleep
 - Updated CONTRIBUTING.md with better testing documentation and code quality guidelines
 - Restructured Makefile `services` target into logical subtargets
+- Upgraded go-redis from v7 to v9 for native context support and improved performance (internal change)
+- Replaced all context.TODO() with proper context propagation from HTTP requests (internal change)
+- v2 API endpoints now return HTTP 408 Request Timeout for cancelled or timed-out requests
+- All internal interfaces and functions now accept context.Context for proper cancellation support
 
 ### Fixed
 - `make run-daemon` now properly runs in background and returns immediately
 - Daemon process output redirected to `/tmp/cellar-api.log` for troubleshooting
 - Binary no longer removed while daemon is running
+- Long-running v2 operations now properly respect client disconnections
+- Redis and Vault operations can be cancelled mid-flight when clients disconnect
+- AWS SDK v2 operations now properly receive and respect request context
 
-**Note:** This release contains no breaking changes to the API or configuration.
-All changes are internal implementation details.
+**Note:** This release contains no breaking changes to the HTTP API or configuration.
+v1 endpoints maintain backward compatibility using background context.
+v2 endpoints gain request cancellation support (returns HTTP 408 on timeout).
+All changes are internal implementation details for self-hosted deployments.
 Pre-built binaries and Docker images work as drop-in replacements.
 
 ## [3.1.1]

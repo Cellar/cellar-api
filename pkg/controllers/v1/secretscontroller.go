@@ -5,6 +5,7 @@ import (
 	"cellar/pkg/cryptography"
 	"cellar/pkg/datastore"
 	"cellar/pkg/models"
+	"context"
 	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/swaggo/swag/example/celler/httputil"
@@ -52,7 +53,7 @@ func CreateSecret(c *gin.Context) {
 		secret.AccessLimit = *body.AccessLimit
 	}
 
-	if metadata, isValidationError, err := commands.CreateSecret(dataStore, encryption, secret); err != nil {
+	if metadata, isValidationError, err := commands.CreateSecret(context.Background(), dataStore, encryption, secret); err != nil {
 		if isValidationError {
 			httputil.NewError(c, http.StatusBadRequest, err)
 		} else {
@@ -86,7 +87,7 @@ func AccessSecretContent(c *gin.Context) {
 
 	id := c.Param("id")
 
-	if secret, err := commands.AccessSecret(dataStore, encryption, id); err != nil {
+	if secret, err := commands.AccessSecret(context.Background(), dataStore, encryption, id); err != nil {
 		httputil.NewError(c, http.StatusInternalServerError, err)
 		return
 	} else if secret == nil {
@@ -113,7 +114,7 @@ func GetSecretMetadata(c *gin.Context) {
 
 	id := c.Param("id")
 
-	if secretMetadata := commands.GetSecretMetadata(dataStore, id); secretMetadata == nil {
+	if secretMetadata := commands.GetSecretMetadata(context.Background(), dataStore, id); secretMetadata == nil {
 		c.Status(http.StatusNotFound)
 	} else {
 		c.JSON(http.StatusOK, models.SecretMetadataResponse{
@@ -139,7 +140,7 @@ func DeleteSecret(c *gin.Context) {
 
 	id := c.Param("id")
 
-	if deleted, err := commands.DeleteSecret(dataStore, id); err != nil {
+	if deleted, err := commands.DeleteSecret(context.Background(), dataStore, id); err != nil {
 		httputil.NewError(c, http.StatusInternalServerError, err)
 		return
 	} else if !deleted {

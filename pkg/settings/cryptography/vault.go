@@ -3,6 +3,7 @@ package cryptography
 import (
 	"cellar/pkg/aws"
 	"cellar/pkg/gcp"
+	"context"
 	"errors"
 	"fmt"
 	"github.com/spf13/viper"
@@ -192,7 +193,7 @@ func (awsIam AwsIamAuth) LoginPath() string {
 }
 
 func (awsIam AwsIamAuth) LoginParameters() (map[string]interface{}, error) {
-	requestInfo, err := aws.GetAwsIamRequestInfo(viper.GetString(vaultAuthMountPath))
+	requestInfo, err := aws.GetAwsIamRequestInfo(context.Background(), viper.GetString(vaultAuthMountPath))
 	if err != nil {
 		return nil, err
 	}

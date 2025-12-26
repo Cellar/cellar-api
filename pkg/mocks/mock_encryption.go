@@ -11,6 +11,7 @@ package mocks
 
 import (
 	models "cellar/pkg/models"
+	context "context"
 	reflect "reflect"
 
 	gomock "go.uber.org/mock/gomock"
@@ -41,45 +42,45 @@ func (m *MockEncryption) EXPECT() *MockEncryptionMockRecorder {
 }
 
 // Decrypt mocks base method.
-func (m *MockEncryption) Decrypt(content string) ([]byte, error) {
+func (m *MockEncryption) Decrypt(ctx context.Context, ciphertext string) ([]byte, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Decrypt", content)
+	ret := m.ctrl.Call(m, "Decrypt", ctx, ciphertext)
 	ret0, _ := ret[0].([]byte)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Decrypt indicates an expected call of Decrypt.
-func (mr *MockEncryptionMockRecorder) Decrypt(content any) *gomock.Call {
+func (mr *MockEncryptionMockRecorder) Decrypt(ctx, ciphertext any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Decrypt", reflect.TypeOf((*MockEncryption)(nil).Decrypt), content)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Decrypt", reflect.TypeOf((*MockEncryption)(nil).Decrypt), ctx, ciphertext)
 }
 
 // Encrypt mocks base method.
-func (m *MockEncryption) Encrypt(content []byte) (string, error) {
+func (m *MockEncryption) Encrypt(ctx context.Context, plaintext []byte) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Encrypt", content)
+	ret := m.ctrl.Call(m, "Encrypt", ctx, plaintext)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Encrypt indicates an expected call of Encrypt.
-func (mr *MockEncryptionMockRecorder) Encrypt(content any) *gomock.Call {
+func (mr *MockEncryptionMockRecorder) Encrypt(ctx, plaintext any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Encrypt", reflect.TypeOf((*MockEncryption)(nil).Encrypt), content)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Encrypt", reflect.TypeOf((*MockEncryption)(nil).Encrypt), ctx, plaintext)
 }
 
 // Health mocks base method.
-func (m *MockEncryption) Health() models.Health {
+func (m *MockEncryption) Health(ctx context.Context) models.Health {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Health")
+	ret := m.ctrl.Call(m, "Health", ctx)
 	ret0, _ := ret[0].(models.Health)
 	return ret0
 }
 
 // Health indicates an expected call of Health.
-func (mr *MockEncryptionMockRecorder) Health() *gomock.Call {
+func (mr *MockEncryptionMockRecorder) Health(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Health", reflect.TypeOf((*MockEncryption)(nil).Health))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Health", reflect.TypeOf((*MockEncryption)(nil).Health), ctx)
 }

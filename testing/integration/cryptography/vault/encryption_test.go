@@ -7,6 +7,7 @@ import (
 	"cellar/pkg/cryptography/vault"
 	"cellar/pkg/settings"
 	"cellar/testing/testhelpers"
+	"context"
 	"fmt"
 	"regexp"
 	"strings"
@@ -14,12 +15,13 @@ import (
 )
 
 func TestWhenGettingHealth(t *testing.T) {
+	ctx := context.Background()
 	cfg := settings.NewConfiguration()
-	sut, err := vault.NewEncryptionClient(cfg.Encryption().Vault())
+	sut, err := vault.NewEncryptionClient(ctx, cfg.Encryption().Vault())
 	if err != nil {
 		t.Error(err)
 	}
-	actual := sut.Health()
+	actual := sut.Health(ctx)
 
 	t.Run("should return name", testhelpers.EqualsF("vault", strings.ToLower(actual.Name)))
 	t.Run("should return healthy status", testhelpers.EqualsF("healthy", strings.ToLower(actual.Status)))
@@ -27,13 +29,14 @@ func TestWhenGettingHealth(t *testing.T) {
 }
 
 func TestVaultEncryption(t *testing.T) {
+	ctx := context.Background()
 	cfg := settings.NewConfiguration()
-	sut, err := vault.NewEncryptionClient(cfg.Encryption().Vault())
+	sut, err := vault.NewEncryptionClient(ctx, cfg.Encryption().Vault())
 	if err != nil {
 		t.Error(err)
 	}
 	content := "some secret content"
-	encrypted, err := sut.Encrypt([]byte(content))
+	encrypted, err := sut.Encrypt(ctx, []byte(content))
 	t.Run("when encrypting", func(t *testing.T) {
 		t.Run("should not return error", testhelpers.EqualsF(nil, err))
 		t.Run("should return encrypted in the right format", testhelpers.AssertF(func() bool {
@@ -44,7 +47,7 @@ func TestVaultEncryption(t *testing.T) {
 			return matched
 		}(), fmt.Sprintf("expected vault encrypted text, but was '%s'", encrypted)))
 	})
-	decrypted, err := sut.Decrypt(encrypted)
+	decrypted, err := sut.Decrypt(ctx, encrypted)
 	t.Run("when decrypting", func(t *testing.T) {
 		t.Run("should not return error", testhelpers.EqualsF(nil, err))
 		t.Run("should return initial content", testhelpers.EqualsF(content, string(decrypted)))

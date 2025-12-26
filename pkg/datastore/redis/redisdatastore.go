@@ -1,10 +1,12 @@
 package redis
 
 import (
+	pkgerrors "cellar/pkg/errors"
 	"cellar/pkg/models"
 	"cellar/pkg/settings/datastore"
+	"context"
 	"fmt"
-	"github.com/go-redis/redis/v7"
+	"github.com/redis/go-redis/v9"
 	log "github.com/sirupsen/logrus"
 	"strconv"
 	"strings"
@@ -49,12 +51,16 @@ func initializeLogger(configuration datastore.IRedisConfiguration) *log.Entry {
 	return logger
 }
 
-func (redis DataStore) Health() models.Health {
+func (redis DataStore) Health(ctx context.Context) models.Health {
 	name := "Redis"
 	status := models.HealthStatus(models.Unhealthy)
 	version := "Unknown"
 
-	if res, err := redis.client.Info("server").Result(); err == nil {
+	if err := pkgerrors.CheckContext(ctx); err != nil {
+		return *models.NewHealth(name, status, version)
+	}
+
+	if res, err := redis.client.Info(ctx, "server").Result(); err == nil {
 		res = strings.ReplaceAll(res, "\r\n", "\n")
 		info := strings.Split(res, "\n")
 		statusKey := "redis_version"
@@ -70,27 +76,31 @@ func (redis DataStore) Health() models.Health {
 	return *models.NewHealth(name, status, version)
 }
 
-func (redis DataStore) WriteSecret(secret models.Secret) error {
+func (redis DataStore) WriteSecret(ctx context.Context, secret models.Secret) error {
+	if err := pkgerrors.CheckContext(ctx); err != nil {
+		return err
+	}
+
 	keySet := NewRedisKeySet(secret.ID)
 	redis.logger.WithField(redisIdFieldKey, keySet.id).Debug("Writing secret to datastore")
 
-	err := redis.client.Set(keySet.Access(), strconv.Itoa(0), secret.Duration()).Err()
+	err := redis.client.Set(ctx, keySet.Access(), strconv.Itoa(0), secret.Duration()).Err()
 	if err != nil {
 		return err
 	}
-	err = redis.client.Set(keySet.AccessLimit(), strconv.Itoa(secret.AccessLimit), secret.Duration()).Err()
+	err = redis.client.Set(ctx, keySet.AccessLimit(), strconv.Itoa(secret.AccessLimit), secret.Duration()).Err()
 	if err != nil {
 		return err
 	}
-	err = redis.client.Set(keySet.ContentType(), secret.ContentType, secret.Duration()).Err()
+	err = redis.client.Set(ctx, keySet.ContentType(), secret.ContentType, secret.Duration()).Err()
 	if err != nil {
 		return err
 	}
-	err = redis.client.Set(keySet.Content(), secret.CipherText, secret.Duration()).Err()
+	err = redis.client.Set(ctx, keySet.Content(), secret.CipherText, secret.Duration()).Err()
 	if err != nil {
 		return err
 	}
-	err = redis.client.Set(keySet.ExpirationEpoch(), secret.ExpirationEpoch, secret.Duration()).Err()
+	err = redis.client.Set(ctx, keySet.ExpirationEpoch(), secret.ExpirationEpoch, secret.Duration()).Err()
 	if err != nil {
 		return err
 	}
@@ -98,31 +108,35 @@ func (redis DataStore) WriteSecret(secret models.Secret) error {
 	return nil
 }
 
-func (redis DataStore) ReadSecret(id string) (secret *models.Secret) {
+func (redis DataStore) ReadSecret(ctx context.Context, id string) (secret *models.Secret) {
+	if err := pkgerrors.CheckContext(ctx); err != nil {
+		return nil
+	}
+
 	keySet := NewRedisKeySet(id)
 	redis.logger.WithField(redisIdFieldKey, keySet.id).Debug("reading secret from redis")
 
-	accessLimit, err := redis.client.Get(keySet.AccessLimit()).Int()
+	accessLimit, err := redis.client.Get(ctx, keySet.AccessLimit()).Int()
 	if err != nil {
 		return nil
 	}
 
-	contentType, err := redis.client.Get(keySet.ContentType()).Result()
+	contentType, err := redis.client.Get(ctx, keySet.ContentType()).Result()
 	if err != nil {
 		return nil
 	}
 
-	content, err := redis.client.Get(keySet.Content()).Result()
+	content, err := redis.client.Get(ctx, keySet.Content()).Result()
 	if err != nil {
 		return nil
 	}
 
-	accessCount, err := redis.client.Get(keySet.Access()).Int()
+	accessCount, err := redis.client.Get(ctx, keySet.Access()).Int()
 	if err != nil {
 		return nil
 	}
 
-	expirationEpoch, err := redis.client.Get(keySet.ExpirationEpoch()).Int64()
+	expirationEpoch, err := redis.client.Get(ctx, keySet.ExpirationEpoch()).Int64()
 	if err != nil {
 		return nil
 	}
@@ -137,16 +151,22 @@ func (redis DataStore) ReadSecret(id string) (secret *models.Secret) {
 	}
 }
 
-func (redis DataStore) IncreaseAccessCount(id string) (accessCount int64, err error) {
+func (redis DataStore) IncreaseAccessCount(ctx context.Context, id string) (accessCount int64, err error) {
+	if err := pkgerrors.CheckContext(ctx); err != nil {
+		return 0, err
+	}
 	keySet := NewRedisKeySet(id)
 	redis.logger.WithField(redisIdFieldKey, keySet.id).Debug("increasing secret access count in redis")
-	return redis.client.Incr(keySet.Access()).Result()
+	return redis.client.Incr(ctx, keySet.Access()).Result()
 }
 
-func (redis DataStore) DeleteSecret(id string) (bool, error) {
+func (redis DataStore) DeleteSecret(ctx context.Context, id string) (bool, error) {
+	if err := pkgerrors.CheckContext(ctx); err != nil {
+		return false, err
+	}
 	keySet := NewRedisKeySet(id)
 	redis.logger.WithField(redisIdFieldKey, keySet.id).Debug("deleting secret from redis")
-	numDeleted, err := redis.client.Del(keySet.AllKeys()...).Result()
+	numDeleted, err := redis.client.Del(ctx, keySet.AllKeys()...).Result()
 	return numDeleted > int64(0), err
 }
 

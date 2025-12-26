@@ -83,8 +83,8 @@ func TestCreateSecret(t *testing.T) {
 			validContent := []byte("small file content")
 
 			t.Run("it should not reject based on size", func(t *testing.T) {
-				mockEncryption.EXPECT().Encrypt(gomock.Any()).Return("encrypted", nil).AnyTimes()
-				mockDataStore.EXPECT().WriteSecret(gomock.Any()).Return(nil).AnyTimes()
+				mockEncryption.EXPECT().Encrypt(gomock.Any(), gomock.Any()).Return("encrypted", nil).AnyTimes()
+				mockDataStore.EXPECT().WriteSecret(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 				req := createMultipartRequest(validContent, "test.txt")
 				w := httptest.NewRecorder()
@@ -136,9 +136,9 @@ func TestAccessSecretContent(t *testing.T) {
 			ContentType: models.ContentTypeFile,
 		}
 
-		mockDataStore.EXPECT().ReadSecret("test-id-123").Return(secret)
-		mockDataStore.EXPECT().IncreaseAccessCount("test-id-123").Return(int64(1), nil)
-		mockEncryption.EXPECT().Decrypt(gomock.Any()).Return(secret.Content, nil)
+		mockDataStore.EXPECT().ReadSecret(gomock.Any(), "test-id-123").Return(secret)
+		mockDataStore.EXPECT().IncreaseAccessCount(gomock.Any(), "test-id-123").Return(int64(1), nil)
+		mockEncryption.EXPECT().Decrypt(gomock.Any(), gomock.Any()).Return(secret.Content, nil)
 
 		req, _ := http.NewRequest("POST", "/v2/secrets/test-id-123/access", nil)
 		w := httptest.NewRecorder()
