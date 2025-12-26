@@ -26,6 +26,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated CONTRIBUTING.md with better testing documentation and code quality guidelines
 - Restructured Makefile `services` target into logical subtargets
 
+### Fixed
+- `make run-daemon` now properly runs in background and returns immediately
+- Daemon process output redirected to `/tmp/cellar-api.log` for troubleshooting
+- Binary no longer removed while daemon is running
+
 ## [3.1.1]
 
 ### Fixed
