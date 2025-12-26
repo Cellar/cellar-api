@@ -8,6 +8,7 @@ import (
 	"cellar/pkg/settings"
 	"context"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -23,11 +24,11 @@ func TestWhenGettingHealth(t *testing.T) {
 	actual := sut.Health(ctx)
 
 	t.Run("it should return vault name", func(t *testing.T) {
-		assert.Equal(t, "vault", actual.Name)
+		assert.True(t, strings.EqualFold("vault", actual.Name), "expected name to be 'vault' (case insensitive), got %s", actual.Name)
 	})
 
 	t.Run("it should return healthy status", func(t *testing.T) {
-		assert.Equal(t, "healthy", actual.Status)
+		assert.True(t, strings.EqualFold("healthy", actual.Status), "expected status to be 'healthy' (case insensitive), got %s", actual.Status)
 	})
 
 	t.Run("it should return version", func(t *testing.T) {

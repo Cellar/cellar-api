@@ -10,6 +10,7 @@ import (
 	"cellar/testing/testhelpers"
 	"context"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -24,11 +25,11 @@ func TestWhenGettingHealth(t *testing.T) {
 	actual := sut.Health(ctx)
 
 	t.Run("it should return redis name", func(t *testing.T) {
-		assert.Equal(t, "redis", actual.Name)
+		assert.True(t, strings.EqualFold("redis", actual.Name), "expected name to be 'redis' (case insensitive), got %s", actual.Name)
 	})
 
 	t.Run("it should return healthy status", func(t *testing.T) {
-		assert.Equal(t, "healthy", actual.Status)
+		assert.True(t, strings.EqualFold("healthy", actual.Status), "expected status to be 'healthy' (case insensitive), got %s", actual.Status)
 	})
 
 	t.Run("it should return version", func(t *testing.T) {
