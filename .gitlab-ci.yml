@@ -11,7 +11,7 @@ variables:
   PACKAGE_REGISTRY_URL: ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic
 
 .api:
-  image: golang:1.23-bookworm
+  image: golang:1.25-bookworm
   cache:
     key:
       files:
@@ -24,7 +24,7 @@ variables:
     - gitlab-org-docker
 
 .docker:
-  image: docker:stable
+  image: docker:latest
   services:
     - name: docker:dind
       alias: docker
@@ -74,9 +74,9 @@ test-unit:
     CRYPTOGRAPHY_VAULT_ADDRESS: http://vault:8200
     CRYPTOGRAPHY_VAULT_ENCRYPTION_TOKEN_NAME: cellar-testing
   services:
-    - name: redis:6.0-alpine
+    - name: redis:8-alpine
       alias: redis
-    - name: vault:1.5.5
+    - name: hashicorp/vault:1.21
       alias: vault
   before_script:
     - apt-get update && apt-get install -y jq

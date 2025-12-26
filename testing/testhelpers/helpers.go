@@ -49,7 +49,7 @@ func CreateSecretV1(t *testing.T, cfg settings.IConfiguration, content string, a
 	body, err := json.Marshal(secret)
 	Ok(t, err)
 
-	createResp, err := http.Post(fmt.Sprintf(cfg.App().ClientAddress()+"/v1/secrets"), "application/json", bytes.NewBuffer(body))
+	createResp, err := http.Post(cfg.App().ClientAddress()+"/v1/secrets", "application/json", bytes.NewBuffer(body))
 	OkF(err)
 	defer func() {
 		Ok(t, createResp.Body.Close())
@@ -75,7 +75,7 @@ func CreateSecretV2(t *testing.T, cfg settings.IConfiguration, contentType model
 	} else {
 		fileFormData["file"] = content
 	}
-	createResp := PostFormData(t, fmt.Sprintf(cfg.App().ClientAddress()+"/v2/secrets"), formData, fileFormData)
+	createResp := PostFormData(t, cfg.App().ClientAddress()+"/v2/secrets", formData, fileFormData)
 	defer func() {
 		Ok(t, createResp.Body.Close())
 	}()
