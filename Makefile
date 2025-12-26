@@ -94,6 +94,17 @@ format:
 	$(LOG) "Formatting Go code"
 	@gofmt -w .
 
+format-check:
+	$(LOG) "Checking Go code formatting"
+	@unformatted=$$(gofmt -l .); \
+	if [ -n "$$unformatted" ]; then \
+		echo "The following files are not formatted:"; \
+		echo "$$unformatted"; \
+		echo ""; \
+		echo "Run 'make format' to fix formatting"; \
+		exit 1; \
+	fi
+
 lint:
 	$(LOG) "Running linter"
 	@golangci-lint run
