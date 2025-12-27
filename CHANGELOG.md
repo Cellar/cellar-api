@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.3.0]
+
+### Added
+- Filename storage and retrieval for v2 file uploads
+- Filenames are now preserved through the upload-storage-retrieval cycle
+- Original filename returned in CreateSecret response (v2 API)
+- Actual filename used in AccessSecret Content-Disposition header (v2 API)
+- Redis filename key storage with TTL matching other secret data
+- Table-driven integration tests for filename storage scenarios
+
+### Security
+- Filename excluded from GetSecretMetadata response to prevent information leakage (filenames could reveal sensitive information about secret contents)
+
+### Changed
+- v2 CreateSecret response now includes `filename` field (optional, backward compatible)
+- v2 AccessSecret uses actual filename in download headers instead of generic `cellar-{id}` pattern
+- Test helpers updated with optional filename parameters using variadic arguments
+
+**Note:** This release is fully backward compatible.
+Old secrets without stored filenames use fallback pattern `cellar-{shortID}`.
+Text secrets have empty filename field (only file uploads preserve filenames).
+No breaking changes to HTTP API or configuration.
+
 ## [3.2.2]
 
 ### Fixed
@@ -144,7 +167,8 @@ Pre-built binaries and Docker images work as drop-in replacements.
 ### Added
 - Initial open source release
 
-[Unreleased]: https://gitlab.com/cellar-app/cellar-api/-/compare/v3.2.2...main
+[Unreleased]: https://gitlab.com/cellar-app/cellar-api/-/compare/v3.3.0...main
+[3.3.0]: https://gitlab.com/cellar-app/cellar-api/-/compare/v3.2.2...v3.3.0
 [3.2.2]: https://gitlab.com/cellar-app/cellar-api/-/compare/v3.2.1...v3.2.2
 [3.2.1]: https://gitlab.com/cellar-app/cellar-api/-/compare/v3.2.0...v3.2.1
 [3.2.0]: https://gitlab.com/cellar-app/cellar-api/-/compare/v3.1.1...v3.2.0
