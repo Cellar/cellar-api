@@ -552,6 +552,10 @@ const docTemplate = `{
                     "type": "string",
                     "example": "1970-01-01 00:00:00 UTC"
                 },
+                "filename": {
+                    "type": "string",
+                    "example": "document.pdf"
+                },
                 "id": {
                     "type": "string",
                     "example": "22b6fff1be15d1fd54b7b8ec6ad22e80e66275195c914c4b0f9652248a498680"

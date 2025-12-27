@@ -9,6 +9,7 @@ import (
 	pkgerrors "cellar/pkg/errors"
 	"cellar/pkg/models"
 	"cellar/pkg/settings"
+	"cellar/pkg/validators"
 	"errors"
 	"fmt"
 	"net/http"
@@ -90,6 +91,7 @@ func CreateSecret(c *gin.Context) {
 			return
 		}
 		secret.ContentType = models.ContentTypeFile
+		secret.Filename = validators.SanitizeFilename(fileHeader.Filename)
 	}
 
 	if metadata, isValidationError, err := commands.CreateSecret(ctx, dataStore, encryption, secret); err != nil {
@@ -111,6 +113,7 @@ func CreateSecret(c *gin.Context) {
 			AccessCount: metadata.AccessCount,
 			AccessLimit: metadata.AccessLimit,
 			ContentType: metadata.ContentType,
+			Filename:    metadata.Filename,
 			Expiration:  metadata.Expiration,
 		})
 	}
@@ -147,8 +150,13 @@ func AccessSecretContent(c *gin.Context) {
 		contentLength := reader.Size()
 		contentType := "application/octet-stream"
 
+		filename := secret.Filename
+		if filename == "" {
+			filename = fmt.Sprintf("cellar-%s", secret.ID[:8])
+		}
+
 		extraHeaders := map[string]string{
-			"Content-Disposition":     fmt.Sprintf(`attachment; filename="cellar-%s"`, secret.ID[:8]),
+			"Content-Disposition":     fmt.Sprintf(`attachment; filename="%s"`, filename),
 			"X-Content-Type-Options":  "nosniff",
 			"Content-Security-Policy": "default-src 'none'",
 			"X-Frame-Options":         "DENY",

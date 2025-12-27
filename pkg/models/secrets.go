@@ -28,6 +28,7 @@ type (
 		AccessCount int           `json:"access_count" example:"1"`
 		AccessLimit int           `json:"access_limit" example:"10"`
 		ContentType ContentType   `json:"content_type" swaggertype:"string" example:"text"`
+		Filename    string        `json:"filename,omitempty" example:"document.pdf"`
 		Expiration  FormattedTime `json:"expiration" swaggertype:"string" example:"1970-01-01 00:00:00 UTC"`
 	}
 
@@ -38,6 +39,7 @@ type (
 		Content         []byte
 		CipherText      string
 		ContentType     string
+		Filename        string
 		AccessCount     int
 		AccessLimit     int
 		ExpirationEpoch int64
@@ -46,6 +48,7 @@ type (
 	SecretMetadata struct {
 		ID          string
 		ContentType ContentType
+		Filename    string
 		AccessCount int
 		AccessLimit int
 		Expiration  FormattedTime
@@ -69,6 +72,7 @@ func (secret *Secret) Metadata() *SecretMetadata {
 	return &SecretMetadata{
 		ID:          secret.ID,
 		ContentType: ContentType(secret.ContentType),
+		Filename:    secret.Filename,
 		AccessCount: secret.AccessCount,
 		AccessLimit: secret.AccessLimit,
 		Expiration:  secret.Expiration(),

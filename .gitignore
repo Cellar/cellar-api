@@ -8,6 +8,7 @@ cellar-api-*-*
 *.so
 *.dylib
 dist/
+cellar-api-reference
 
 # Test binary, built with `go test -c`
 *.test

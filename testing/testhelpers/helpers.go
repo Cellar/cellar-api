@@ -65,7 +65,7 @@ func CreateSecretV1(t *testing.T, cfg settings.IConfiguration, content string, a
 	return createdSecret
 }
 
-func CreateSecretV2(t *testing.T, cfg settings.IConfiguration, contentType models.ContentType, content string, accessLimit int) models.SecretMetadataResponseV2 {
+func CreateSecretV2(t *testing.T, cfg settings.IConfiguration, contentType models.ContentType, content string, accessLimit int, filename ...string) models.SecretMetadataResponseV2 {
 	formData := map[string]string{
 		"access_limit":     strconv.Itoa(accessLimit),
 		"expiration_epoch": strconv.FormatInt(EpochFromNow(time.Hour), 10),
@@ -76,7 +76,7 @@ func CreateSecretV2(t *testing.T, cfg settings.IConfiguration, contentType model
 	} else {
 		fileFormData["file"] = content
 	}
-	createResp := PostFormData(t, cfg.App().ClientAddress()+"/v2/secrets", formData, fileFormData)
+	createResp := PostFormData(t, cfg.App().ClientAddress()+"/v2/secrets", formData, fileFormData, filename...)
 	defer func() {
 		require.NoError(t, createResp.Body.Close())
 	}()
@@ -94,14 +94,19 @@ func EpochFromNow(duration time.Duration) int64 {
 	return time.Now().UTC().Add(duration).Unix()
 }
 
-func PostFormData(t *testing.T, uri string, formData map[string]string, fileFormData map[string]string) *http.Response {
+func PostFormData(t *testing.T, uri string, formData map[string]string, fileFormData map[string]string, filename ...string) *http.Response {
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
 
 	for key, content := range fileFormData {
-		filename := RandomId(t)
+		var fname string
+		if len(filename) > 0 && filename[0] != "" {
+			fname = filename[0]
+		} else {
+			fname = RandomId(t)
+		}
 		fileContents := bytes.NewBufferString(content)
-		part, err := writer.CreateFormFile(key, filename)
+		part, err := writer.CreateFormFile(key, fname)
 		require.NoError(t, err)
 
 		_, err = io.Copy(part, fileContents)

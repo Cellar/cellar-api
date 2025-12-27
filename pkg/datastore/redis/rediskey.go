@@ -30,6 +30,10 @@ func (key RedisKey) ExpirationEpoch() string {
 	return key.buildKey("expirationepoch")
 }
 
+func (key RedisKey) Filename() string {
+	return key.buildKey("filename")
+}
+
 func (key RedisKey) AllKeys() []string {
 	return []string{
 		key.ContentType(),
@@ -37,6 +41,7 @@ func (key RedisKey) AllKeys() []string {
 		key.Access(),
 		key.AccessLimit(),
 		key.ExpirationEpoch(),
+		key.Filename(),
 	}
 }
 

@@ -106,6 +106,13 @@ func (redis DataStore) WriteSecret(ctx context.Context, secret models.Secret) er
 		return err
 	}
 
+	if secret.Filename != "" {
+		err = redis.client.Set(ctx, keySet.Filename(), secret.Filename, secret.Duration()).Err()
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -142,10 +149,16 @@ func (redis DataStore) ReadSecret(ctx context.Context, id string) (secret *model
 		return nil
 	}
 
+	filename := ""
+	if filenameVal, err := redis.client.Get(ctx, keySet.Filename()).Result(); err == nil {
+		filename = filenameVal
+	}
+
 	return &models.Secret{
 		ID:              id,
 		CipherText:      content,
 		ContentType:     contentType,
+		Filename:        filename,
 		AccessCount:     accessCount,
 		AccessLimit:     accessLimit,
 		ExpirationEpoch: expirationEpoch,
