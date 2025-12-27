@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.3.1]
+
+### Fixed
+- Bug where filename was stored in Redis but not retrieved during secret access in v2 API
+- AccessSecret command now correctly includes filename field in returned Secret struct
+- Content-Disposition header now uses actual filename instead of fallback pattern for file downloads
+
+### Added
+- Unit test for filename retrieval in AccessSecret command to prevent regression
+
 ## [3.3.0]
 
 ### Added
@@ -167,7 +177,8 @@ Pre-built binaries and Docker images work as drop-in replacements.
 ### Added
 - Initial open source release
 
-[Unreleased]: https://gitlab.com/cellar-app/cellar-api/-/compare/v3.3.0...main
+[Unreleased]: https://gitlab.com/cellar-app/cellar-api/-/compare/v3.3.1...main
+[3.3.1]: https://gitlab.com/cellar-app/cellar-api/-/compare/v3.3.0...v3.3.1
 [3.3.0]: https://gitlab.com/cellar-app/cellar-api/-/compare/v3.2.2...v3.3.0
 [3.2.2]: https://gitlab.com/cellar-app/cellar-api/-/compare/v3.2.1...v3.2.2
 [3.2.1]: https://gitlab.com/cellar-app/cellar-api/-/compare/v3.2.0...v3.2.1

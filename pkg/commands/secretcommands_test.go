@@ -244,6 +244,42 @@ func TestWhenAccessingASecret(t *testing.T) {
 	t.Run("from file", test(models.ContentTypeFile))
 }
 
+func TestWhenAccessingASecretWithFilename(t *testing.T) {
+	expectedFilename := "test-document.pdf"
+
+	secret := models.Secret{
+		ID:              testhelpers.RandomId(t),
+		Content:         []byte(testhelpers.RandomId(t)),
+		CipherText:      testhelpers.RandomId(t),
+		ContentType:     models.ContentTypeFile,
+		Filename:        expectedFilename,
+		AccessLimit:     100,
+		ExpirationEpoch: testhelpers.EpochFromNow(time.Minute),
+	}
+
+	ctrl := gomock.NewController(t)
+
+	encryption := mocks.NewMockEncryption(ctrl)
+	encryption.EXPECT().
+		Decrypt(gomock.Any(), secret.CipherText).
+		Return(secret.Content, nil)
+
+	dataStore := mocks.NewMockDataStore(ctrl)
+	dataStore.EXPECT().
+		ReadSecret(gomock.Any(), secret.ID).
+		Return(&secret)
+	dataStore.EXPECT().
+		IncreaseAccessCount(gomock.Any(), secret.ID).
+		Return(int64(1), nil)
+
+	response, err := commands.AccessSecret(context.Background(), dataStore, encryption, secret.ID)
+	require.NoError(t, err)
+
+	t.Run("it should return filename", func(t *testing.T) {
+		assert.Equal(t, expectedFilename, response.Filename)
+	})
+}
+
 func TestWhenAccessingASecretThatDoesNotExist(t *testing.T) {
 
 	sut := func(decryptCallTimes, readSecretCallTimes, increaseAccessCountCallTimes int) (response *models.Secret, err error) {

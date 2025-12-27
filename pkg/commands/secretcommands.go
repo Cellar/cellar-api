@@ -116,6 +116,7 @@ func AccessSecret(ctx context.Context, dataStore datastore.DataStore, encryption
 		ID:          id,
 		Content:     content,
 		ContentType: secret.ContentType,
+		Filename:    secret.Filename,
 	}, nil
 }
 
