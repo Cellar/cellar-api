@@ -4,6 +4,7 @@ import (
 	"cellar/pkg/commands"
 	"cellar/pkg/cryptography"
 	"cellar/pkg/datastore"
+	pkgerrors "cellar/pkg/errors"
 	"cellar/pkg/models"
 	"cellar/pkg/settings"
 	"context"
@@ -56,23 +57,22 @@ func CreateSecret(c *gin.Context) {
 		secret.AccessLimit = *body.AccessLimit
 	}
 
-	if metadata, isValidationError, err := commands.CreateSecret(context.Background(), cfg.App(), dataStore, encryption, secret); err != nil {
-		if isValidationError {
+	metadata, err := commands.CreateSecret(context.Background(), cfg.App(), dataStore, encryption, secret)
+	if err != nil {
+		if pkgerrors.IsValidationError(err) {
 			httputil.NewError(c, http.StatusBadRequest, err)
 		} else {
 			httputil.NewError(c, http.StatusInternalServerError, err)
 		}
 		return
-	} else if metadata == nil {
-		httputil.NewError(c, http.StatusInternalServerError, errors.New("unexpected error while creating secret"))
-	} else {
-		c.JSON(http.StatusCreated, models.SecretMetadataResponse{
-			ID:          metadata.ID,
-			AccessCount: metadata.AccessCount,
-			AccessLimit: metadata.AccessLimit,
-			Expiration:  metadata.Expiration,
-		})
 	}
+
+	c.JSON(http.StatusCreated, models.SecretMetadataResponse{
+		ID:          metadata.ID,
+		AccessCount: metadata.AccessCount,
+		AccessLimit: metadata.AccessLimit,
+		Expiration:  metadata.Expiration,
+	})
 }
 
 // @Summary Access Secret Content

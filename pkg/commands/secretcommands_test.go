@@ -60,7 +60,7 @@ func TestCreateSecret(t *testing.T) {
 					appConfig.EXPECT().MaxAccessCount().Return(maxAccessCount).AnyTimes()
 					appConfig.EXPECT().MaxExpirationSeconds().Return(maxExpirationSeconds).AnyTimes()
 
-					response, _, err := commands.CreateSecret(context.Background(), appConfig, dataStore, encryption, expectedSecret)
+					response, err := commands.CreateSecret(context.Background(), appConfig, dataStore, encryption, expectedSecret)
 					require.NoError(t, err)
 
 					return
@@ -103,7 +103,7 @@ func TestCreateSecret(t *testing.T) {
 						dataStore := mocks.NewMockDataStore(ctrl)
 						appConfig := mocks.NewMockIAppConfiguration(ctrl)
 
-						_, _, err := commands.CreateSecret(ctx, appConfig, dataStore, encryption, expectedSecret)
+						_, err := commands.CreateSecret(ctx, appConfig, dataStore, encryption, expectedSecret)
 
 						assert.True(t, pkgerrors.IsContextError(err), "expected context error")
 					})
@@ -132,7 +132,7 @@ func TestCreateSecret(t *testing.T) {
 			ExpirationEpoch: expirationEpoch,
 		}
 
-		sut := func(writeSecretCallTimes int) (isValidationError bool, err error) {
+		sut := func(writeSecretCallTimes int) error {
 			ctrl := gomock.NewController(t)
 
 			encryption := mocks.NewMockEncryption(ctrl)
@@ -155,17 +155,16 @@ func TestCreateSecret(t *testing.T) {
 			appConfig.EXPECT().MaxAccessCount().Return(maxAccessCount).AnyTimes()
 			appConfig.EXPECT().MaxExpirationSeconds().Return(maxExpirationSeconds).AnyTimes()
 
-			_, isValidationError, err = commands.CreateSecret(context.Background(), appConfig, dataStore, encryption, secretRequest)
-
-			return
+			_, err := commands.CreateSecret(context.Background(), appConfig, dataStore, encryption, secretRequest)
+			return err
 		}
 
-		t.Run("it should not call to database", func(t *testing.T) { _, _ = sut(0) })
+		t.Run("it should not call to database", func(t *testing.T) { _ = sut(0) })
 		t.Run("it should return", func(t *testing.T) {
-			isValidationError, err := sut(-1)
+			err := sut(-1)
 
 			t.Run("validation error", func(t *testing.T) {
-				assert.True(t, isValidationError)
+				assert.True(t, pkgerrors.IsValidationError(err))
 			})
 
 			t.Run("an error", func(t *testing.T) {
@@ -191,7 +190,7 @@ func TestCreateSecret(t *testing.T) {
 			ExpirationEpoch: expirationEpoch,
 		}
 
-		sut := func(writeSecretCallTimes int) (isValidationError bool, err error) {
+		sut := func(writeSecretCallTimes int) error {
 			ctrl := gomock.NewController(t)
 
 			encryption := mocks.NewMockEncryption(ctrl)
@@ -220,17 +219,16 @@ func TestCreateSecret(t *testing.T) {
 				Return(maxExpirationSeconds).
 				AnyTimes()
 
-			_, isValidationError, err = commands.CreateSecret(context.Background(), appConfig, dataStore, encryption, secretRequest)
-
-			return
+			_, err := commands.CreateSecret(context.Background(), appConfig, dataStore, encryption, secretRequest)
+			return err
 		}
 
-		t.Run("it should not call to database", func(t *testing.T) { _, _ = sut(0) })
+		t.Run("it should not call to database", func(t *testing.T) { _ = sut(0) })
 		t.Run("it should return", func(t *testing.T) {
-			isValidationError, err := sut(-1)
+			err := sut(-1)
 
 			t.Run("validation error", func(t *testing.T) {
-				assert.True(t, isValidationError)
+				assert.True(t, pkgerrors.IsValidationError(err))
 			})
 
 			t.Run("an error", func(t *testing.T) {
@@ -256,7 +254,7 @@ func TestCreateSecret(t *testing.T) {
 			ExpirationEpoch: expirationEpoch,
 		}
 
-		sut := func(writeSecretCallTimes int) (isValidationError bool, err error) {
+		sut := func(writeSecretCallTimes int) error {
 			ctrl := gomock.NewController(t)
 
 			encryption := mocks.NewMockEncryption(ctrl)
@@ -285,17 +283,16 @@ func TestCreateSecret(t *testing.T) {
 				Return(maxExpirationSeconds).
 				AnyTimes()
 
-			_, isValidationError, err = commands.CreateSecret(context.Background(), appConfig, dataStore, encryption, secretRequest)
-
-			return
+			_, err := commands.CreateSecret(context.Background(), appConfig, dataStore, encryption, secretRequest)
+			return err
 		}
 
-		t.Run("it should not call to database", func(t *testing.T) { _, _ = sut(0) })
+		t.Run("it should not call to database", func(t *testing.T) { _ = sut(0) })
 		t.Run("it should return", func(t *testing.T) {
-			isValidationError, err := sut(-1)
+			err := sut(-1)
 
 			t.Run("validation error", func(t *testing.T) {
-				assert.True(t, isValidationError)
+				assert.True(t, pkgerrors.IsValidationError(err))
 			})
 
 			t.Run("an error", func(t *testing.T) {

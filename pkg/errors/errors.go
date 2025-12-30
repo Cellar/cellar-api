@@ -27,3 +27,27 @@ func CheckContext(ctx context.Context) error {
 		return nil
 	}
 }
+
+// ValidationError represents an error caused by invalid input or business rule violation
+type ValidationError struct {
+	message string
+}
+
+// Error implements the error interface
+func (e *ValidationError) Error() string {
+	return e.message
+}
+
+// NewValidationError creates a new validation error with the given message
+func NewValidationError(msg string) error {
+	return &ValidationError{message: msg}
+}
+
+// IsValidationError checks if an error is a validation error
+func IsValidationError(err error) bool {
+	if err == nil {
+		return false
+	}
+	var ve *ValidationError
+	return errors.As(err, &ve)
+}

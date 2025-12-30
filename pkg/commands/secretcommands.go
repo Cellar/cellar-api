@@ -9,7 +9,6 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"time"
 
@@ -24,18 +23,17 @@ func getLogger(secretId string) *log.Entry {
 }
 
 // CreateSecret encrypts and stores a new secret with the given parameters.
-// Returns the secret metadata, a validation error flag, and any error encountered.
+// Returns the secret metadata and any error encountered.
+// Validation errors are returned as ValidationError types.
 // The context can be used to cancel the operation before completion.
-func CreateSecret(ctx context.Context, appConfig settings.IAppConfiguration, dataStore datastore.DataStore, encryption cryptography.Encryption, secret models.Secret) (response *models.SecretMetadata, isValidationError bool, err error) {
-	if err = pkgerrors.CheckContext(ctx); err != nil {
-		return
+func CreateSecret(ctx context.Context, appConfig settings.IAppConfiguration, dataStore datastore.DataStore, encryption cryptography.Encryption, secret models.Secret) (*models.SecretMetadata, error) {
+	if err := pkgerrors.CheckContext(ctx); err != nil {
+		return nil, err
 	}
-
-	isValidationError = false
 
 	id, err := randomId()
 	if err != nil {
-		return
+		return nil, err
 	}
 
 	logger := getLogger(id)
@@ -45,7 +43,7 @@ func CreateSecret(ctx context.Context, appConfig settings.IAppConfiguration, dat
 	if err != nil {
 		logger.WithError(err).
 			Error("Error encrypting new secret content")
-		return
+		return nil, err
 	}
 
 	secret.ID = id
@@ -56,18 +54,18 @@ func CreateSecret(ctx context.Context, appConfig settings.IAppConfiguration, dat
 
 	// Validate access limit against configured maximum
 	if secret.AccessLimit > 0 && secret.AccessLimit > appConfig.MaxAccessCount() {
-		return response, true, fmt.Errorf("access_limit cannot exceed %d", appConfig.MaxAccessCount())
+		return nil, pkgerrors.NewValidationError(fmt.Sprintf("access_limit cannot exceed %d", appConfig.MaxAccessCount()))
 	}
 
 	// Validate expiration duration
 	if secret.Duration() < time.Minute*10 {
-		return response, true, errors.New("expiration must be at least 10 minutes in the future")
+		return nil, pkgerrors.NewValidationError("expiration must be at least 10 minutes in the future")
 	}
 
 	// Validate expiration does not exceed configured maximum
 	maxExpirationDuration := time.Second * time.Duration(appConfig.MaxExpirationSeconds())
 	if secret.Duration() > maxExpirationDuration {
-		return response, true, fmt.Errorf("expiration cannot exceed %d seconds", appConfig.MaxExpirationSeconds())
+		return nil, pkgerrors.NewValidationError(fmt.Sprintf("expiration cannot exceed %d seconds", appConfig.MaxExpirationSeconds()))
 	}
 
 	logger = logger.WithFields(log.Fields{
@@ -78,11 +76,10 @@ func CreateSecret(ctx context.Context, appConfig settings.IAppConfiguration, dat
 	err = dataStore.WriteSecret(ctx, secret)
 	if err != nil {
 		logger.WithError(err).Error("Error writing new secret to datastore")
-		return
+		return nil, err
 	}
 
-	response = secret.Metadata()
-	return
+	return secret.Metadata(), nil
 }
 
 // AccessSecret retrieves and decrypts a secret by ID, incrementing its access count.

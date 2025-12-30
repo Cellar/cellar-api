@@ -94,29 +94,26 @@ func CreateSecret(c *gin.Context) {
 		secret.Filename = validators.SanitizeFilename(fileHeader.Filename)
 	}
 
-	if metadata, isValidationError, err := commands.CreateSecret(ctx, cfg.App(), dataStore, encryption, secret); err != nil {
+	metadata, err := commands.CreateSecret(ctx, cfg.App(), dataStore, encryption, secret)
+	if err != nil {
 		if pkgerrors.IsContextError(err) {
 			httputil.NewError(c, http.StatusRequestTimeout, err)
-			return
-		}
-		if isValidationError {
+		} else if pkgerrors.IsValidationError(err) {
 			httputil.NewError(c, http.StatusBadRequest, err)
 		} else {
 			httputil.NewError(c, http.StatusInternalServerError, err)
 		}
 		return
-	} else if metadata == nil {
-		httputil.NewError(c, http.StatusInternalServerError, errors.New("unexpected error while creating secret"))
-	} else {
-		c.JSON(http.StatusCreated, models.SecretMetadataResponseV2{
-			ID:          metadata.ID,
-			AccessCount: metadata.AccessCount,
-			AccessLimit: metadata.AccessLimit,
-			ContentType: metadata.ContentType,
-			Filename:    metadata.Filename,
-			Expiration:  metadata.Expiration,
-		})
 	}
+
+	c.JSON(http.StatusCreated, models.SecretMetadataResponseV2{
+		ID:          metadata.ID,
+		AccessCount: metadata.AccessCount,
+		AccessLimit: metadata.AccessLimit,
+		ContentType: metadata.ContentType,
+		Filename:    metadata.Filename,
+		Expiration:  metadata.Expiration,
+	})
 }
 
 // @Summary Access Secret Content. If the content is a file it the response will be an application/octet-stream
