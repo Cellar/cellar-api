@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `APP_MAX_ACCESS_COUNT` configuration setting with default of 100 (minimum value: 1)
 - `APP_MAX_EXPIRATION_SECONDS` configuration setting with default of 604800 seconds / 7 days (minimum value: 900 seconds / 15 minutes)
 - Minimum value validation for all configuration settings to prevent misconfiguration
+- Validation of `access_limit` parameter against `APP_MAX_ACCESS_COUNT` in CreateSecret command
+- Validation of `expiration_epoch` parameter against `APP_MAX_EXPIRATION_SECONDS` in CreateSecret command
+- HTTP 400 Bad Request responses when access_limit or expiration exceed configured maximums
 
 ## [3.3.1]
 
