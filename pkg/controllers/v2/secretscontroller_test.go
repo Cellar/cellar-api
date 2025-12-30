@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"cellar/pkg/cryptography"
 	"cellar/pkg/datastore"
+	"cellar/pkg/middleware"
 	"cellar/pkg/mocks"
 	"cellar/pkg/models"
 	"cellar/pkg/settings"
@@ -48,6 +49,7 @@ func TestCreateSecret(t *testing.T) {
 			mockDataStore = mocks.NewMockDataStore(ctrl)
 			mockEncryption = mocks.NewMockEncryption(ctrl)
 
+			router.Use(middleware.ErrorHandler())
 			router.Use(func(c *gin.Context) {
 				c.Set(settings.Key, cfg)
 				c.Set(datastore.Key, mockDataStore)

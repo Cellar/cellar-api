@@ -8,11 +8,9 @@ import (
 	"cellar/pkg/models"
 	"cellar/pkg/settings"
 	"context"
-	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/swaggo/swag/example/celler/httputil"
 )
 
 // @Summary Create Secret
@@ -32,24 +30,22 @@ func CreateSecret(c *gin.Context) {
 	var body models.CreateSecretRequest
 	var secret models.Secret
 	if err := c.ShouldBindJSON(&body); err != nil {
-		httputil.NewError(c, http.StatusBadRequest, err)
+		_ = c.Error(pkgerrors.NewValidationError(err.Error()))
 		return
 	}
 
 	if body.Content == nil {
-		httputil.NewError(c, http.StatusBadRequest, errors.New("required parameter: content"))
+		_ = c.Error(pkgerrors.NewValidationError("required parameter: content"))
 		return
-	} else {
-		secret.Content = []byte(*body.Content)
-		secret.ContentType = string(models.ContentTypeText)
 	}
+	secret.Content = []byte(*body.Content)
+	secret.ContentType = string(models.ContentTypeText)
 
 	if body.ExpirationEpoch == nil {
-		httputil.NewError(c, http.StatusBadRequest, errors.New("required parameter: duration"))
+		_ = c.Error(pkgerrors.NewValidationError("required parameter: duration"))
 		return
-	} else {
-		secret.ExpirationEpoch = *body.ExpirationEpoch
 	}
+	secret.ExpirationEpoch = *body.ExpirationEpoch
 
 	if body.AccessLimit == nil {
 		secret.AccessLimit = 0
@@ -59,11 +55,7 @@ func CreateSecret(c *gin.Context) {
 
 	metadata, err := commands.CreateSecret(context.Background(), cfg.App(), dataStore, encryption, secret)
 	if err != nil {
-		if pkgerrors.IsValidationError(err) {
-			httputil.NewError(c, http.StatusBadRequest, err)
-		} else {
-			httputil.NewError(c, http.StatusInternalServerError, err)
-		}
+		_ = c.Error(err)
 		return
 	}
 
@@ -90,17 +82,21 @@ func AccessSecretContent(c *gin.Context) {
 
 	id := c.Param("id")
 
-	if secret, err := commands.AccessSecret(context.Background(), dataStore, encryption, id); err != nil {
-		httputil.NewError(c, http.StatusInternalServerError, err)
+	secret, err := commands.AccessSecret(context.Background(), dataStore, encryption, id)
+	if err != nil {
+		_ = c.Error(err)
 		return
-	} else if secret == nil {
-		c.Status(http.StatusNotFound)
-	} else {
-		c.JSON(http.StatusOK, models.SecretContentResponse{
-			ID:      secret.ID,
-			Content: string(secret.Content),
-		})
 	}
+
+	if secret == nil {
+		c.Status(http.StatusNotFound)
+		return
+	}
+
+	c.JSON(http.StatusOK, models.SecretContentResponse{
+		ID:      secret.ID,
+		Content: string(secret.Content),
+	})
 }
 
 // @Summary Get Secret Metadata
@@ -143,12 +139,16 @@ func DeleteSecret(c *gin.Context) {
 
 	id := c.Param("id")
 
-	if deleted, err := commands.DeleteSecret(context.Background(), dataStore, id); err != nil {
-		httputil.NewError(c, http.StatusInternalServerError, err)
+	deleted, err := commands.DeleteSecret(context.Background(), dataStore, id)
+	if err != nil {
+		_ = c.Error(err)
 		return
-	} else if !deleted {
-		c.Status(http.StatusNotFound)
-	} else {
-		c.Status(http.StatusNoContent)
 	}
+
+	if !deleted {
+		c.Status(http.StatusNotFound)
+		return
+	}
+
+	c.Status(http.StatusNoContent)
 }

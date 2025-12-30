@@ -10,13 +10,11 @@ import (
 	"cellar/pkg/models"
 	"cellar/pkg/settings"
 	"cellar/pkg/validators"
-	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/swaggo/swag/example/celler/httputil"
 )
 
 // @Summary Create Secret
@@ -42,52 +40,56 @@ func CreateSecret(c *gin.Context) {
 	var secret models.Secret
 
 	if accessLimitStr := c.PostForm("access_limit"); accessLimitStr != "" {
-		if accessLimit, err := strconv.Atoi(accessLimitStr); err != nil {
-			httputil.NewError(c, http.StatusBadRequest, errors.New("optional parameter: access_limit: invalid value"))
+		accessLimit, err := strconv.Atoi(accessLimitStr)
+		if err != nil {
+			_ = c.Error(pkgerrors.NewValidationError("optional parameter: access_limit: invalid value"))
 			return
-		} else {
-			secret.AccessLimit = accessLimit
 		}
+		secret.AccessLimit = accessLimit
 	}
 
-	if expirationEpoch, err := strconv.ParseInt(c.PostForm("expiration_epoch"), 10, 64); err != nil {
-		httputil.NewError(c, http.StatusBadRequest, errors.New("required parameter: expiration_epoch"))
+	expirationEpoch, err := strconv.ParseInt(c.PostForm("expiration_epoch"), 10, 64)
+	if err != nil {
+		_ = c.Error(pkgerrors.NewValidationError("required parameter: expiration_epoch"))
 		return
-	} else {
-		secret.ExpirationEpoch = expirationEpoch
 	}
+	secret.ExpirationEpoch = expirationEpoch
 
 	content := c.PostForm("content")
 	fileHeader, err := c.FormFile("file")
 	if err != nil && err != http.ErrMissingFile {
-		httputil.NewError(c, http.StatusBadRequest, errors.New("required parameter: file: invalid value"))
+		_ = c.Error(pkgerrors.NewValidationError("required parameter: file: invalid value"))
 		return
 	}
 
 	if content != "" && fileHeader != nil {
-		httputil.NewError(c, http.StatusBadRequest, errors.New("secret with both content and file is not allowed"))
+		_ = c.Error(pkgerrors.NewValidationError("secret with both content and file is not allowed"))
 		return
-	} else if content == "" && fileHeader == nil {
-		httputil.NewError(c, http.StatusBadRequest, errors.New("required parameter: file or content"))
+	}
+
+	if content == "" && fileHeader == nil {
+		_ = c.Error(pkgerrors.NewValidationError("required parameter: file or content"))
 		return
-	} else if content != "" {
+	}
+
+	if content != "" {
 		secret.Content = []byte(content)
 		secret.ContentType = models.ContentTypeText
 	} else {
 		if fileHeader.Size == 0 {
-			httputil.NewError(c, http.StatusBadRequest, errors.New("file cannot be empty"))
+			_ = c.Error(pkgerrors.NewValidationError("file cannot be empty"))
 			return
 		}
 
 		maxSizeBytes := int64(cfg.App().MaxFileSizeMB() * 1024 * 1024)
 		if fileHeader.Size > maxSizeBytes {
-			httputil.NewError(c, http.StatusRequestEntityTooLarge, fmt.Errorf("file size %d bytes exceeds maximum allowed size of %d MB", fileHeader.Size, cfg.App().MaxFileSizeMB()))
+			_ = c.Error(pkgerrors.NewFileTooLargeError(fmt.Sprintf("file size %d bytes exceeds maximum allowed size of %d MB", fileHeader.Size, cfg.App().MaxFileSizeMB())))
 			return
 		}
 
 		secret.Content, err = controllers.FileToBytes(fileHeader)
 		if err != nil {
-			httputil.NewError(c, http.StatusBadRequest, err)
+			_ = c.Error(pkgerrors.NewValidationError(err.Error()))
 			return
 		}
 		secret.ContentType = models.ContentTypeFile
@@ -96,13 +98,7 @@ func CreateSecret(c *gin.Context) {
 
 	metadata, err := commands.CreateSecret(ctx, cfg.App(), dataStore, encryption, secret)
 	if err != nil {
-		if pkgerrors.IsContextError(err) {
-			httputil.NewError(c, http.StatusRequestTimeout, err)
-		} else if pkgerrors.IsValidationError(err) {
-			httputil.NewError(c, http.StatusBadRequest, err)
-		} else {
-			httputil.NewError(c, http.StatusInternalServerError, err)
-		}
+		_ = c.Error(err)
 		return
 	}
 
@@ -133,16 +129,18 @@ func AccessSecretContent(c *gin.Context) {
 
 	id := c.Param("id")
 
-	if secret, err := commands.AccessSecret(ctx, dataStore, encryption, id); err != nil {
-		if pkgerrors.IsContextError(err) {
-			httputil.NewError(c, http.StatusRequestTimeout, err)
-			return
-		}
-		httputil.NewError(c, http.StatusInternalServerError, err)
+	secret, err := commands.AccessSecret(ctx, dataStore, encryption, id)
+	if err != nil {
+		_ = c.Error(err)
 		return
-	} else if secret == nil {
+	}
+
+	if secret == nil {
 		c.Status(http.StatusNotFound)
-	} else if secret.ContentType == models.ContentTypeFile {
+		return
+	}
+
+	if secret.ContentType == models.ContentTypeFile {
 		reader := bytes.NewReader(secret.Content)
 		contentLength := reader.Size()
 		contentType := "application/octet-stream"
@@ -161,12 +159,13 @@ func AccessSecretContent(c *gin.Context) {
 		}
 
 		c.DataFromReader(http.StatusOK, contentLength, contentType, reader, extraHeaders)
-	} else {
-		c.JSON(http.StatusOK, models.SecretContentResponse{
-			ID:      secret.ID,
-			Content: string(secret.Content),
-		})
+		return
 	}
+
+	c.JSON(http.StatusOK, models.SecretContentResponse{
+		ID:      secret.ID,
+		Content: string(secret.Content),
+	})
 }
 
 // @Summary Get Secret Metadata
@@ -214,16 +213,16 @@ func DeleteSecret(c *gin.Context) {
 
 	id := c.Param("id")
 
-	if deleted, err := commands.DeleteSecret(ctx, dataStore, id); err != nil {
-		if pkgerrors.IsContextError(err) {
-			httputil.NewError(c, http.StatusRequestTimeout, err)
-			return
-		}
-		httputil.NewError(c, http.StatusInternalServerError, err)
+	deleted, err := commands.DeleteSecret(ctx, dataStore, id)
+	if err != nil {
+		_ = c.Error(err)
 		return
-	} else if !deleted {
-		c.Status(http.StatusNotFound)
-	} else {
-		c.Status(http.StatusNoContent)
 	}
+
+	if !deleted {
+		c.Status(http.StatusNotFound)
+		return
+	}
+
+	c.Status(http.StatusNoContent)
 }

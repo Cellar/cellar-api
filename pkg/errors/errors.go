@@ -51,3 +51,27 @@ func IsValidationError(err error) bool {
 	var ve *ValidationError
 	return errors.As(err, &ve)
 }
+
+// FileTooLargeError represents an error caused by a file that exceeds the maximum allowed size
+type FileTooLargeError struct {
+	message string
+}
+
+// Error implements the error interface
+func (e *FileTooLargeError) Error() string {
+	return e.message
+}
+
+// NewFileTooLargeError creates a new file too large error with the given message
+func NewFileTooLargeError(msg string) error {
+	return &FileTooLargeError{message: msg}
+}
+
+// IsFileTooLargeError checks if an error is a file too large error
+func IsFileTooLargeError(err error) bool {
+	if err == nil {
+		return false
+	}
+	var fe *FileTooLargeError
+	return errors.As(err, &fe)
+}
