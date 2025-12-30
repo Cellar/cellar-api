@@ -94,7 +94,7 @@ func CreateSecret(c *gin.Context) {
 		secret.Filename = validators.SanitizeFilename(fileHeader.Filename)
 	}
 
-	if metadata, isValidationError, err := commands.CreateSecret(ctx, dataStore, encryption, secret); err != nil {
+	if metadata, isValidationError, err := commands.CreateSecret(ctx, cfg.App(), dataStore, encryption, secret); err != nil {
 		if pkgerrors.IsContextError(err) {
 			httputil.NewError(c, http.StatusRequestTimeout, err)
 			return

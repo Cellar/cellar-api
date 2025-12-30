@@ -15,147 +15,292 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-func TestWhenCreatingASecret(t *testing.T) {
-	test := func(expectedContentType string) func(t *testing.T) {
-		return func(t *testing.T) {
-			encryptedData := testhelpers.RandomId(t)
+func TestCreateSecret(t *testing.T) {
+	t.Run("when all parameters are valid", func(t *testing.T) {
+		test := func(expectedContentType string) func(t *testing.T) {
+			return func(t *testing.T) {
+				encryptedData := testhelpers.RandomId(t)
 
-			expectedDuration := time.Minute * 11
-			expectedExpiration := time.Now().Add(expectedDuration).UTC()
-			expectedSecret := models.Secret{
-				Content:         []byte("Super Secret Test Content"),
-				ContentType:     expectedContentType,
-				AccessLimit:     100,
-				ExpirationEpoch: testhelpers.EpochFromNow(expectedDuration),
-			}
+				expectedDuration := time.Minute * 11
+				expectedExpiration := time.Now().Add(expectedDuration).UTC()
+				maxAccessCount := 100
+				maxExpirationSeconds := 604800
 
-			sut := func(encryptCallTimes, writeSecretCallTimes int) (response *models.SecretMetadata) {
-				ctrl := gomock.NewController(t)
-
-				encryption := mocks.NewMockEncryption(ctrl)
-				encryptCall := encryption.EXPECT().
-					Encrypt(gomock.Any(), expectedSecret.Content).
-					Return(encryptedData, nil).
-					AnyTimes()
-
-				if encryptCallTimes >= 0 {
-					encryptCall.Times(encryptCallTimes)
+				expectedSecret := models.Secret{
+					Content:         []byte("Super Secret Test Content"),
+					ContentType:     expectedContentType,
+					AccessLimit:     50,
+					ExpirationEpoch: testhelpers.EpochFromNow(expectedDuration),
 				}
 
-				dataStore := mocks.NewMockDataStore(ctrl)
-				writeSecretCall := dataStore.EXPECT().
-					WriteSecret(gomock.Any(), gomock.Any()).
-					Return(nil).
-					AnyTimes()
-
-				if writeSecretCallTimes >= 0 {
-					writeSecretCall.Times(writeSecretCallTimes)
-				}
-
-				response, _, err := commands.CreateSecret(context.Background(), dataStore, encryption, expectedSecret)
-				require.NoError(t, err)
-
-				return
-			}
-
-			t.Run("should encrypt content", func(t *testing.T) { sut(1, -1) })
-			t.Run("should write to database", func(t *testing.T) { sut(-1, 1) })
-
-			t.Run("should return", func(t *testing.T) {
-				response := sut(-1, -1)
-
-				t.Run("it should have ID of length 64", func(t *testing.T) {
-					assert.Equal(t, 64, len(response.ID))
-				})
-
-				t.Run("it should have access count of zero", func(t *testing.T) {
-					assert.Equal(t, 0, response.AccessCount)
-				})
-
-				t.Run("it should have expected access limit", func(t *testing.T) {
-					assert.Equal(t, expectedSecret.AccessLimit, response.AccessLimit)
-				})
-
-				t.Run("it should have expected content type", func(t *testing.T) {
-					assert.Equal(t, models.ContentType(expectedSecret.ContentType), response.ContentType)
-				})
-
-				t.Run("it should have expected expiration", func(t *testing.T) {
-					assert.Equal(t, expectedExpiration.Format("2006-01-02 15:04:05 UTC"), response.Expiration.Format())
-				})
-			})
-
-			t.Run("when context is cancelled", func(t *testing.T) {
-				t.Run("it should return context error", func(t *testing.T) {
-					ctx, cancel := context.WithCancel(context.Background())
-					cancel()
-
+				sut := func(encryptCallTimes, writeSecretCallTimes int) (response *models.SecretMetadata) {
 					ctrl := gomock.NewController(t)
+
 					encryption := mocks.NewMockEncryption(ctrl)
+					encryptCall := encryption.EXPECT().
+						Encrypt(gomock.Any(), expectedSecret.Content).
+						Return(encryptedData, nil).
+						AnyTimes()
+
+					if encryptCallTimes >= 0 {
+						encryptCall.Times(encryptCallTimes)
+					}
+
 					dataStore := mocks.NewMockDataStore(ctrl)
+					writeSecretCall := dataStore.EXPECT().
+						WriteSecret(gomock.Any(), gomock.Any()).
+						Return(nil).
+						AnyTimes()
 
-					_, _, err := commands.CreateSecret(ctx, dataStore, encryption, expectedSecret)
+					if writeSecretCallTimes >= 0 {
+						writeSecretCall.Times(writeSecretCallTimes)
+					}
 
-					assert.True(t, pkgerrors.IsContextError(err), "expected context error")
+					appConfig := mocks.NewMockIAppConfiguration(ctrl)
+					appConfig.EXPECT().MaxAccessCount().Return(maxAccessCount).AnyTimes()
+					appConfig.EXPECT().MaxExpirationSeconds().Return(maxExpirationSeconds).AnyTimes()
+
+					response, _, err := commands.CreateSecret(context.Background(), appConfig, dataStore, encryption, expectedSecret)
+					require.NoError(t, err)
+
+					return
+				}
+
+				t.Run("it should encrypt content", func(t *testing.T) { sut(1, -1) })
+				t.Run("it should write to database", func(t *testing.T) { sut(-1, 1) })
+
+				t.Run("it should return", func(t *testing.T) {
+					response := sut(-1, -1)
+
+					t.Run("ID of length 64", func(t *testing.T) {
+						assert.Equal(t, 64, len(response.ID))
+					})
+
+					t.Run("access count of zero", func(t *testing.T) {
+						assert.Equal(t, 0, response.AccessCount)
+					})
+
+					t.Run("expected access limit", func(t *testing.T) {
+						assert.Equal(t, expectedSecret.AccessLimit, response.AccessLimit)
+					})
+
+					t.Run("expected content type", func(t *testing.T) {
+						assert.Equal(t, models.ContentType(expectedSecret.ContentType), response.ContentType)
+					})
+
+					t.Run("expected expiration", func(t *testing.T) {
+						assert.Equal(t, expectedExpiration.Format("2006-01-02 15:04:05 UTC"), response.Expiration.Format())
+					})
 				})
+
+				t.Run("when context is cancelled", func(t *testing.T) {
+					t.Run("it should return context error", func(t *testing.T) {
+						ctx, cancel := context.WithCancel(context.Background())
+						cancel()
+
+						ctrl := gomock.NewController(t)
+						encryption := mocks.NewMockEncryption(ctrl)
+						dataStore := mocks.NewMockDataStore(ctrl)
+						appConfig := mocks.NewMockIAppConfiguration(ctrl)
+
+						_, _, err := commands.CreateSecret(ctx, appConfig, dataStore, encryption, expectedSecret)
+
+						assert.True(t, pkgerrors.IsContextError(err), "expected context error")
+					})
+				})
+			}
+		}
+
+		t.Run("and from content", test(models.ContentTypeText))
+		t.Run("and from file", test(models.ContentTypeFile))
+	})
+
+	t.Run("when expiration is too short", func(t *testing.T) {
+		encryptedData := testhelpers.RandomId(t)
+
+		expectedDuration := time.Minute * 9
+		expirationEpoch := testhelpers.EpochFromNow(expectedDuration)
+		maxAccessCount := 100
+		maxExpirationSeconds := 604800
+
+		content := "Super Secret Test Content"
+		accessLimit := 50
+
+		secretRequest := models.Secret{
+			Content:         []byte(content),
+			AccessLimit:     accessLimit,
+			ExpirationEpoch: expirationEpoch,
+		}
+
+		sut := func(writeSecretCallTimes int) (isValidationError bool, err error) {
+			ctrl := gomock.NewController(t)
+
+			encryption := mocks.NewMockEncryption(ctrl)
+			encryption.EXPECT().
+				Encrypt(gomock.Any(), gomock.Any()).
+				Return(encryptedData, nil).
+				AnyTimes()
+
+			dataStore := mocks.NewMockDataStore(ctrl)
+			writeSecretCall := dataStore.EXPECT().
+				WriteSecret(gomock.Any(), gomock.Any()).
+				Return(nil).
+				AnyTimes()
+
+			if writeSecretCallTimes >= 0 {
+				writeSecretCall.Times(writeSecretCallTimes)
+			}
+
+			appConfig := mocks.NewMockIAppConfiguration(ctrl)
+			appConfig.EXPECT().MaxAccessCount().Return(maxAccessCount).AnyTimes()
+			appConfig.EXPECT().MaxExpirationSeconds().Return(maxExpirationSeconds).AnyTimes()
+
+			_, isValidationError, err = commands.CreateSecret(context.Background(), appConfig, dataStore, encryption, secretRequest)
+
+			return
+		}
+
+		t.Run("it should not call to database", func(t *testing.T) { _, _ = sut(0) })
+		t.Run("it should return", func(t *testing.T) {
+			isValidationError, err := sut(-1)
+
+			t.Run("validation error", func(t *testing.T) {
+				assert.True(t, isValidationError)
 			})
-		}
-	}
 
-	t.Run("from content", test(models.ContentTypeText))
-	t.Run("from file", test(models.ContentTypeFile))
-}
-
-func TestWhenCreatingASecretWithTooShortExpiration(t *testing.T) {
-
-	encryptedData := testhelpers.RandomId(t)
-
-	expectedDuration := time.Minute * 9
-	expirationEpoch := testhelpers.EpochFromNow(expectedDuration)
-
-	content := "Super Secret Test Content"
-	accessLimit := 100
-
-	secretRequest := models.Secret{
-		Content:         []byte(content),
-		AccessLimit:     accessLimit,
-		ExpirationEpoch: expirationEpoch,
-	}
-
-	sut := func(writeSecretCallTimes int) (isValidationError bool, err error) {
-		ctrl := gomock.NewController(t)
-
-		encryption := mocks.NewMockEncryption(ctrl)
-		encryption.EXPECT().
-			Encrypt(gomock.Any(), gomock.Any()).
-			Return(encryptedData, nil).
-			AnyTimes()
-
-		dataStore := mocks.NewMockDataStore(ctrl)
-		writeSecretCall := dataStore.EXPECT().
-			WriteSecret(gomock.Any(), gomock.Any()).
-			Return(nil).
-			AnyTimes()
-
-		if writeSecretCallTimes >= 0 {
-			writeSecretCall.Times(writeSecretCallTimes)
-		}
-
-		_, isValidationError, err = commands.CreateSecret(context.Background(), dataStore, encryption, secretRequest)
-
-		return
-	}
-
-	t.Run("should not call to database", func(t *testing.T) { _, _ = sut(0) })
-	t.Run("should return", func(t *testing.T) {
-		isValidationError, err := sut(-1)
-
-		t.Run("it should return validation error", func(t *testing.T) {
-			assert.True(t, isValidationError)
+			t.Run("an error", func(t *testing.T) {
+				assert.Error(t, err)
+			})
 		})
+	})
 
-		t.Run("it should return an error", func(t *testing.T) {
-			assert.Error(t, err)
+	t.Run("when access limit exceeds maximum configured value", func(t *testing.T) {
+		encryptedData := testhelpers.RandomId(t)
+
+		expectedDuration := time.Hour
+		expirationEpoch := testhelpers.EpochFromNow(expectedDuration)
+		maxAccessCount := 100
+		maxExpirationSeconds := 604800
+		exceedingAccessLimit := maxAccessCount + 1
+
+		content := "Super Secret Test Content"
+
+		secretRequest := models.Secret{
+			Content:         []byte(content),
+			AccessLimit:     exceedingAccessLimit,
+			ExpirationEpoch: expirationEpoch,
+		}
+
+		sut := func(writeSecretCallTimes int) (isValidationError bool, err error) {
+			ctrl := gomock.NewController(t)
+
+			encryption := mocks.NewMockEncryption(ctrl)
+			encryption.EXPECT().
+				Encrypt(gomock.Any(), gomock.Any()).
+				Return(encryptedData, nil).
+				AnyTimes()
+
+			dataStore := mocks.NewMockDataStore(ctrl)
+			writeSecretCall := dataStore.EXPECT().
+				WriteSecret(gomock.Any(), gomock.Any()).
+				Return(nil).
+				AnyTimes()
+
+			if writeSecretCallTimes >= 0 {
+				writeSecretCall.Times(writeSecretCallTimes)
+			}
+
+			appConfig := mocks.NewMockIAppConfiguration(ctrl)
+			appConfig.EXPECT().
+				MaxAccessCount().
+				Return(maxAccessCount).
+				AnyTimes()
+			appConfig.EXPECT().
+				MaxExpirationSeconds().
+				Return(maxExpirationSeconds).
+				AnyTimes()
+
+			_, isValidationError, err = commands.CreateSecret(context.Background(), appConfig, dataStore, encryption, secretRequest)
+
+			return
+		}
+
+		t.Run("it should not call to database", func(t *testing.T) { _, _ = sut(0) })
+		t.Run("it should return", func(t *testing.T) {
+			isValidationError, err := sut(-1)
+
+			t.Run("validation error", func(t *testing.T) {
+				assert.True(t, isValidationError)
+			})
+
+			t.Run("an error", func(t *testing.T) {
+				assert.Error(t, err)
+			})
+		})
+	})
+
+	t.Run("when expiration exceeds maximum configured value", func(t *testing.T) {
+		encryptedData := testhelpers.RandomId(t)
+
+		maxAccessCount := 100
+		maxExpirationSeconds := 604800 // 7 days
+		exceedingExpiration := time.Now().Add(time.Second * time.Duration(maxExpirationSeconds+1)).UTC()
+		expirationEpoch := exceedingExpiration.Unix()
+
+		content := "Super Secret Test Content"
+		accessLimit := 10
+
+		secretRequest := models.Secret{
+			Content:         []byte(content),
+			AccessLimit:     accessLimit,
+			ExpirationEpoch: expirationEpoch,
+		}
+
+		sut := func(writeSecretCallTimes int) (isValidationError bool, err error) {
+			ctrl := gomock.NewController(t)
+
+			encryption := mocks.NewMockEncryption(ctrl)
+			encryption.EXPECT().
+				Encrypt(gomock.Any(), gomock.Any()).
+				Return(encryptedData, nil).
+				AnyTimes()
+
+			dataStore := mocks.NewMockDataStore(ctrl)
+			writeSecretCall := dataStore.EXPECT().
+				WriteSecret(gomock.Any(), gomock.Any()).
+				Return(nil).
+				AnyTimes()
+
+			if writeSecretCallTimes >= 0 {
+				writeSecretCall.Times(writeSecretCallTimes)
+			}
+
+			appConfig := mocks.NewMockIAppConfiguration(ctrl)
+			appConfig.EXPECT().
+				MaxAccessCount().
+				Return(maxAccessCount).
+				AnyTimes()
+			appConfig.EXPECT().
+				MaxExpirationSeconds().
+				Return(maxExpirationSeconds).
+				AnyTimes()
+
+			_, isValidationError, err = commands.CreateSecret(context.Background(), appConfig, dataStore, encryption, secretRequest)
+
+			return
+		}
+
+		t.Run("it should not call to database", func(t *testing.T) { _, _ = sut(0) })
+		t.Run("it should return", func(t *testing.T) {
+			isValidationError, err := sut(-1)
+
+			t.Run("validation error", func(t *testing.T) {
+				assert.True(t, isValidationError)
+			})
+
+			t.Run("an error", func(t *testing.T) {
+				assert.Error(t, err)
+			})
 		})
 	})
 }

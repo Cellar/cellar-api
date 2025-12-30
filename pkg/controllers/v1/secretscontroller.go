@@ -5,6 +5,7 @@ import (
 	"cellar/pkg/cryptography"
 	"cellar/pkg/datastore"
 	"cellar/pkg/models"
+	"cellar/pkg/settings"
 	"context"
 	"errors"
 	"net/http"
@@ -23,6 +24,7 @@ import (
 // @Failure 500 {object} httputil.HTTPError
 // @Router /v1/secrets [post]
 func CreateSecret(c *gin.Context) {
+	cfg := c.MustGet(settings.Key).(settings.IConfiguration)
 	dataStore := c.MustGet(datastore.Key).(datastore.DataStore)
 	encryption := c.MustGet(cryptography.Key).(cryptography.Encryption)
 
@@ -54,7 +56,7 @@ func CreateSecret(c *gin.Context) {
 		secret.AccessLimit = *body.AccessLimit
 	}
 
-	if metadata, isValidationError, err := commands.CreateSecret(context.Background(), dataStore, encryption, secret); err != nil {
+	if metadata, isValidationError, err := commands.CreateSecret(context.Background(), cfg.App(), dataStore, encryption, secret); err != nil {
 		if isValidationError {
 			httputil.NewError(c, http.StatusBadRequest, err)
 		} else {

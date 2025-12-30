@@ -5,10 +5,12 @@ import (
 	"cellar/pkg/datastore"
 	pkgerrors "cellar/pkg/errors"
 	"cellar/pkg/models"
+	"cellar/pkg/settings"
 	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -24,7 +26,7 @@ func getLogger(secretId string) *log.Entry {
 // CreateSecret encrypts and stores a new secret with the given parameters.
 // Returns the secret metadata, a validation error flag, and any error encountered.
 // The context can be used to cancel the operation before completion.
-func CreateSecret(ctx context.Context, dataStore datastore.DataStore, encryption cryptography.Encryption, secret models.Secret) (response *models.SecretMetadata, isValidationError bool, err error) {
+func CreateSecret(ctx context.Context, appConfig settings.IAppConfiguration, dataStore datastore.DataStore, encryption cryptography.Encryption, secret models.Secret) (response *models.SecretMetadata, isValidationError bool, err error) {
 	if err = pkgerrors.CheckContext(ctx); err != nil {
 		return
 	}
@@ -52,8 +54,20 @@ func CreateSecret(ctx context.Context, dataStore datastore.DataStore, encryption
 		secret.AccessLimit = 0
 	}
 
+	// Validate access limit against configured maximum
+	if secret.AccessLimit > 0 && secret.AccessLimit > appConfig.MaxAccessCount() {
+		return response, true, fmt.Errorf("access_limit cannot exceed %d", appConfig.MaxAccessCount())
+	}
+
+	// Validate expiration duration
 	if secret.Duration() < time.Minute*10 {
 		return response, true, errors.New("expiration must be at least 10 minutes in the future")
+	}
+
+	// Validate expiration does not exceed configured maximum
+	maxExpirationDuration := time.Second * time.Duration(appConfig.MaxExpirationSeconds())
+	if secret.Duration() > maxExpirationDuration {
+		return response, true, fmt.Errorf("expiration cannot exceed %d seconds", appConfig.MaxExpirationSeconds())
 	}
 
 	logger = logger.WithFields(log.Fields{

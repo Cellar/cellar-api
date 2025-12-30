@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/viper"
 )
 
+//go:generate mockgen -destination=../mocks/mock_app_configuration.go -package=mocks cellar/pkg/settings IAppConfiguration
 type IAppConfiguration interface {
 	BindAddress() string
 	ClientAddress() string
