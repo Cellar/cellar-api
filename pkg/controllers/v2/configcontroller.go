@@ -1,6 +1,7 @@
 package v2
 
 import (
+	"cellar/pkg/commands"
 	"cellar/pkg/models"
 	"cellar/pkg/settings"
 	"net/http"
@@ -16,12 +17,10 @@ import (
 func GetConfig(c *gin.Context) {
 	cfg := c.MustGet(settings.Key).(settings.IConfiguration)
 
+	limits := commands.GetConfig(cfg)
+
 	response := models.ConfigResponse{
-		Limits: models.LimitsConfig{
-			MaxFileSizeMB:        cfg.App().MaxFileSizeMB(),
-			MaxAccessCount:       cfg.App().MaxAccessCount(),
-			MaxExpirationSeconds: cfg.App().MaxExpirationSeconds(),
-		},
+		Limits: limits,
 	}
 
 	c.Header("Cache-Control", "public, max-age=86400")
