@@ -16,11 +16,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Validation of `expiration_epoch` parameter against `APP_MAX_EXPIRATION_SECONDS` in CreateSecret command
 - HTTP 400 Bad Request responses when access_limit or expiration exceed configured maximums
 - ValidationError type in pkg/errors for consistent error handling patterns
+- FileTooLargeError type in pkg/errors for HTTP 413 responses when file size exceeds limits
+- Centralized error handler middleware for automatic error-to-HTTP-status mapping
+- Consistent error logging across all API endpoints
 
 ### Changed
 - Refactored CreateSecret command to use ValidationError type instead of boolean return parameter
 - Controllers now use IsValidationError() function instead of boolean flag for error type checking
 - Improved error handling consistency across command and controller layers
+- All controllers now use c.Error() pattern with middleware handling HTTP responses
+- Parameter validation errors wrapped as ValidationError types for consistent handling
+- HTTP error responses now centralized in middleware instead of scattered across controllers
 
 ## [3.3.1]
 
