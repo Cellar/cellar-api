@@ -9,14 +9,18 @@ type IAppConfiguration interface {
 	ClientAddress() string
 	Version() string
 	MaxFileSizeMB() int
+	MaxAccessCount() int
+	MaxExpirationSeconds() int
 }
 
 const (
-	appKey              = "app."
-	appVersionKey       = appKey + "version"
-	appClientAddressKey = appKey + "client_address"
-	appBindAddressKey   = appKey + "bind_address"
-	appMaxFileSizeMBKey = appKey + "max_file_size_mb"
+	appKey                     = "app."
+	appVersionKey              = appKey + "version"
+	appClientAddressKey        = appKey + "client_address"
+	appBindAddressKey          = appKey + "bind_address"
+	appMaxFileSizeMBKey        = appKey + "max_file_size_mb"
+	appMaxAccessCountKey       = appKey + "max_access_count"
+	appMaxExpirationSecondsKey = appKey + "max_expiration_seconds"
 )
 
 var version string
@@ -33,6 +37,8 @@ func NewAppConfiguration() *AppConfiguration {
 	viper.SetDefault(appBindAddressKey, defaultAddress)
 	viper.SetDefault(appClientAddressKey, "http://"+defaultAddress)
 	viper.SetDefault(appMaxFileSizeMBKey, 8)
+	viper.SetDefault(appMaxAccessCountKey, 100)
+	viper.SetDefault(appMaxExpirationSecondsKey, 604800)
 	return &AppConfiguration{}
 }
 
@@ -50,4 +56,12 @@ func (app AppConfiguration) Version() string {
 
 func (app AppConfiguration) MaxFileSizeMB() int {
 	return viper.GetInt(appMaxFileSizeMBKey)
+}
+
+func (app AppConfiguration) MaxAccessCount() int {
+	return viper.GetInt(appMaxAccessCountKey)
+}
+
+func (app AppConfiguration) MaxExpirationSeconds() int {
+	return viper.GetInt(appMaxExpirationSecondsKey)
 }

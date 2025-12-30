@@ -236,6 +236,26 @@
         }
       }
     },
+    "/v2/config": {
+      "get": {
+        "tags": [
+          "v2"
+        ],
+        "summary": "Get Configuration",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/models.ConfigResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v2/secrets": {
       "post": {
         "tags": [
@@ -541,6 +561,14 @@
           }
         }
       },
+      "models.ConfigResponse": {
+        "type": "object",
+        "properties": {
+          "limits": {
+            "$ref": "#/components/schemas/models.LimitsConfig"
+          }
+        }
+      },
       "models.CreateSecretRequest": {
         "type": "object",
         "properties": {
@@ -595,6 +623,23 @@
           "version": {
             "type": "string",
             "example": "1.0.0"
+          }
+        }
+      },
+      "models.LimitsConfig": {
+        "type": "object",
+        "properties": {
+          "maxAccessCount": {
+            "type": "integer",
+            "example": 100
+          },
+          "maxExpirationSeconds": {
+            "type": "integer",
+            "example": 604800
+          },
+          "maxFileSizeMB": {
+            "type": "integer",
+            "example": 8
           }
         }
       },

@@ -13,6 +13,8 @@ import "github.com/gin-gonic/gin"
 func Register(router *gin.Engine) {
 	v2 := router.Group("/v2")
 	{
+		v2.GET("/config", GetConfig)
+
 		secrets := v2.Group("/secrets")
 		{
 			secrets.POST("", CreateSecret)

@@ -211,6 +211,25 @@ const docTemplate = `{
                 }
             }
         },
+        "/v2/config": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "v2"
+                ],
+                "summary": "Get Configuration",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.ConfigResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/v2/secrets": {
             "post": {
                 "consumes": [
@@ -442,6 +461,14 @@ const docTemplate = `{
                 }
             }
         },
+        "models.ConfigResponse": {
+            "type": "object",
+            "properties": {
+                "limits": {
+                    "$ref": "#/definitions/models.LimitsConfig"
+                }
+            }
+        },
         "models.CreateSecretRequest": {
             "type": "object",
             "properties": {
@@ -496,6 +523,23 @@ const docTemplate = `{
                 "version": {
                     "type": "string",
                     "example": "1.0.0"
+                }
+            }
+        },
+        "models.LimitsConfig": {
+            "type": "object",
+            "properties": {
+                "maxAccessCount": {
+                    "type": "integer",
+                    "example": 100
+                },
+                "maxExpirationSeconds": {
+                    "type": "integer",
+                    "example": 604800
+                },
+                "maxFileSizeMB": {
+                    "type": "integer",
+                    "example": 8
                 }
             }
         },
