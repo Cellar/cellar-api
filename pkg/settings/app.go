@@ -55,13 +55,25 @@ func (app AppConfiguration) Version() string {
 }
 
 func (app AppConfiguration) MaxFileSizeMB() int {
-	return viper.GetInt(appMaxFileSizeMBKey)
+	value := viper.GetInt(appMaxFileSizeMBKey)
+	if value < 0 {
+		return 0
+	}
+	return value
 }
 
 func (app AppConfiguration) MaxAccessCount() int {
-	return viper.GetInt(appMaxAccessCountKey)
+	value := viper.GetInt(appMaxAccessCountKey)
+	if value < 1 {
+		return 1
+	}
+	return value
 }
 
 func (app AppConfiguration) MaxExpirationSeconds() int {
-	return viper.GetInt(appMaxExpirationSecondsKey)
+	value := viper.GetInt(appMaxExpirationSecondsKey)
+	if value < 900 {
+		return 900
+	}
+	return value
 }
