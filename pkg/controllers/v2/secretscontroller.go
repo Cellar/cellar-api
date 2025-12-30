@@ -62,20 +62,20 @@ func CreateSecret(c *gin.Context) {
 		return
 	}
 
-	if content != "" && fileHeader != nil {
-		_ = c.Error(pkgerrors.NewValidationError("secret with both content and file is not allowed"))
-		return
-	}
-
-	if content == "" && fileHeader == nil {
-		_ = c.Error(pkgerrors.NewValidationError("required parameter: file or content"))
-		return
-	}
-
 	if content != "" {
+		if fileHeader != nil {
+			_ = c.Error(pkgerrors.NewValidationError("secret with both content and file is not allowed"))
+			return
+		}
+
 		secret.Content = []byte(content)
 		secret.ContentType = models.ContentTypeText
 	} else {
+		if fileHeader == nil {
+			_ = c.Error(pkgerrors.NewValidationError("required parameter: file or content"))
+			return
+		}
+
 		if fileHeader.Size == 0 {
 			_ = c.Error(pkgerrors.NewValidationError("file cannot be empty"))
 			return
