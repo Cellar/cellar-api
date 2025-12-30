@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `/api/v2/config` endpoint for querying runtime configuration limits (maxFileSizeMB, maxAccessCount, maxExpirationSeconds)
+- `APP_MAX_ACCESS_COUNT` configuration setting with default of 100 (minimum value: 1)
+- `APP_MAX_EXPIRATION_SECONDS` configuration setting with default of 604800 seconds / 7 days (minimum value: 900 seconds / 15 minutes)
+- Minimum value validation for all configuration settings to prevent misconfiguration
+
 ## [3.3.1]
 
 ### Fixed
