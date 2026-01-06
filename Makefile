@@ -127,6 +127,7 @@ run-daemon:
 		CRYPTOGRAPHY_VAULT_AUTH_APPROLE_ROLE_ID=${CRYPTOGRAPHY_VAULT_AUTH_APPROLE_ROLE_ID} \
 		CRYPTOGRAPHY_VAULT_AUTH_APPROLE_SECRET_ID=${CRYPTOGRAPHY_VAULT_AUTH_APPROLE_SECRET_ID} \
 		CRYPTOGRAPHY_VAULT_ENCRYPTION_TOKEN_NAME=${CRYPTOGRAPHY_VAULT_ENCRYPTION_TOKEN_NAME} \
+		RATE_LIMIT_ENABLED=${RATE_LIMIT_ENABLED} \
 		./cellar-bin > /tmp/cellar-api.log 2>&1 & echo $$! > ${PID_FILE}
 	@sleep 2
 	@echo "Cellar API started (PID: $$(cat ${PID_FILE}), logs: /tmp/cellar-api.log)"
@@ -250,6 +251,7 @@ services-env:
 	@echo "CRYPTOGRAPHY_VAULT_AUTH_APPROLE_ROLE_ID=$$(make -s vault-role-id)" >> .env
 	@echo "CRYPTOGRAPHY_VAULT_AUTH_APPROLE_SECRET_ID=$$(make -s vault-secret-id)" >> .env
 	@echo "CRYPTOGRAPHY_VAULT_ENCRYPTION_TOKEN_NAME=${VAULT_ENCRYPTION_TOKEN_NAME}" >> .env
+	@echo "RATE_LIMIT_ENABLED=false" >> .env
 
 clean-services:
 	@[ -f ".env" ] || touch .env

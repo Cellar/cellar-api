@@ -5,6 +5,7 @@ import (
 	v1 "cellar/pkg/controllers/v1"
 	v2 "cellar/pkg/controllers/v2"
 	"cellar/pkg/middleware"
+	"cellar/pkg/ratelimit"
 	"cellar/pkg/settings"
 	"net/http"
 	"os"
@@ -42,7 +43,7 @@ func setMultipartMemoryLimit(router *gin.Engine, cfg settings.IConfiguration) {
 
 func addRoutes(router *gin.Engine) {
 	router.GET("/swagger/*any", DisablingWrapHandler(swaggerFiles.Handler, "DISABLE_SWAGGER"))
-	router.GET("/health-check", controllers.HealthCheck)
+	router.GET("/health-check", middleware.RateLimit(ratelimit.HealthCheck), controllers.HealthCheck)
 
 	v1.Register(router)
 

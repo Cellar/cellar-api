@@ -8,6 +8,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Tiered rate limiting with Redis-backed sliding window algorithm
+  - Tier 1 (10 req/min): Expensive cryptography operations (POST /secrets, POST /secrets/:id/access)
+  - Tier 2 (30 req/min): Moderate operations (GET /secrets/:id, DELETE /secrets/:id)
+  - Tier 3 (60 req/min): Lightweight operations (GET /v2/config)
+  - Health check (120 req/min): Monitoring endpoint (GET /health-check)
+- Rate limit configuration settings with environment variable support
+  - `RATE_LIMIT_ENABLED` (default: true, disabled in local development via `make services`)
+  - `RATE_LIMIT_WINDOW_SECONDS` (default: 60)
+  - `RATE_LIMIT_TIER1_REQUESTS_PER_WINDOW` (default: 10)
+  - `RATE_LIMIT_TIER2_REQUESTS_PER_WINDOW` (default: 30)
+  - `RATE_LIMIT_TIER3_REQUESTS_PER_WINDOW` (default: 60)
+  - `RATE_LIMIT_HEALTH_CHECK_REQUESTS_PER_WINDOW` (default: 120)
+- HTTP 429 Too Many Requests responses when rate limits are exceeded
+- Standard rate limit HTTP headers on all responses
+  - `X-RateLimit-Limit`: Maximum requests allowed in window
+  - `X-RateLimit-Remaining`: Requests remaining in current window
+  - `X-RateLimit-Reset`: Unix timestamp when window resets
+  - `Retry-After`: Seconds until rate limit resets (on 429 responses only)
+- RateLimitError type in pkg/errors for structured rate limit error handling
+- Per-client IP rate limiting with support for X-Forwarded-For headers
+- Fail-open behavior when Redis is unavailable (logs warning, allows requests)
 - `/api/v2/config` endpoint for querying runtime configuration limits (maxFileSizeMB, maxAccessCount, maxExpirationSeconds)
 - `APP_MAX_ACCESS_COUNT` configuration setting with default of 100 (minimum value: 1)
 - `APP_MAX_EXPIRATION_SECONDS` configuration setting with default of 604800 seconds / 7 days (minimum value: 900 seconds / 15 minutes)

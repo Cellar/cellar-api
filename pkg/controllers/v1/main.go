@@ -1,6 +1,11 @@
 package v1
 
-import "github.com/gin-gonic/gin"
+import (
+	"cellar/pkg/middleware"
+	"cellar/pkg/ratelimit"
+
+	"github.com/gin-gonic/gin"
+)
 
 // @title Cellar
 // @description Simple secret sharing with the infrastructure you already trust
@@ -15,10 +20,10 @@ func Register(router *gin.Engine) {
 	{
 		secrets := v1.Group("/secrets")
 		{
-			secrets.POST("", CreateSecret)
-			secrets.POST(":id/access", AccessSecretContent)
-			secrets.GET(":id", GetSecretMetadata)
-			secrets.DELETE(":id", DeleteSecret)
+			secrets.POST("", middleware.RateLimit(ratelimit.Tier1), CreateSecret)
+			secrets.POST(":id/access", middleware.RateLimit(ratelimit.Tier1), AccessSecretContent)
+			secrets.GET(":id", middleware.RateLimit(ratelimit.Tier2), GetSecretMetadata)
+			secrets.DELETE(":id", middleware.RateLimit(ratelimit.Tier2), DeleteSecret)
 		}
 	}
 }

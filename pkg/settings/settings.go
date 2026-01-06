@@ -10,11 +10,13 @@ import (
 
 var Key = "CONFIGURATION"
 
+//go:generate mockgen -destination=../mocks/mock_configuration.go -package=mocks cellar/pkg/settings IConfiguration
 type IConfiguration interface {
 	App() IAppConfiguration
 	Datastore() datastore.IDatastoreConfiguration
 	Encryption() cryptography.IEncryptionConfiguration
 	Logging() ILoggingConfiguration
+	RateLimit() IRateLimitConfiguration
 }
 
 type Configuration struct {
@@ -22,6 +24,7 @@ type Configuration struct {
 	datastore  datastore.IDatastoreConfiguration
 	encryption cryptography.IEncryptionConfiguration
 	logging    ILoggingConfiguration
+	rateLimit  IRateLimitConfiguration
 }
 
 func NewConfiguration() *Configuration {
@@ -32,6 +35,7 @@ func NewConfiguration() *Configuration {
 		datastore:  datastore.NewDatastoreConfiguration(),
 		encryption: cryptography.NewEncryptionConfiguration(),
 		logging:    NewLoggingConfiguration(),
+		rateLimit:  NewRateLimitConfiguration(),
 	}
 }
 
@@ -46,3 +50,5 @@ func (config Configuration) Encryption() cryptography.IEncryptionConfiguration {
 }
 
 func (config Configuration) Logging() ILoggingConfiguration { return config.logging }
+
+func (config Configuration) RateLimit() IRateLimitConfiguration { return config.rateLimit }

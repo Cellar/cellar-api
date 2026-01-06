@@ -6,6 +6,7 @@ import (
 	"cellar/pkg/cryptography/vault"
 	"cellar/pkg/datastore"
 	"cellar/pkg/datastore/redis"
+	"cellar/pkg/ratelimit"
 	"cellar/pkg/settings"
 	"context"
 	"errors"
@@ -18,11 +19,13 @@ func injectDependencies(router *gin.Engine, cfg settings.IConfiguration) {
 	HandleError("error while initializing cryptography engine connection", err)
 
 	dataStore := getDatastoreClient(cfg)
+	rateLimiter := getRateLimiterClient(cfg, dataStore)
 
 	router.Use(func(c *gin.Context) {
 		c.Set(settings.Key, cfg)
 		c.Set(cryptography.Key, encryptionClient)
 		c.Set(datastore.Key, dataStore)
+		c.Set(ratelimit.Key, rateLimiter)
 		c.Next()
 	})
 }
@@ -45,4 +48,12 @@ func getEncryptionClient(cfg settings.IConfiguration) (cryptography.Encryption, 
 
 func getDatastoreClient(cfg settings.IConfiguration) datastore.DataStore {
 	return redis.NewDataStore(cfg.Datastore().Redis())
+}
+
+func getRateLimiterClient(cfg settings.IConfiguration, dataStore datastore.DataStore) ratelimit.RateLimiter {
+	redisDataStore, ok := dataStore.(*redis.DataStore)
+	if !ok {
+		HandleError("datastore must be Redis for rate limiting", errors.New("invalid datastore type"))
+	}
+	return ratelimit.NewRedisRateLimiter(redisDataStore.Client(), cfg.RateLimit())
 }

@@ -19,22 +19,37 @@ func ErrorHandler() gin.HandlerFunc {
 			err := c.Errors.Last().Err
 
 			var statusCode int
+			var logLevel string
 			switch {
+			case pkgerrors.IsRateLimitError(err):
+				statusCode = http.StatusTooManyRequests
+				logLevel = "warn"
 			case pkgerrors.IsContextError(err):
 				statusCode = http.StatusRequestTimeout
+				logLevel = "error"
 			case pkgerrors.IsFileTooLargeError(err):
 				statusCode = http.StatusRequestEntityTooLarge
+				logLevel = "warn"
 			case pkgerrors.IsValidationError(err):
 				statusCode = http.StatusBadRequest
+				logLevel = "warn"
 			default:
 				statusCode = http.StatusInternalServerError
+				logLevel = "error"
 			}
 
-			log.WithFields(log.Fields{
+			logEntry := log.WithFields(log.Fields{
 				"status": statusCode,
 				"error":  err.Error(),
 				"path":   c.Request.URL.Path,
-			}).Error("Request error")
+			})
+
+			switch logLevel {
+			case "warn":
+				logEntry.Warn("Request error")
+			default:
+				logEntry.Error("Request error")
+			}
 
 			if !c.Writer.Written() {
 				c.JSON(statusCode, gin.H{

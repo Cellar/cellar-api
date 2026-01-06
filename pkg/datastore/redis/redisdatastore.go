@@ -23,6 +23,10 @@ type (
 	}
 )
 
+func (redis *DataStore) Client() *redis.Client {
+	return redis.client
+}
+
 const redisIdFieldKey = "redis_key"
 
 func NewDataStore(configuration datastore.IRedisConfiguration) *DataStore {

@@ -75,3 +75,48 @@ func IsFileTooLargeError(err error) bool {
 	var fe *FileTooLargeError
 	return errors.As(err, &fe)
 }
+
+// RateLimitError represents an error caused by exceeding rate limits
+type RateLimitError struct {
+	message    string
+	retryAfter int
+}
+
+// Error implements the error interface
+func (e *RateLimitError) Error() string {
+	return e.message
+}
+
+// RetryAfter returns the number of seconds until the rate limit resets
+func (e *RateLimitError) RetryAfter() int {
+	return e.retryAfter
+}
+
+// NewRateLimitError creates a new rate limit error with the given message and retry-after value
+func NewRateLimitError(msg string, retryAfter int) error {
+	return &RateLimitError{
+		message:    msg,
+		retryAfter: retryAfter,
+	}
+}
+
+// IsRateLimitError checks if an error is a rate limit error
+func IsRateLimitError(err error) bool {
+	if err == nil {
+		return false
+	}
+	var re *RateLimitError
+	return errors.As(err, &re)
+}
+
+// GetRateLimitError attempts to extract a RateLimitError from an error chain
+func GetRateLimitError(err error) *RateLimitError {
+	if err == nil {
+		return nil
+	}
+	var re *RateLimitError
+	if errors.As(err, &re) {
+		return re
+	}
+	return nil
+}
