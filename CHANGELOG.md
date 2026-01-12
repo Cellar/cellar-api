@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.4.0] - 2026-01-12
+
 ### Added
 - Tiered rate limiting with Redis-backed sliding window algorithm
   - Tier 1 (10 req/min): Expensive cryptography operations (POST /secrets, POST /secrets/:id/access)
