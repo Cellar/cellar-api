@@ -7,6 +7,7 @@ import (
 	"cellar/pkg/mocks"
 	"cellar/pkg/ratelimit"
 	"cellar/pkg/settings"
+	"cellar/testing/testhelpers"
 	"context"
 	"fmt"
 	"net/http"
@@ -243,10 +244,8 @@ func TestRateLimitMiddleware(t *testing.T) {
 }
 
 func setupRateLimitTest(t *testing.T) (*redis.Client, *mocks.MockIRateLimitConfiguration) {
-	client := redis.NewClient(&redis.Options{
-		Addr: "localhost:6379",
-		DB:   3,
-	})
+	cfg := settings.NewConfiguration()
+	client := testhelpers.GetRedisClient(cfg.Datastore().Redis())
 
 	ctx := context.Background()
 	if err := client.Ping(ctx).Err(); err != nil {
