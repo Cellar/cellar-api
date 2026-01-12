@@ -95,6 +95,7 @@ test-unit:
     CRYPTOGRAPHY_VAULT_AUTH_MOUNT_PATH: approle
     CRYPTOGRAPHY_VAULT_ADDRESS: http://vault:8200
     CRYPTOGRAPHY_VAULT_ENCRYPTION_TOKEN_NAME: cellar-testing
+    RATE_LIMIT_ENABLED: false
   services:
     - name: redis:8-alpine
       alias: redis
