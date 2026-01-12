@@ -140,6 +140,48 @@ For example, verifying that a given RESTful endpoint behaves as expected.
 In some cases it may be necessary to use multiple endpoints for a single test.
 
 
+#### Rate Limiting in Development
+
+Rate limiting is **disabled by default** in local development environments to ensure tests run reliably without interference.
+When you run `make services`, the generated `.env` file automatically sets `RATE_LIMIT_ENABLED=false`.
+
+**Why disabled in local development:**
+- Prevents test failures from rate limit collisions when all tests use the same IP (127.0.0.1)
+- Ensures tests remain fast and idempotent
+- Allows focus on business logic rather than rate limiting behavior
+- Acceptance tests verify API functionality without rate limiting interference
+
+**Rate limiting is thoroughly tested:**
+- **Unit tests** (`pkg/ratelimit/redis_test.go`) - Test rate limiter logic with mocks
+- **Integration tests** (`testing/integration/middleware/ratelimit_test.go`) - Test with real Redis using unique IPs per test
+
+**To test rate limiting behavior:**
+```shell
+# Integration tests include rate limiting tests
+make test-integration
+```
+
+**To enable rate limiting in local development:**
+```shell
+# Edit .env file
+RATE_LIMIT_ENABLED=true
+
+# Then restart the API
+make stop-daemon
+make run-daemon
+```
+
+**Production deployment:**
+Rate limiting is enabled by default in production.
+Configure via environment variables:
+```shell
+RATE_LIMIT_ENABLED=true  # Default in production
+RATE_LIMIT_TIER1_REQUESTS_PER_WINDOW=10  # Cryptography operations
+RATE_LIMIT_TIER2_REQUESTS_PER_WINDOW=30  # Moderate operations
+RATE_LIMIT_TIER3_REQUESTS_PER_WINDOW=60  # Lightweight operations
+```
+
+
 #### Code Quality
 
 Before committing code, make sure to format and lint your changes:
