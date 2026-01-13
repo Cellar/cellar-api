@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.4.1] - 2026-01-12
+
+### Changed
+- Updated rate limit defaults to align with professional-tier REST API standards
+  - Tier 1 (crypto operations): 10 → 300 requests/minute (5 req/sec)
+  - Tier 2 (datastore operations): 30 → 600 requests/minute (10 req/sec)
+  - Tier 3 (config queries): 60 → 1,200 requests/minute (20 req/sec)
+  - Health check: 120 → 1,200 requests/minute (20 req/sec)
+- Rationale: Previous defaults were excessively strict for legitimate team usage.
+  New defaults remain conservative relative to underlying infrastructure capacity (cryptography backends handle 60,000+ ops/min, Redis handles millions of ops/min) while preventing abuse and allowing normal usage patterns.
+  All limits remain fully configurable via environment variables.
+
 ## [3.4.0] - 2026-01-12
 
 ### Added
