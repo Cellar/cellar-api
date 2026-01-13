@@ -29,10 +29,10 @@ type RateLimitConfiguration struct{}
 func NewRateLimitConfiguration() *RateLimitConfiguration {
 	viper.SetDefault(rateLimitEnabledKey, true)
 	viper.SetDefault(rateLimitWindowSecondsKey, 60)
-	viper.SetDefault(rateLimitTier1RequestsPerWindowKey, 10)
-	viper.SetDefault(rateLimitTier2RequestsPerWindowKey, 30)
-	viper.SetDefault(rateLimitTier3RequestsPerWindowKey, 60)
-	viper.SetDefault(rateLimitHealthCheckRequestsPerWindowKey, 120)
+	viper.SetDefault(rateLimitTier1RequestsPerWindowKey, 300)
+	viper.SetDefault(rateLimitTier2RequestsPerWindowKey, 600)
+	viper.SetDefault(rateLimitTier3RequestsPerWindowKey, 1200)
+	viper.SetDefault(rateLimitHealthCheckRequestsPerWindowKey, 1200)
 	return &RateLimitConfiguration{}
 }
 

@@ -96,10 +96,10 @@ func TestRedisRateLimiter(t *testing.T) {
 			client := setupRedisClient(t)
 			config := mocks.NewMockIRateLimitConfiguration(ctrl)
 			config.EXPECT().WindowSeconds().Return(60).AnyTimes()
-			config.EXPECT().Tier1RequestsPerWindow().Return(10).AnyTimes()
-			config.EXPECT().Tier2RequestsPerWindow().Return(30).AnyTimes()
-			config.EXPECT().Tier3RequestsPerWindow().Return(60).AnyTimes()
-			config.EXPECT().HealthCheckRequestsPerWindow().Return(120).AnyTimes()
+			config.EXPECT().Tier1RequestsPerWindow().Return(300).AnyTimes()
+			config.EXPECT().Tier2RequestsPerWindow().Return(600).AnyTimes()
+			config.EXPECT().Tier3RequestsPerWindow().Return(1200).AnyTimes()
+			config.EXPECT().HealthCheckRequestsPerWindow().Return(1200).AnyTimes()
 
 			limiter := ratelimit.NewRedisRateLimiter(client, config)
 			ctx := context.Background()
@@ -108,28 +108,28 @@ func TestRedisRateLimiter(t *testing.T) {
 				result, err := limiter.Allow(ctx, "client-tier1", ratelimit.Tier1)
 
 				require.NoError(t, err)
-				assert.Equal(t, 10, result.Limit)
+				assert.Equal(t, 300, result.Limit)
 			})
 
 			t.Run("it should apply tier2 limit", func(t *testing.T) {
 				result, err := limiter.Allow(ctx, "client-tier2", ratelimit.Tier2)
 
 				require.NoError(t, err)
-				assert.Equal(t, 30, result.Limit)
+				assert.Equal(t, 600, result.Limit)
 			})
 
 			t.Run("it should apply tier3 limit", func(t *testing.T) {
 				result, err := limiter.Allow(ctx, "client-tier3", ratelimit.Tier3)
 
 				require.NoError(t, err)
-				assert.Equal(t, 60, result.Limit)
+				assert.Equal(t, 1200, result.Limit)
 			})
 
 			t.Run("it should apply health check limit", func(t *testing.T) {
 				result, err := limiter.Allow(ctx, "client-health", ratelimit.HealthCheck)
 
 				require.NoError(t, err)
-				assert.Equal(t, 120, result.Limit)
+				assert.Equal(t, 1200, result.Limit)
 			})
 		})
 
