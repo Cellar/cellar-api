@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.4.2] - 2026-03-22
+
+### Changed
+- Updated all Go dependencies to latest versions
+  - Gin v1.11.0 → v1.12.0
+  - AWS Lambda Go v1.51.1 → v1.53.0
+  - AWS SDK Go v2 v1.41.0 → v1.41.4
+  - AWS KMS v1.49.4 → v1.50.3
+  - Redis go-redis v9.17.2 → v9.18.0
+  - Logrus v1.9.3 → v1.9.4
+  - Google API v0.258.0 → v0.272.0
+  - gRPC v1.78.0 → v1.79.3
+  - OpenTelemetry v1.39.0 → v1.42.0
+  - golang.org/x/net v0.48.0 → v0.52.0
+  - golang.org/x/crypto v0.46.0 → v0.49.0
+  - Plus all transitive dependency updates
+
 ## [3.4.1] - 2026-01-12
 
 ### Changed
@@ -233,7 +250,10 @@ Pre-built binaries and Docker images work as drop-in replacements.
 ### Added
 - Initial open source release
 
-[Unreleased]: https://gitlab.com/cellar-app/cellar-api/-/compare/v3.3.1...main
+[Unreleased]: https://gitlab.com/cellar-app/cellar-api/-/compare/v3.4.2...main
+[3.4.2]: https://gitlab.com/cellar-app/cellar-api/-/compare/v3.4.1...v3.4.2
+[3.4.1]: https://gitlab.com/cellar-app/cellar-api/-/compare/v3.4.0...v3.4.1
+[3.4.0]: https://gitlab.com/cellar-app/cellar-api/-/compare/v3.3.1...v3.4.0
 [3.3.1]: https://gitlab.com/cellar-app/cellar-api/-/compare/v3.3.0...v3.3.1
 [3.3.0]: https://gitlab.com/cellar-app/cellar-api/-/compare/v3.2.2...v3.3.0
 [3.2.2]: https://gitlab.com/cellar-app/cellar-api/-/compare/v3.2.1...v3.2.2
