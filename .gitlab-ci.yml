@@ -56,13 +56,10 @@ format-check:
 
 lint:
   extends: .api
+  image: golangci/golangci-lint:v2.15.0
   stage: build
-  before_script:
-    - export GOPATH=$CI_PROJECT_DIR/.go
-    - export PATH=$GOPATH/bin:$PATH
-    - curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin
   script:
-    - make lint
+    - golangci-lint run
 
 build-docker:
   extends: .docker
