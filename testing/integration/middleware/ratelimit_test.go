@@ -8,22 +8,21 @@ import (
 	"cellar/pkg/ratelimit"
 	"cellar/pkg/settings"
 	"cellar/testing/testhelpers"
-	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
 	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
 
-var ipCounter uint32
+var ipCounter = uint32(time.Now().UnixNano())
 
 func getUniqueIP() string {
 	counter := atomic.AddUint32(&ipCounter, 1)
@@ -31,13 +30,17 @@ func getUniqueIP() string {
 }
 
 func TestRateLimitMiddleware(t *testing.T) {
+	testhelpers.ForEachBackend(t, rateLimitMiddlewareSuite)
+}
+
+func rateLimitMiddlewareSuite(t *testing.T, backend testhelpers.Backend) {
 	gin.SetMode(gin.TestMode)
 
 	t.Run("when rate limit is disabled", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		client, config := setupRateLimitTest(t)
+		client, config := setupRateLimitTest(t, backend)
 		config.EXPECT().WindowSeconds().Return(60).AnyTimes()
 		config.EXPECT().Enabled().Return(false).AnyTimes()
 
@@ -61,7 +64,7 @@ func TestRateLimitMiddleware(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			client, config := setupRateLimitTest(t)
+			client, config := setupRateLimitTest(t, backend)
 			config.EXPECT().Enabled().Return(true).AnyTimes()
 			config.EXPECT().WindowSeconds().Return(60).AnyTimes()
 			config.EXPECT().Tier1RequestsPerWindow().Return(5).AnyTimes()
@@ -95,7 +98,7 @@ func TestRateLimitMiddleware(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			client, config := setupRateLimitTest(t)
+			client, config := setupRateLimitTest(t, backend)
 			config.EXPECT().Enabled().Return(true).AnyTimes()
 			config.EXPECT().WindowSeconds().Return(60).AnyTimes()
 			config.EXPECT().Tier1RequestsPerWindow().Return(3).AnyTimes()
@@ -136,7 +139,7 @@ func TestRateLimitMiddleware(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			client, config := setupRateLimitTest(t)
+			client, config := setupRateLimitTest(t, backend)
 			config.EXPECT().Enabled().Return(true).AnyTimes()
 			config.EXPECT().WindowSeconds().Return(60).AnyTimes()
 			config.EXPECT().Tier1RequestsPerWindow().Return(2).AnyTimes()
@@ -175,7 +178,7 @@ func TestRateLimitMiddleware(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			client, config := setupRateLimitTest(t)
+			client, config := setupRateLimitTest(t, backend)
 			config.EXPECT().Enabled().Return(true).AnyTimes()
 			config.EXPECT().WindowSeconds().Return(60).AnyTimes()
 			config.EXPECT().Tier1RequestsPerWindow().Return(2).AnyTimes()
@@ -215,7 +218,7 @@ func TestRateLimitMiddleware(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			client, config := setupRateLimitTest(t)
+			client, config := setupRateLimitTest(t, backend)
 			config.EXPECT().Enabled().Return(true).AnyTimes()
 			config.EXPECT().WindowSeconds().Return(60).AnyTimes()
 			config.EXPECT().Tier1RequestsPerWindow().Return(2).AnyTimes()
@@ -243,31 +246,18 @@ func TestRateLimitMiddleware(t *testing.T) {
 	})
 }
 
-func setupRateLimitTest(t *testing.T) (*redis.Client, *mocks.MockIRateLimitConfiguration) {
-	cfg := settings.NewConfiguration()
-	client := testhelpers.GetRedisClient(cfg.Datastore().Redis())
-
-	ctx := context.Background()
-	if err := client.Ping(ctx).Err(); err != nil {
-		t.Fatalf("Redis must be available for integration tests: %v", err)
-	}
-
-	t.Cleanup(func() {
-		client.FlushDB(ctx)
-		_ = client.Close()
-	})
-
+func setupRateLimitTest(t *testing.T, backend testhelpers.Backend) (ratelimit.WindowStore, *mocks.MockIRateLimitConfiguration) {
 	ctrl := gomock.NewController(t)
 	config := mocks.NewMockIRateLimitConfiguration(ctrl)
 
-	return client, config
+	return backend.WindowStore, config
 }
 
-func setupRouter(ctrl *gomock.Controller, client *redis.Client, config settings.IRateLimitConfiguration) *gin.Engine {
+func setupRouter(ctrl *gomock.Controller, store ratelimit.WindowStore, config settings.IRateLimitConfiguration) *gin.Engine {
 	router := gin.New()
 	router.Use(middleware.ErrorHandler())
 
-	limiter := ratelimit.NewRedisRateLimiter(client, config)
+	limiter := ratelimit.NewSlidingWindowRateLimiter(store, config)
 
 	mockConfig := mocks.NewMockIConfiguration(ctrl)
 	mockConfig.EXPECT().RateLimit().Return(config).AnyTimes()
@@ -285,11 +275,11 @@ func setupRouter(ctrl *gomock.Controller, client *redis.Client, config settings.
 	return router
 }
 
-func setupRouterWithTiers(ctrl *gomock.Controller, client *redis.Client, config settings.IRateLimitConfiguration) *gin.Engine {
+func setupRouterWithTiers(ctrl *gomock.Controller, store ratelimit.WindowStore, config settings.IRateLimitConfiguration) *gin.Engine {
 	router := gin.New()
 	router.Use(middleware.ErrorHandler())
 
-	limiter := ratelimit.NewRedisRateLimiter(client, config)
+	limiter := ratelimit.NewSlidingWindowRateLimiter(store, config)
 
 	mockConfig := mocks.NewMockIConfiguration(ctrl)
 	mockConfig.EXPECT().RateLimit().Return(config).AnyTimes()

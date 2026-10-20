@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.0.0] - 2026-10-20
+
+### Breaking
+- A datastore must now be enabled explicitly, the same way as the cryptography engines.
+  Existing Redis deployments must add `DATASTORE_REDIS_ENABLED=true`.
+  Cellar refuses to start when no datastore is enabled (`at least one datastore is required`),
+  and when more than one is enabled (`cannot enable more than one datastore`).
+
+### Added
+- Valkey datastore, using the official [valkey-go](https://github.com/valkey-io/valkey-go) client
+  - Enable with `DATASTORE_VALKEY_ENABLED=true`
+  - Settings: `DATASTORE_VALKEY_HOST`, `DATASTORE_VALKEY_PORT`, `DATASTORE_VALKEY_USERNAME`, `DATASTORE_VALKEY_PASSWORD` (or `DATASTORE_VALKEY_PASSWORD_FILE`), `DATASTORE_VALKEY_DB`, `DATASTORE_VALKEY_TLS_ENABLED`
+  - Cluster mode is detected automatically, so AWS MemoryDB and ElastiCache for Valkey work.
+  - Rate limiting works on Valkey with the same sliding window as Redis.
+- Integration tests run every datastore suite against both Redis and Valkey,
+  including tests that prove every secret key expires when its TTL passes.
+
+### Changed
+- Redis and Valkey share one datastore implementation (`pkg/datastore/keyvalue`) and one rate limiter (`ratelimit.SlidingWindowRateLimiter`).
+  Each backend only provides a thin client adapter.
+- Secret keys are deleted one key per command,
+  so deletes no longer hit `CROSSSLOT` errors on cluster-mode servers such as MemoryDB.
+  The key format is unchanged.
+- Writing a secret whose expiration has already passed now fails instead of storing keys with no TTL.
+
+### Fixed
+- The health check now reports the server's own name and version.
+  Valkey reports a frozen `redis_version:7.2.4` for compatibility,
+  so it would previously have been shown as "Redis 7.2.4".
+
 ## [3.4.2] - 2026-03-22
 
 ### Changed
@@ -250,7 +280,8 @@ Pre-built binaries and Docker images work as drop-in replacements.
 ### Added
 - Initial open source release
 
-[Unreleased]: https://gitlab.com/cellar-app/cellar-api/-/compare/v3.4.2...main
+[Unreleased]: https://gitlab.com/cellar-app/cellar-api/-/compare/v4.0.0...main
+[4.0.0]: https://gitlab.com/cellar-app/cellar-api/-/compare/v3.4.2...v4.0.0
 [3.4.2]: https://gitlab.com/cellar-app/cellar-api/-/compare/v3.4.1...v3.4.2
 [3.4.1]: https://gitlab.com/cellar-app/cellar-api/-/compare/v3.4.0...v3.4.1
 [3.4.0]: https://gitlab.com/cellar-app/cellar-api/-/compare/v3.3.1...v3.4.0

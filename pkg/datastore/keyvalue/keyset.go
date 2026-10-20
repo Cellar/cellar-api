@@ -1,40 +1,40 @@
-package redis
+package keyvalue
 
 import "fmt"
 
-type RedisKey struct {
+type KeySet struct {
 	id string
 }
 
-func NewRedisKeySet(id string) *RedisKey {
-	return &RedisKey{id: id}
+func NewKeySet(id string) *KeySet {
+	return &KeySet{id: id}
 }
 
-func (key RedisKey) AccessLimit() string {
+func (key KeySet) AccessLimit() string {
 	return key.buildKey("accesslimit")
 }
 
-func (key RedisKey) Access() string {
+func (key KeySet) Access() string {
 	return key.buildKey("access")
 }
 
-func (key RedisKey) ContentType() string {
+func (key KeySet) ContentType() string {
 	return key.buildKey("contenttype")
 }
 
-func (key RedisKey) Content() string {
+func (key KeySet) Content() string {
 	return key.buildKey("content")
 }
 
-func (key RedisKey) ExpirationEpoch() string {
+func (key KeySet) ExpirationEpoch() string {
 	return key.buildKey("expirationepoch")
 }
 
-func (key RedisKey) Filename() string {
+func (key KeySet) Filename() string {
 	return key.buildKey("filename")
 }
 
-func (key RedisKey) AllKeys() []string {
+func (key KeySet) AllKeys() []string {
 	return []string{
 		key.ContentType(),
 		key.Content(),
@@ -45,6 +45,6 @@ func (key RedisKey) AllKeys() []string {
 	}
 }
 
-func (key RedisKey) buildKey(tail string) string {
+func (key KeySet) buildKey(tail string) string {
 	return fmt.Sprintf("secrets:%s:%s", key.id, tail)
 }
