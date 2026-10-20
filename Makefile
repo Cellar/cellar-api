@@ -27,6 +27,19 @@ VAULT_ROLE_NAME ?= cellar-testing
 
 VAULT_REQUEST := @curl --header "X-Vault-Token: ${VAULT_ROOT_TOKEN}"
 
+DATASTORE_ENGINE ?= redis
+ifeq (${DATASTORE_ENGINE},valkey)
+DATASTORE_REDIS_ENABLED ?= false
+DATASTORE_VALKEY_ENABLED ?= true
+else
+DATASTORE_REDIS_ENABLED ?= true
+DATASTORE_VALKEY_ENABLED ?= false
+endif
+DATASTORE_VALKEY_PORT ?= 6380
+DATASTORE_ENV = DATASTORE_REDIS_ENABLED=${DATASTORE_REDIS_ENABLED} \
+	DATASTORE_VALKEY_ENABLED=${DATASTORE_VALKEY_ENABLED} \
+	DATASTORE_VALKEY_PORT=${DATASTORE_VALKEY_PORT}
+
 
 LOG := @sh -c '\
 	   printf ${GREEN}; \
@@ -84,11 +97,14 @@ test-integration:
 	 CRYPTOGRAPHY_VAULT_AUTH_APPROLE_ROLE_ID=${CRYPTOGRAPHY_VAULT_AUTH_APPROLE_ROLE_ID} \
 	 CRYPTOGRAPHY_VAULT_AUTH_APPROLE_SECRET_ID=${CRYPTOGRAPHY_VAULT_AUTH_APPROLE_SECRET_ID} \
 	 CRYPTOGRAPHY_VAULT_ENCRYPTION_TOKEN_NAME=${CRYPTOGRAPHY_VAULT_ENCRYPTION_TOKEN_NAME} \
-	 go test -tags=integration -race ./testing/integration/...
+	 ${DATASTORE_ENV} go test -tags=integration -race ./testing/integration/...
+
+test-integration-all:
+	@$(MAKE) --no-print-directory test-integration DATASTORE_REDIS_ENABLED=true DATASTORE_VALKEY_ENABLED=true
 
 test-acceptance:
 	$(LOG) "Running acceptance tests"
-	@go test -tags=acceptance -race ./testing/acceptance/...
+	@${DATASTORE_ENV} go test -tags=acceptance -race ./testing/acceptance/...
 
 format:
 	$(LOG) "Formatting Go code"
@@ -116,7 +132,7 @@ run:
 	 CRYPTOGRAPHY_VAULT_AUTH_APPROLE_ROLE_ID=${CRYPTOGRAPHY_VAULT_AUTH_APPROLE_ROLE_ID} \
 	 CRYPTOGRAPHY_VAULT_AUTH_APPROLE_SECRET_ID=${CRYPTOGRAPHY_VAULT_AUTH_APPROLE_SECRET_ID} \
 	 CRYPTOGRAPHY_VAULT_ENCRYPTION_TOKEN_NAME=${CRYPTOGRAPHY_VAULT_ENCRYPTION_TOKEN_NAME} \
-	 go run cmd/cellar/main.go
+	 ${DATASTORE_ENV} go run cmd/cellar/main.go
 
 run-daemon:
 	$(LOG) "Starting Cellar"
@@ -128,6 +144,7 @@ run-daemon:
 		CRYPTOGRAPHY_VAULT_AUTH_APPROLE_SECRET_ID=${CRYPTOGRAPHY_VAULT_AUTH_APPROLE_SECRET_ID} \
 		CRYPTOGRAPHY_VAULT_ENCRYPTION_TOKEN_NAME=${CRYPTOGRAPHY_VAULT_ENCRYPTION_TOKEN_NAME} \
 		RATE_LIMIT_ENABLED=${RATE_LIMIT_ENABLED} \
+		${DATASTORE_ENV} \
 		./cellar-bin > /tmp/cellar-api.log 2>&1 & echo $$! > ${PID_FILE}
 	@sleep 2
 	@echo "Cellar API started (PID: $$(cat ${PID_FILE}), logs: /tmp/cellar-api.log)"
@@ -236,7 +253,7 @@ services-api-dependencies:
 	@touch .env
 	$(LOG) "Starting API dependencies"
 	@docker compose pull
-	@docker compose up -d redis vault
+	@docker compose up -d redis valkey vault
 
 services-vault-wait:
 	@timeout 10 \
@@ -257,4 +274,4 @@ clean-services:
 	@[ -f ".env" ] || touch .env
 	@docker compose down
 	@docker compose rm -svf
-	@basename ${PWD} | xargs -I % docker volume rm -f %_redis_data
+	@basename ${PWD} | xargs -I % docker volume rm -f %_redis_data %_valkey_data

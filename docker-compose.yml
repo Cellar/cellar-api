@@ -8,6 +8,15 @@ services:
     volumes:
       - redis_data:/data
 
+  valkey:
+    image: valkey/valkey:9-alpine
+    ports:
+      - 6380:6379
+    networks:
+      - datastore
+    volumes:
+      - valkey_data:/data
+
   vault:
     image: hashicorp/vault:1.21
     ports:
@@ -28,6 +37,7 @@ services:
       - datastore
     environment:
       APP_CLIENT_ADDRESS: 127.0.0.1:8081
+      DATASTORE_REDIS_ENABLED: "true"
       DATASTORE_REDIS_HOST: redis
       DATASTORE_REDIS_PORT: 6379
       DISABLE_SWAGGER:
@@ -41,6 +51,7 @@ services:
 
 volumes:
   redis_data:
+  valkey_data:
 
 
 networks:

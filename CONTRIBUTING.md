@@ -25,7 +25,7 @@ You may replace any sensitive information that appears in logs you share with th
 
 Cellar is designed to integrate with the systems you already trust.
 That means that Cellar does handle encryption or data storage itself.
-It relies on other trusted infrastructure that you deploy, such as [Hashicorp Vault][vault] or [Redis][redis].
+It relies on other trusted infrastructure that you deploy, such as [Hashicorp Vault][vault], [Redis][redis], or [Valkey][valkey].
 
 If Cellar does not currently support your favorite [Datastore][docs-datastore] or your favorite [cryptography engine][docs-cryptography],
 request it by creating an [engine request issue][issues-engine-request].
@@ -98,7 +98,9 @@ make test-acceptance   # Run only acceptance tests
 ```
 
 > Note: The unit tests do not require the services to be running.
-> The integration tests require Redis and Vault to be running.
+> The integration tests require Redis and/or Valkey and Vault to be running.
+> Each datastore suite runs once per enabled datastore (`DATASTORE_REDIS_ENABLED`, `DATASTORE_VALKEY_ENABLED`).
+> Use `make test-integration-all` to run against both.
 > The acceptance tests require the API to be running.
 
 If all the tests pass, you are ready to begin work!
@@ -152,8 +154,9 @@ When you run `make services`, the generated `.env` file automatically sets `RATE
 - Acceptance tests verify API functionality without rate limiting interference
 
 **Rate limiting is thoroughly tested:**
-- **Unit tests** (`pkg/ratelimit/redis_test.go`) - Test rate limiter logic with mocks
-- **Integration tests** (`testing/integration/middleware/ratelimit_test.go`) - Test with real Redis using unique IPs per test
+- **Unit tests** (`pkg/ratelimit/slidingwindow_test.go`) - Test rate limiter logic with a mocked window store
+- **Integration tests** (`testing/integration/ratelimit/windowstore_test.go`) - Test the Redis and Valkey window stores against real servers
+- **Integration tests** (`testing/integration/middleware/ratelimit_test.go`) - Test the middleware against each enabled datastore using unique IPs per test
 
 **To test rate limiting behavior:**
 ```shell
@@ -425,6 +428,7 @@ Users get **one full endpoint version cycle** as a migration window.
 
 [vault]: https://www.vaultproject.io/
 [redis]: https://redis.io/
+[valkey]: https://valkey.io/
 [golang]: https://golang.org/
 [gnu-make]: https://www.gnu.org/software/make/
 [docker]: https://www.docker.com/

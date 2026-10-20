@@ -29,10 +29,20 @@ The API supports two versions (v1 and v2) and can be deployed as a standalone bi
 
 ### Local Development Setup
 
-Start Redis and Vault services locally and configure Vault:
+Start Redis, Valkey, and Vault services locally and configure Vault:
 ```bash
 make services
 ```
+
+Redis listens on `localhost:6379` and Valkey on `localhost:6380`.
+Pick the datastore for `run`, `run-daemon`, `test-integration`, and `test-acceptance` with `DATASTORE_ENGINE` (`redis` by default):
+```bash
+make run DATASTORE_ENGINE=valkey
+make test-integration-all   # integration tests against Redis and Valkey together
+```
+
+> Do not name a variable `DATASTORE` in the environment.
+> Viper's `AutomaticEnv` treats it as a leaf value for the whole `datastore.*` tree and hides every nested default.
 
 This creates a `.env` file with Vault credentials needed for local development.
 
@@ -75,7 +85,7 @@ go test ./...
 make test-unit
 ```
 
-Run integration tests (requires Redis + Vault services):
+Run integration tests (requires Redis and/or Valkey + Vault services):
 ```bash
 make services  # Start dependencies first
 make test-integration
@@ -158,7 +168,10 @@ pkg/
 │   ├── vault/      # HashiCorp Vault backend
 │   └── aws/        # AWS KMS backend
 ├── datastore/       # Storage abstraction and implementations
-│   └── redis/      # Redis implementation
+│   ├── keyvalue/   # Shared datastore logic + key set, written against a small Client port
+│   ├── redis/      # go-redis adapter for keyvalue
+│   └── valkey/     # valkey-go adapter for keyvalue
+├── ratelimit/       # Sliding window limiter over a WindowStore port (Redis + Valkey stores)
 ├── middleware/      # HTTP middleware (logging, DI, error handling)
 ├── settings/        # Configuration management
 └── mocks/           # Generated test mocks
@@ -187,11 +200,11 @@ Key interfaces allow pluggable implementations:
 
 **IConfiguration** - Configuration management (Viper-based)
 - `App()` - application settings
-- `Datastore()` - Redis configuration
+- `Datastore()` - Redis and Valkey configuration
 - `Encryption()` - cryptography backend selection
 - `Logging()` - logging configuration
 
-**DataStore** - Storage backend (Redis implementation provided)
+**DataStore** - Storage backend (Redis and Valkey implementations provided, both backed by `pkg/datastore/keyvalue`)
 - `Save()` - persist secret metadata
 - `Get()` - retrieve secret metadata
 - `Delete()` - remove secret metadata
@@ -277,12 +290,29 @@ Dots in config keys are converted to underscores for environment variables.
 
 ### Required Configuration
 
-**Redis (always required):**
+**Datastore (choose exactly one):**
+
+Starting with v4.0.0 a datastore must be enabled explicitly, the same way as the cryptography engines.
+Enabling none or both is a startup error.
+
+Redis:
 ```bash
+DATASTORE_REDIS_ENABLED=true
 DATASTORE_REDIS_HOST=localhost
 DATASTORE_REDIS_PORT=6379
 DATASTORE_REDIS_PASSWORD=
 DATASTORE_REDIS_DB=0
+```
+
+Valkey:
+```bash
+DATASTORE_VALKEY_ENABLED=true
+DATASTORE_VALKEY_HOST=localhost
+DATASTORE_VALKEY_PORT=6379
+DATASTORE_VALKEY_USERNAME=
+DATASTORE_VALKEY_PASSWORD=
+DATASTORE_VALKEY_DB=0
+DATASTORE_VALKEY_TLS_ENABLED=false
 ```
 
 **Cryptography Backend (choose one):**

@@ -47,8 +47,8 @@ func TestHealthCheck(t *testing.T) {
 		assert.NotEqual(t, "", health.Version)
 	})
 
-	t.Run("it should return redis datastore name", func(t *testing.T) {
-		assert.Equal(t, "redis", strings.ToLower(health.Datastore.Name))
+	t.Run("it should return the enabled datastore name", func(t *testing.T) {
+		assert.Equal(t, testhelpers.EnabledDatastoreName(cfg), strings.ToLower(health.Datastore.Name))
 	})
 
 	t.Run("it should return healthy datastore status", func(t *testing.T) {

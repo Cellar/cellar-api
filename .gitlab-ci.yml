@@ -6,7 +6,7 @@ stages:
 
 variables:
   APP_NAME: cellar-api
-  APP_VERSION: 3.4.2
+  APP_VERSION: 4.0.0
   IMAGE_NAME: ${CI_REGISTRY_IMAGE}
   PACKAGE_REGISTRY_URL: ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic
 
@@ -91,6 +91,8 @@ test-unit:
     # APP SETTINGS
     DATASTORE_REDIS_HOST: "redis"
     DATASTORE_REDIS_PORT: 6379
+    DATASTORE_VALKEY_HOST: "valkey"
+    DATASTORE_VALKEY_PORT: 6379
     CRYPTOGRAPHY_VAULT_ENABLED: true
     CRYPTOGRAPHY_VAULT_AUTH_MOUNT_PATH: approle
     CRYPTOGRAPHY_VAULT_ADDRESS: http://vault:8200
@@ -99,6 +101,8 @@ test-unit:
   services:
     - name: redis:8-alpine
       alias: redis
+    - name: valkey/valkey:9-alpine
+      alias: valkey
     - name: hashicorp/vault:1.21
       alias: vault
   before_script:
@@ -111,12 +115,18 @@ test-unit:
 test-integration:
   extends: .api-test-depends
   stage: test
+  parallel:
+    matrix:
+      - DATASTORE_ENGINE: [redis, valkey]
   script:
     - make test-integration
 
 test-acceptance:
   extends: .api-test-depends
   stage: test
+  parallel:
+    matrix:
+      - DATASTORE_ENGINE: [redis, valkey]
   script:
     - make run-daemon
     - make test-acceptance
