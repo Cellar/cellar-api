@@ -1,7 +1,7 @@
-package redis_test
+package keyvalue_test
 
 import (
-	"cellar/pkg/datastore/redis"
+	"cellar/pkg/datastore/keyvalue"
 	"fmt"
 	"testing"
 
@@ -9,7 +9,7 @@ import (
 )
 
 var id = "1234567890"
-var sut = redis.NewRedisKeySet(id)
+var sut = keyvalue.NewKeySet(id)
 
 var keys = struct {
 	access          string
@@ -25,27 +25,27 @@ var keys = struct {
 	expirationEpoch: fmt.Sprintf("secrets:%s:expirationepoch", id),
 }
 
-func TestRedisKey_Access(t *testing.T) {
+func TestKeySet_Access(t *testing.T) {
 	assert.Equal(t, keys.access, sut.Access())
 }
 
-func TestRedisKey_ContentType(t *testing.T) {
+func TestKeySet_ContentType(t *testing.T) {
 	assert.Equal(t, keys.contentType, sut.ContentType())
 }
 
-func TestRedisKey_Content(t *testing.T) {
+func TestKeySet_Content(t *testing.T) {
 	assert.Equal(t, keys.content, sut.Content())
 }
 
-func TestRedisKey_AccessLimit(t *testing.T) {
+func TestKeySet_AccessLimit(t *testing.T) {
 	assert.Equal(t, keys.accessLimit, sut.AccessLimit())
 }
 
-func TestRedisKey_ExpirationEpoch(t *testing.T) {
+func TestKeySet_ExpirationEpoch(t *testing.T) {
 	assert.Equal(t, keys.expirationEpoch, sut.ExpirationEpoch())
 }
 
-func TestRedisKey_AllKeys(t *testing.T) {
+func TestKeySet_AllKeys(t *testing.T) {
 	allKeys := sut.AllKeys()
 	for _, expected := range []string{keys.contentType, keys.content, keys.access, keys.accessLimit, keys.expirationEpoch} {
 		assert.Contains(t, allKeys, expected)
