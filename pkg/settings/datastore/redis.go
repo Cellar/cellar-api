@@ -5,6 +5,7 @@ import (
 )
 
 type IRedisConfiguration interface {
+	Enabled() bool
 	Host() string
 	Port() int
 	Password() string
@@ -13,6 +14,7 @@ type IRedisConfiguration interface {
 
 const (
 	redisKey         = datastoreKey + "redis."
+	redisEnabledKey  = redisKey + "enabled"
 	redisHostKey     = redisKey + "host"
 	redisPortKey     = redisKey + "port"
 	redisPasswordKey = redisKey + "password"
@@ -27,6 +29,10 @@ func NewRedisConfiguration() *RedisConfiguration {
 	viper.SetDefault(redisPasswordKey, "")
 	viper.SetDefault(redisDBKey, 0)
 	return &RedisConfiguration{}
+}
+
+func (rds RedisConfiguration) Enabled() bool {
+	return viper.GetBool(redisEnabledKey)
 }
 
 func (rds RedisConfiguration) Host() string {
