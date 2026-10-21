@@ -1,10 +1,5 @@
 #!/usr/bin/env sh
 
-variable_not_found() {
-    echo "$1 is not set but is required"
-    exit 1
-}
-
 verify_present() {
     name=$1
     val=$2
@@ -14,48 +9,50 @@ verify_present() {
     fi
 }
 
+is_true() {
+    case "$1" in
+        1|t|T|true|TRUE|True) return 0 ;;
+        *) return 1 ;;
+    esac
+}
 
-if [ -z "$DATASTORE_REDIS_PASSWORD" ]; then
-  [ -z "$DATASTORE_REDIS_PASSWORD_FILE" ] || export DATASTORE_REDIS_PASSWORD=$(cat "$DATASTORE_REDIS_PASSWORD_FILE")
+load_secret_file() {
+    name=$1
+    eval "value=\${$name:-}"
+    eval "file=\${${name}_FILE:-}"
+
+    if [ -n "$value" ] || [ -z "$file" ]; then
+        return 0
+    fi
+
+    if ! content=$(cat "$file" 2>/dev/null); then
+        echo "unable to read ${name}_FILE ($file)"
+        exit 1
+    fi
+    export "$name=$content"
+}
+
+for secret in \
+    DATASTORE_REDIS_PASSWORD \
+    DATASTORE_VALKEY_PASSWORD \
+    CRYPTOGRAPHY_VAULT_AUTH_APPROLE_ROLE_ID \
+    CRYPTOGRAPHY_VAULT_AUTH_APPROLE_SECRET_ID \
+    CRYPTOGRAPHY_VAULT_AUTH_AWSIAM_ROLE \
+    CRYPTOGRAPHY_VAULT_AUTH_GCPIAM_ROLE \
+    CRYPTOGRAPHY_VAULT_AUTH_KUBERNETES_ROLE \
+    CRYPTOGRAPHY_VAULT_ENCRYPTION_TOKEN_NAME \
+    CRYPTOGRAPHY_AWS_REGION \
+    CRYPTOGRAPHY_AWS_KMS_KEY_ID
+do
+    load_secret_file "$secret"
+done
+
+if is_true "$DATASTORE_REDIS_ENABLED"; then
+    verify_present "DATASTORE_REDIS_HOST" "$DATASTORE_REDIS_HOST"
 fi
 
-if [ -z "$DATASTORE_VALKEY_PASSWORD" ]; then
-  [ -z "$DATASTORE_VALKEY_PASSWORD_FILE" ] || export DATASTORE_VALKEY_PASSWORD=$(cat "$DATASTORE_VALKEY_PASSWORD_FILE")
+if is_true "$DATASTORE_VALKEY_ENABLED"; then
+    verify_present "DATASTORE_VALKEY_HOST" "$DATASTORE_VALKEY_HOST"
 fi
 
-if [ -z "$CRYPTOGRAPHY_VAULT_AUTH_APPROLE_ROLE_ID" ]; then
-  [ -z "$CRYPTOGRAPHY_VAULT_AUTH_APPROLE_ROLE_ID_FILE" ] || export CRYPTOGRAPHY_VAULT_AUTH_APPROLE_ROLE_ID=$(cat "$CRYPTOGRAPHY_VAULT_AUTH_APPROLE_ROLE_ID_FILE")
-fi
-
-if [ -z "$CRYPTOGRAPHY_VAULT_AUTH_APPROLE_SECRET_ID" ]; then
-  [ -z "$CRYPTOGRAPHY_VAULT_AUTH_APPROLE_SECRET_ID_FILE" ] || export CRYPTOGRAPHY_VAULT_AUTH_APPROLE_SECRET_ID=$(cat "$CRYPTOGRAPHY_VAULT_AUTH_APPROLE_SECRET_ID_FILE")
-fi
-
-if [ -z "$CRYPTOGRAPHY_VAULT_AUTH_AWSIAM_ROLE" ]; then
-  [ -z "$CRYPTOGRAPHY_VAULT_AUTH_AWSIAM_ROLE_FILE" ] || export CRYPTOGRAPHY_VAULT_AUTH_AWSIAM_ROLE=$(cat "$CRYPTOGRAPHY_VAULT_AUTH_AWSIAM_ROLE_FILE")
-fi
-
-if [ -z "$CRYPTOGRAPHY_VAULT_AUTH_GCPIAM_ROLE" ]; then
-  [ -z "$CRYPTOGRAPHY_VAULT_AUTH_GCPIAM_ROLE_FILE" ] || export CRYPTOGRAPHY_VAULT_AUTH_GCPIAM_ROLE=$(cat "$CRYPTOGRAPHY_VAULT_AUTH_GCPIAM_ROLE_FILE")
-fi
-
-if [ -z "$CRYPTOGRAPHY_VAULT_AUTH_KUBERNETES_ROLE" ]; then
-  [ -z "$CRYPTOGRAPHY_VAULT_AUTH_KUBERNETES_ROLE_FILE" ] || export CRYPTOGRAPHY_VAULT_AUTH_KUBERNETES_ROLE=$(cat "$CRYPTOGRAPHY_VAULT_AUTH_KUBERNETES_ROLE_FILE")
-fi
-
-if [ -z "$CRYPTOGRAPHY_VAULT_ENCRYPTION_TOKEN_NAME" ]; then
-  [ -z "$CRYPTOGRAPHY_VAULT_ENCRYPTION_TOKEN_NAME_FILE" ] || export CRYPTOGRAPHY_VAULT_ENCRYPTION_TOKEN_NAME=$(cat "$CRYPTOGRAPHY_VAULT_ENCRYPTION_TOKEN_NAME_FILE")
-fi
-
-if [ -z "$CRYPTOGRAPHY_AWS_REGION" ]; then
-  [ -z "$CRYPTOGRAPHY_AWS_REGION_FILE" ] || export CRYPTOGRAPHY_AWS_REGION=$(cat "$CRYPTOGRAPHY_AWS_REGION_FILE")
-fi
-
-if [ -z "$CRYPTOGRAPHY_AWS_KMS_KEY_ID" ]; then
-  [ -z "$CRYPTOGRAPHY_AWS_KMS_KEY_ID_FILE" ] || export CRYPTOGRAPHY_AWS_KMS_KEY_ID=$(cat "$CRYPTOGRAPHY_AWS_KMS_KEY_ID_FILE")
-fi
-
-verify_present "DATASTORE_REDIS_HOST" "$DATASTORE_REDIS_HOST"
-
-exec /app/cellar $@
-
+exec "${CELLAR_BIN:-/app/cellar}" "$@"

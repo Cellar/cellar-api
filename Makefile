@@ -86,9 +86,13 @@ generate-mocks:
 
 test: test-unit test-integration test-acceptance
 
-test-unit:
+test-unit: test-entrypoint
 	$(LOG) "Running unit tests"
 	@go test ./...
+
+test-entrypoint:
+	$(LOG) "Running docker entrypoint tests"
+	@./docker-entrypoint_test.sh
 
 test-integration:
 	$(LOG) "Running integration tests"
