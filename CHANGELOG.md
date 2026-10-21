@@ -36,6 +36,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The health check now reports the server's own name and version.
   Valkey reports a frozen `redis_version:7.2.4` for compatibility,
   so it would previously have been shown as "Redis 7.2.4".
+- The Docker entrypoint now requires only the host of the enabled datastore.
+  It previously always required `DATASTORE_REDIS_HOST`, so Valkey-only containers could not start.
+- The Docker entrypoint exits with `unable to read <NAME>_FILE` when a `*_FILE` secret cannot be read.
+  It previously started Cellar with an empty secret.
+- The Docker entrypoint forwards container arguments without word-splitting them.
 
 ## [3.4.2] - 2026-03-22
 

@@ -424,8 +424,14 @@ make package APP_VERSION=1.0.0
 
 ```bash
 make docker-build IMAGE_TAG=1.0.0
-docker run -p 8080:8080 --env-file .env cellar-api:1.0.0
+docker run -p 8080:8080 --env-file .env \
+  -e DATASTORE_VALKEY_ENABLED=true -e DATASTORE_VALKEY_HOST=valkey.example.com \
+  cellar-api:1.0.0
 ```
+
+The entrypoint requires the host of whichever datastore is enabled (`DATASTORE_REDIS_HOST` or `DATASTORE_VALKEY_HOST`).
+Every `*_FILE` secret variable must point at a readable file, or the container exits instead of starting with an empty secret.
+Run `make test-entrypoint` after changing `docker-entrypoint.sh`.
 
 ### AWS Lambda
 
